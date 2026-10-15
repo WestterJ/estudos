@@ -1,0 +1,48 @@
+PLANEJADOR DE ESTUDOS — PWA COM LOGIN GOOGLE + LOGIN TRADICIONAL
+
+CONTEÚDO DO PACOTE
+- index.html: aplicativo Planejador de Estudos baseado na versão V6.
+- manifest.webmanifest: configuração de instalação como PWA.
+- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth.
+- icons/: ícones 192x192 e 512x512.
+- VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
+- CONFIGURAR_TABELA_SE_NECESSARIO.sql: SQL opcional, apenas se a tabela de estudos ainda não existir.
+
+PUBLICAR / INSTALAR
+1. Extraia o ZIP.
+2. Publique TODOS os arquivos e a pasta icons/ no mesmo diretório de um site HTTPS (por exemplo, Netlify ou GitHub Pages). index.html, manifest.webmanifest e service-worker.js devem ficar na raiz da publicação.
+3. Não abra index.html diretamente com file:// para autenticar. OAuth e service worker precisam de HTTPS ou localhost.
+4. Acesse o endereço publicado. Informe a URL e a chave pública do projeto Supabase Nutri. Essa configuração fica salva no navegador.
+5. Clique em “Continuar com Google” ou use e-mail e senha. Ambos permanecem disponíveis.
+6. Depois de autenticar, se já houver um registro na nuvem, a aplicação orienta a baixar os dados remotos ou enviar os dados locais. Leia a mensagem com cuidado para evitar sobrescrever progresso.
+7. Para instalar no celular, abra o endereço HTTPS no navegador e use “Instalar”/“Adicionar à tela inicial” quando a opção aparecer.
+
+CONFIGURAR GOOGLE OAUTH NO SUPABASE
+A) No Supabase, abra Authentication → Sign In / Providers → Google. Ative o provedor. Se ele já estiver habilitado para o Diário Nutricional no MESMO projeto Nutri, não é necessário criar outro projeto Supabase.
+B) No Google Cloud / Google Auth Platform, o OAuth Client precisa ser do tipo Web application. Em Authorized redirect URIs, use o Callback URL que o painel do provedor Google do Supabase mostrar (normalmente https://<project-ref>.supabase.co/auth/v1/callback). O Client ID e Client Secret ficam no painel do Supabase; nunca os coloque no HTML.
+C) Em Supabase → Authentication → URL Configuration, mantenha o Site URL oficial e acrescente a URL real do Planejador à lista Redirect URLs. Para uma publicação em pasta, permita o caminho exato ou um padrão restrito, por exemplo https://seu-dominio/planejador/**. Não use o domínio de exemplo literalmente.
+D) A URL de retorno solicitada pelo Planejador é a origem + caminho atuais, sem query string. Esse endereço deve corresponder a uma Redirect URL permitida pelo Supabase.
+E) Erros como “redirect URL not allowed” indicam que a URL publicada precisa ser acrescentada em Authentication → URL Configuration. “Provider not enabled” indica que o Google precisa ser habilitado em Sign In / Providers.
+
+SUPABASE / TABELA
+- O Planejador usa o projeto Nutri existente e a tabela public.study_planner_data. Ele NÃO usa a tabela diary_data do Diário Nutricional; cada aplicativo mantém seus próprios registros.
+- A estrutura esperada é user_id (uuid, chave primária e referência a auth.users), data (jsonb) e updated_at (timestamptz).
+- Use VERIFICAR_RLS_SUPABASE.sql no SQL Editor para conferir se a tabela existe, se RLS está habilitado e quais políticas existem.
+- CONFIGURAR_TABELA_SE_NECESSARIO.sql é opcional: execute apenas se a tabela ainda não existir ou precisar ser criada. Antes de alterar políticas já existentes, examine o resultado do SQL de verificação.
+- As políticas devem garantir auth.uid() = user_id para leitura, inserção, atualização e exclusão. A chave do navegador deve ser somente publishable/anon, nunca service_role ou segredo privado.
+
+DADOS LOCAIS E PRIVACIDADE
+- A sessão Supabase fica persistida pelo cliente de autenticação neste dispositivo.
+- O aplicativo guarda cópias locais por usuário do Supabase. Ao alternar entre contas no mesmo navegador, tenta recuperar a cópia local da conta correspondente; se não houver, inicia uma cópia local limpa do edital-base antes de oferecer a sincronização.
+- A segurança real dos dados remotos depende das políticas RLS no Supabase, não somente da tela de login.
+- A instalação PWA usa uma cache shell. A autenticação e a sincronização exigem internet. O cache offline não garante funcionamento das bibliotecas de terceiros quando não houver conexão.
+
+CHECKLIST APÓS PUBLICAR
+[ ] Login tradicional por e-mail/senha.
+[ ] Login com Google e retorno ao Planejador.
+[ ] Saída e nova entrada.
+[ ] O Planejador só aparece depois de autenticar.
+[ ] Registro de estudo é salvo e continua após atualizar a página.
+[ ] Sincronização: baixar os dados existentes antes de enviar qualquer cópia local diferente.
+[ ] Instalação PWA no celular/desktop.
+[ ] Conferência das políticas RLS da tabela study_planner_data.
