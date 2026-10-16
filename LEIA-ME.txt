@@ -1,20 +1,22 @@
-PLANEJADOR DE ESTUDOS — PWA V2 COM LOGIN GOOGLE + LOGIN TRADICIONAL
+PLANEJADOR DE ESTUDOS — PWA V5 COM CADASTRO MANUAL, EXCEL E IA ATUALIZADA
 
 CONTEÚDO DO PACOTE
-- index.html: Planejador de Estudos PWA V2 (painel de sugestões por prioridade/progresso, grupos recolhíveis, registro de último salvamento e sem módulo Pomodoro).
+- index.html: Planejador de Estudos PWA V5 (inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos e PWA).
 - manifest.webmanifest: configuração de instalação como PWA.
 - service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
 - CONFIGURAR_TABELA_SE_NECESSARIO.sql: SQL opcional, apenas se a tabela de estudos ainda não existir.
 
-MUDANÇAS DA V2
-- “Últimos estudos” e “Sugestões para os próximos estudos” ficam acima do progresso por prioridade/disciplina.
-- As seções de prioridade e disciplina começam recolhidas e podem ser abertas/fechadas.
-- Em Personalização, escolha a estratégia das sugestões: “Prioridade primeiro” ou “Prioridade + progresso”. A preferência é por concurso e acompanha a sincronização da nuvem.
-- O quadro fixo “Pesos & Questões” foi removido porque mostrava valores estáticos de uma prova e podia confundir em um aplicativo multi-concursos. O cronograma de datas continua no Dashboard.
-- O botão superior de armazenamento mostra somente “Nuvem” ou “Local” e a data/hora do último salvamento confirmado. Ao alterar dados com conta conectada, aparece “Local” até a sincronização com a nuvem ser confirmada.
-- O cache do service worker foi atualizado para forçar a instalação da versão V2 quando a nova publicação for carregada.
+RECURSOS PRINCIPAIS
+- Os painéis “Últimos estudos” e “Sugestões para os próximos estudos” aparecem lado a lado (em telas largas) e acima do progresso por prioridade e disciplina.
+- O painel de sugestões mostra até quatro disciplinas pendentes e segue a estratégia escolhida em Personalização: “Prioridade primeiro”, “Prioridade + progresso” ou “Prioridade + data”.
+- Em “Prioridade + data”, a sugestão dentro de cada prioridade começa pelas disciplinas nunca estudadas e depois pelas há mais tempo sem estudo.
+- O quadro fixo “Pesos & Questões” foi removido porque mostrava valores estáticos de uma prova. O cronograma de datas continua no Dashboard.
+- A tabela extensa com Status, Prioridade, Disciplina, Tópico, Subtópico, Peso Edital, Horas, Questões e Ações foi removida da tela principal. O acompanhamento de conclusão fica no quadro recolhível “Progresso por prioridade e disciplina”; o conteúdo detalhado permanece na aba “Edital Verticalizado”.
+- Os botões Resetar, Exportar e Importar foram mantidos em uma barra compacta. O atalho “Estudar” nas sugestões abre o Registro de Estudos e seleciona a disciplina; anotações continuam acessíveis no painel de progresso.
+- O botão superior de armazenamento mostra “Nuvem” ou “Local” e a data/hora do último salvamento confirmado. Ao alterar dados com conta conectada, aparece “Local” até a sincronização com a nuvem ser confirmada.
+- O cache do service worker foi atualizado para forçar a atualização da interface quando a nova publicação for carregada.
 
 PUBLICAR / INSTALAR
 1. Extraia o ZIP.
@@ -56,8 +58,21 @@ CHECKLIST APÓS PUBLICAR
 [ ] Conferência das políticas RLS da tabela study_planner_data.
 
 
-VERSÃO V3 - ATUALIZAÇÃO DE 16/10/2026
-- Removido o painel grande “Sugestões para os próximos estudos” da tela inicial.
-- Mantido apenas um indicador compacto da próxima recomendação no formulário de registro, com botão para selecionar a disciplina.
-- Adicionada estratégia “Prioridade + data”: dentro de cada prioridade, recomenda primeiro as disciplinas há mais tempo sem estudo; disciplinas nunca estudadas vêm antes.
+VERSÃO V4 - ATUALIZAÇÃO DE 16/10/2026
+- Mantido o painel “Sugestões para os próximos estudos”, ao lado de “Últimos estudos” e acima do progresso por prioridade e disciplina.
+- O painel de sugestões mostra até quatro disciplinas pendentes e respeita a estratégia definida em Personalização: “Prioridade primeiro”, “Prioridade + progresso” ou “Prioridade + data”.
+- Na estratégia “Prioridade + data”, disciplinas nunca estudadas vêm primeiro dentro da prioridade; em seguida, vêm as que estão há mais tempo sem estudo.
+- Removida da tela principal a tabela extensa com Status, Prioridade, Disciplina, Tópico, Subtópico, Peso Edital, Horas, Questões e Ações. O acompanhamento de conclusão continua disponível no quadro recolhível “Progresso por prioridade e disciplina”; o conteúdo do edital continua na aba “Edital Verticalizado”.
+- Mantidos os botões Resetar, Exportar e Importar, agora em uma barra mais compacta.
+- O botão “Estudar” nas sugestões leva ao formulário de registro e seleciona a disciplina escolhida.
 - Atualizado o cache do service worker para forçar a atualização do PWA.
+
+VERSÃO V5 - ATUALIZAÇÃO DE 16/10/2026
+- Incluído cadastro manual de Disciplina, Tópico e Subtópico. Disciplina e Tópico são obrigatórios; Subtópico é opcional. É possível editar ou excluir cada item cadastrado.
+- Incluída importação estruturada de Excel (.xlsx/.xls), CSV e JSON, independente de IA ou chave Gemini. A opção “Adicionar/atualizar sem apagar progresso” preserva métricas dos itens existentes; “Substituir todo o edital” exige confirmação e reinicia o progresso.
+- Botão “Baixar modelo Excel” gera uma planilha com os cabeçalhos aceitos e linhas de exemplo de Noções de AFO; a aba Instruções explica como preencher.
+- A importação usa, como cabeçalhos principais: Disciplina, Tópico, Subtópico, Prioridade, Peso edital, Horas estudadas e Questões resolvidas. Repita disciplina e tópico em cada linha; deixe Subtópico vazio para tópico sem subdivisão.
+- Corrigido o modelo da API Gemini de gemini-2.5-flash para gemini-3.8-flash, conforme a documentação do modelo disponível. A análise solicita hierarquia disciplina > tópico > subtópico e a aplicação preserva subtópicos separados.
+- A aplicação da análise de IA avisa antes de substituir o conteúdo atual. Sempre confira os itens extraídos contra o edital oficial.
+- Não é necessário SQL adicional nem criar outro projeto Supabase. As novas propriedades de conteúdo continuam dentro do campo JSONB já utilizado na tabela study_planner_data.
+

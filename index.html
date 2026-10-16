@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Planejador de Estudos | Concursos — V2</title>
+    <title>Planejador de Estudos | Concursos — V5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -234,44 +234,27 @@
         <!-- ABA 1: CRONOGRAMA & PRIORIDADES -->
         <div id="content-cronograma" class="tab-content flex-1 flex flex-col space-y-4 sm:space-y-6">
             
-            <!-- Barra de Filtros e Ações -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Filtrar Prioridade:</label>
-                        <select id="filter-priority" onchange="renderCronograma()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">Todas as Prioridades</option>
-                            <option value="Vermelha">🔴 Vermelha (Alta)</option>
-                            <option value="Amarela">🟡 Amarela (Média)</option>
-                            <option value="Verde">🟢 Verde (Baixa / Revisão)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Filtrar Disciplina:</label>
-                        <select id="filter-discipline" onchange="renderCronograma()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all">Todas as Disciplinas</option>
-                        </select>
-                    </div>
+            <!-- Ações dos dados do concurso (sem a tabela extensa de tópicos) -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-bold text-sm text-slate-700 dark:text-slate-200">Acompanhe seu estudo</h2>
+                    <p class="text-xs text-slate-500 mt-1">Use o progresso por prioridade e as sugestões abaixo para decidir o próximo estudo.</p>
                 </div>
-
                 <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="confirmReset()" class="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition flex items-center justify-center space-x-1">
-                        <i class="fa-solid fa-rotate-right"></i>
-                        <span>Resetar</span>
+                    <button onclick="confirmReset()" class="px-3 py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-right"></i><span>Resetar</span>
                     </button>
-                    <button onclick="exportData()" class="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition flex items-center justify-center space-x-1">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Exportar</span>
+                    <button onclick="exportData()" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-download"></i><span>Exportar</span>
                     </button>
-                    <label class="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition cursor-pointer flex items-center justify-center space-x-1">
-                        <i class="fa-solid fa-upload"></i>
-                        <span>Importar</span>
+                    <label class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-upload"></i><span>Importar</span>
                         <input type="file" id="import-file" onchange="importData(event)" class="hidden" accept=".json">
                     </label>
                 </div>
             </div>
 
-            <!-- Cards de KPIs Dinâmicos (Reagem aos Filtros) -->
+            <!-- Indicadores gerais de progresso -->
             <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
                 <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Disciplinas Estudadas</p>
@@ -329,16 +312,20 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
                 <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><span class="activity-count">Recentes</span></div>
                 <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
+              </section>
+              <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div>
+                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
               </section>
             </div>
 
             <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
               <div class="flex items-start justify-between flex-wrap gap-2">
-                <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada disciplina para ver tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
+                <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada prioridade e disciplina para acompanhar tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
                 <span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span>
               </div>
               <div id="priority-progress-container" class="space-y-3"></div>
@@ -346,33 +333,6 @@
 
 
 
-            <!-- Tabela com colunas distintas Tópico e Subtópico -->
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-1">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[850px]">
-                        <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                                <th class="p-3.5 w-10 text-center">Status</th>
-                                <th class="p-3.5 w-24">Prioridade</th>
-                                <th class="p-3.5 w-36">Disciplina</th>
-                                <th class="p-3.5 w-56">Tópico</th>
-                                <th class="p-3.5">Subtópico</th>
-                                <th class="p-3.5 text-center w-20">Peso Edital</th>
-                                <th class="p-3.5 text-center w-16">Horas</th>
-                                <th class="p-3.5 text-center w-16">Quest.</th>
-                                <th class="p-3.5 text-center w-14">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cronograma-tbody" class="divide-y divide-slate-200 dark:divide-slate-700 text-xs sm:text-sm">
-                            <!-- Injetado via JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Rodapé com KPIs Agrupados da Disciplina Filtrada -->
-                <div id="footer-discipline-kpis" class="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700 px-4 py-3 flex flex-wrap items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-300">
-                    <!-- Inserido dinamicamente -->
-                </div>
-            </div>
         </div>
 
         <!-- ABA 2: REGISTRO DE ESTUDOS -->
@@ -493,19 +453,76 @@
                     </div>
                 </div>
 
+                <div class="app-card p-4 sm:p-5 mt-5 space-y-4" id="syllabus-manager-panel">
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-list-check mr-2"></i>Cadastro manual e importação de conteúdo</h4>
+                      <p class="text-xs text-slate-500 mt-1">Cadastre uma linha por subtópico. Para um tópico sem divisão, deixe o campo Subtópico em branco. As alterações são salvas no navegador e sincronizadas com o Supabase quando a conta estiver conectada.</p>
+                    </div>
+                    <button type="button" onclick="downloadSyllabusTemplate()" class="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-semibold"><i class="fa-solid fa-file-excel mr-1"></i>Baixar modelo Excel</button>
+                  </div>
+                  <form id="manual-syllabus-form" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" onsubmit="event.preventDefault();saveManualSyllabusItem();">
+                    <label class="block text-xs font-semibold text-slate-600">Disciplina *
+                      <input id="manual-discipline" list="manual-discipline-options" required maxlength="180" placeholder="Ex.: Noções de AFO" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
+                      <datalist id="manual-discipline-options"></datalist>
+                    </label>
+                    <label class="block text-xs font-semibold text-slate-600">Tópico *
+                      <input id="manual-topic" required maxlength="240" placeholder="Ex.: Orçamento Público" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
+                    </label>
+                    <label class="block text-xs font-semibold text-slate-600">Subtópico (opcional)
+                      <input id="manual-subtopic" maxlength="600" placeholder="Ex.: Conceito e princípios orçamentários" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
+                    </label>
+                    <label class="block text-xs font-semibold text-slate-600">Prioridade
+                      <select id="manual-priority" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal"><option value="Vermelha">Vermelha (alta)</option><option value="Amarela" selected>Amarela (média)</option><option value="Verde">Verde (baixa)</option></select>
+                    </label>
+                    <label class="block text-xs font-semibold text-slate-600">Peso no edital (opcional)
+                      <input id="manual-weight" maxlength="80" placeholder="Ex.: 5 questões / peso 2" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
+                    </label>
+                    <div class="flex flex-wrap items-end gap-2">
+                      <button id="manual-save-btn" type="submit" class="px-4 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold"><i class="fa-solid fa-plus mr-1"></i>Adicionar item</button>
+                      <button type="button" onclick="clearManualSyllabusForm()" class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold">Limpar</button>
+                    </div>
+                    <p id="manual-syllabus-form-status" class="md:col-span-2 xl:col-span-3 text-xs text-slate-500" aria-live="polite">Para incluir vários subtópicos, repita a disciplina e o tópico em linhas separadas. Não é necessário usar IA.</p>
+                  </form>
+                  <div class="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
+                    <div>
+                      <h5 class="font-bold text-sm text-slate-800 dark:text-slate-100"><i class="fa-solid fa-file-excel mr-2 text-emerald-700"></i>Importar estrutura do Excel/CSV/JSON</h5>
+                      <p class="text-xs text-slate-500 mt-1">Use o modelo acima. Cabeçalhos esperados: Disciplina, Tópico, Subtópico, Prioridade e Peso edital. Cada linha representa um tópico ou subtópico. A importação não depende de chave de IA.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(180px,auto)_auto] gap-2 items-end">
+                      <label class="block text-xs font-semibold text-slate-600">Planilha de conteúdo
+                        <input id="manual-import-file" type="file" accept=".xlsx,.xls,.csv,.json" class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs font-normal">
+                      </label>
+                      <label class="block text-xs font-semibold text-slate-600">Como importar
+                        <select id="manual-import-mode" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal"><option value="merge" selected>Adicionar/atualizar sem apagar progresso</option><option value="replace">Substituir todo o edital (reinicia o progresso)</option></select>
+                      </label>
+                      <button type="button" onclick="importManualSyllabusFile()" class="px-4 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold"><i class="fa-solid fa-file-import mr-1"></i>Importar estrutura</button>
+                    </div>
+                  </div>
+                  <details class="border-t border-slate-200 dark:border-slate-700 pt-3">
+                    <summary class="cursor-pointer py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Ver, editar ou excluir conteúdo existente <span id="manual-syllabus-count" class="ml-1 text-xs font-normal text-slate-500"></span></summary>
+                    <div class="space-y-3 pt-2">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input id="manual-list-search" oninput="renderSyllabusManager()" placeholder="Buscar disciplina, tópico ou subtópico..." class="w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm">
+                        <select id="manual-list-discipline" onchange="renderSyllabusManager()" class="w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm"><option value="all">Todas as disciplinas</option></select>
+                      </div>
+                      <div id="manual-syllabus-list" class="space-y-3"></div>
+                    </div>
+                  </details>
+                </div>
+
                 <div class="app-card p-4 sm:p-5 mt-5 space-y-3">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Importar e analisar edital com IA</h4>
-                        <p class="text-xs text-slate-500 mt-1">Selecione o edital em PDF, Excel, CSV ou JSON. A análise da IA sugere disciplinas, tópicos, pesos e datas; confira tudo com o documento oficial antes de aplicar.</p>
+                        <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Análise assistida do edital com IA</h4>
+                        <p class="text-xs text-slate-500 mt-1">A IA pode sugerir disciplinas, tópicos, subtópicos, pesos e datas. Para cadastro manual ou importação estruturada de Excel, use o painel acima. Confira qualquer sugestão com o edital oficial antes de aplicar.</p>
                       </div>
                       <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-xs text-blue-700 underline font-semibold">Obter chave Gemini</a>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_auto] gap-2 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-2 items-end">
                       <label class="block text-xs font-semibold text-slate-600">Arquivo do edital
-                        <input id="edital-file" type="file" accept=".xlsx,.xls,.csv,.json,.pdf" onchange="window._editalText='';document.getElementById('ai-results').textContent='Arquivo selecionado. Clique em Importar arquivo para carregar os tópicos ou em Analisar com IA para extrair o conteúdo do edital.'" class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs font-normal dark:bg-slate-900 dark:border-slate-600">
+                        <input id="ai-edital-file" type="file" accept=".xlsx,.xls,.csv,.json,.pdf" onchange="window._editalText='';document.getElementById('ai-results').textContent='Arquivo selecionado. Clique em Analisar com IA para extrair a estrutura proposta.'" class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs font-normal dark:bg-slate-900 dark:border-slate-600">
                       </label>
-                      <button onclick="importSyllabusFile()" class="px-4 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold"><i class="fa-solid fa-file-import mr-1"></i>Importar arquivo</button>
                       <button onclick="analyzeEditalAI()" class="px-4 py-2.5 rounded-lg bg-violet-700 hover:bg-violet-800 text-white text-sm font-semibold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Analisar com IA</button>
                     </div>
                     <div id="ai-results" class="text-sm"></div>
@@ -934,18 +951,7 @@
         }
 
         function initCronogramaFilters() {
-            const discSelect = document.getElementById('filter-discipline');
-            const currentVal = discSelect.value;
-            discSelect.innerHTML = '<option value="all">Todas as Disciplinas</option>';
-            
-            const disciplines = [...new Set(masterEditalData.map(i => i.discipline))];
-            disciplines.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.innerText = d;
-                if (d === currentVal) opt.selected = true;
-                discSelect.appendChild(opt);
-            });
+            // A tabela detalhada foi removida da tela; mantém apenas a atualização dos painéis e KPIs.
             renderCronograma();
             renderRecentRotation();
         }
@@ -990,37 +996,51 @@
                 ? 'Dentro de cada prioridade, serão recomendadas primeiro as disciplinas há mais tempo sem estudo; as nunca estudadas vêm primeiro.'
                 : 'Dentro de cada prioridade, serão recomendadas primeiro as disciplinas com menor percentual concluído.');
         }
-        function getNextStudyRecommendation() {
-            const sorted=getSessionsNewestFirst();
-            const prioritySettings=getPrioritySettings();
-            const priorityOrder=Object.keys(prioritySettings).sort((a,b)=>(Number(prioritySettings[b].weight)||1)-(Number(prioritySettings[a].weight)||1));
-            const priorityRank=Object.fromEntries(priorityOrder.map((priority,index)=>[priority,index]));
-            const grouped=new Map();
-            masterEditalData.forEach(topic=>{
-                if(!grouped.has(topic.discipline)) grouped.set(topic.discipline,[]);
+        function getStudySuggestionCandidates() {
+            const sorted = getSessionsNewestFirst();
+            const prioritySettings = getPrioritySettings();
+            const priorityOrder = Object.keys(prioritySettings).sort((a,b) => (Number(prioritySettings[b].weight)||1) - (Number(prioritySettings[a].weight)||1));
+            const priorityRank = Object.fromEntries(priorityOrder.map((priority,index) => [priority,index]));
+            const grouped = new Map();
+            masterEditalData.forEach(topic => {
+                if (!grouped.has(topic.discipline)) grouped.set(topic.discipline, []);
                 grouped.get(topic.discipline).push(topic);
             });
-            let candidates=[...grouped.entries()].map(([discipline,topics])=>{
-                const vals=topics.map(topic=>userProgress.find(u=>u.id===topic.id)||topic);
-                const done=vals.filter(value=>!!value.completed).length;
-                const pendingTopics=topics.filter(topic=>!(userProgress.find(u=>u.id===topic.id)||topic).completed);
-                const pendingPriorities=pendingTopics.map(topic=>topic.priority||'Amarela');
-                const priority=pendingPriorities.sort((a,b)=>(priorityRank[a]??99)-(priorityRank[b]??99))[0]||topics[0]?.priority||'Amarela';
-                const lastSession=sorted.find(session=>session.discipline===discipline);
-                return {discipline,priority,rank:priorityRank[priority]??99,pct:topics.length?Math.round(done/topics.length*100):0,pending:pendingTopics.length,lastDate:lastSession?.date||'',lastTimestamp:lastSession?parseBRDate(lastSession.date).getTime():0};
-            }).filter(item=>item.pending>0);
-            if(!candidates.length) return null;
-            const mode=getSuggestionMode();
-            if(mode==='priority_first') {
-                const highest=Math.min(...candidates.map(item=>item.rank));
-                candidates=candidates.filter(item=>item.rank===highest);
+            let candidates = [...grouped.entries()].map(([discipline, topics]) => {
+                const vals = topics.map(topic => userProgress.find(u => u.id === topic.id) || topic);
+                const done = vals.filter(value => !!value.completed).length;
+                const pendingTopics = topics.filter(topic => !(userProgress.find(u => u.id === topic.id) || topic).completed);
+                const pendingPriorities = pendingTopics.map(topic => topic.priority || 'Amarela');
+                const priority = pendingPriorities.sort((a,b) => (priorityRank[a] ?? 99) - (priorityRank[b] ?? 99))[0] || topics[0]?.priority || 'Amarela';
+                const lastSession = sorted.find(session => session.discipline === discipline);
+                const lastDate = lastSession?.date || '';
+                const lastTimestamp = lastSession ? parseBRDate(lastSession.date).getTime() : 0;
+                const hours = vals.reduce((sum,value) => sum + (Number(value.hours)||0), 0);
+                const questions = vals.reduce((sum,value) => sum + (Number(value.questions)||0), 0);
+                return {
+                    discipline, topics, done,
+                    pct: topics.length ? Math.round(done/topics.length*100) : 0,
+                    priority, rank: priorityRank[priority] ?? 99,
+                    pending: pendingTopics.length, hours, questions, lastDate, lastTimestamp
+                };
+            }).filter(item => item.pending > 0);
+
+            if (!candidates.length) return [];
+            const mode = getSuggestionMode();
+            if (mode === 'priority_first') {
+                const highest = Math.min(...candidates.map(item => item.rank));
+                candidates = candidates.filter(item => item.rank === highest);
             }
-            if(mode==='priority_date') {
-                candidates.sort((a,b)=>a.rank-b.rank || a.lastTimestamp-b.lastTimestamp || a.discipline.localeCompare(b.discipline,'pt-BR'));
+            if (mode === 'priority_date') {
+                // Dentro de cada prioridade, disciplinas nunca estudadas (data 0) e as mais antigas vêm primeiro.
+                candidates.sort((a,b) => a.rank-b.rank || a.lastTimestamp-b.lastTimestamp || a.discipline.localeCompare(b.discipline,'pt-BR'));
             } else {
-                candidates.sort((a,b)=>a.rank-b.rank || a.pct-b.pct || Number(!!a.lastDate)-Number(!!b.lastDate) || a.lastTimestamp-b.lastTimestamp || a.discipline.localeCompare(b.discipline,'pt-BR'));
+                candidates.sort((a,b) => a.rank-b.rank || a.pct-b.pct || Number(!!a.lastDate)-Number(!!b.lastDate) || a.lastTimestamp-b.lastTimestamp || a.discipline.localeCompare(b.discipline,'pt-BR'));
             }
-            return candidates[0]||null;
+            return candidates;
+        }
+        function getNextStudyRecommendation() {
+            return getStudySuggestionCandidates()[0] || null;
         }
         function applyStudyRecommendation() {
             const item=getNextStudyRecommendation();
@@ -1051,6 +1071,7 @@
                 card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')}</div></div></div><div class="text-right shrink-0 min-w-[64px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${duration} h</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
             });
+            renderStudySuggestionPanel();
             const recommendation=getNextStudyRecommendation();
             const text=document.getElementById('next-study-recommendation-text');
             const button=document.getElementById('use-study-recommendation');
@@ -1058,12 +1079,37 @@
             if(button) button.disabled=!recommendation;
             updateSuggestionModeHelp();
         }
+        function renderStudySuggestionPanel() {
+            const container = document.getElementById('next-study-container');
+            const badge = document.getElementById('suggestion-mode-badge');
+            if (!container) return;
+            container.innerHTML = '';
+            const mode = getSuggestionMode();
+            const labels = {priority_first:'Prioridade primeiro', priority_progress:'Prioridade + progresso', priority_date:'Prioridade + data'};
+            if (badge) badge.textContent = labels[mode] || labels.priority_progress;
+            const suggestions = getStudySuggestionCandidates().slice(0,4);
+            if (!suggestions.length) {
+                container.innerHTML = '<div class="rounded-xl border border-dashed border-emerald-200 dark:border-slate-600 p-5 text-center"><i class="fa-solid fa-check-circle text-2xl text-emerald-500"></i><p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mt-2">Todas as disciplinas estão concluídas</p><p class="text-[11px] text-slate-500 mt-1">Faça revisões e simulados para consolidar o conteúdo.</p></div>';
+                return;
+            }
+            suggestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'next-study-card flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
+                const colorStyle = 'color:' + (getPrioritySettings()[item.priority]?.color || '#64748b');
+                const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) : 'Ainda não estudada';
+                card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.pending} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div></div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
+                const button = card.querySelector('button');
+                if (button) button.addEventListener('click', () => openDisciplineInCronograma(item.discipline));
+                container.appendChild(card);
+            });
+        }
         function openDisciplineInCronograma(discipline) {
-            switchTab('cronograma');
-            const select=document.getElementById('filter-discipline');
-            select.value=discipline;
-            document.getElementById('filter-priority').value='all';
-            renderCronograma();
+            switchTab('registro');
+            const select = document.getElementById('reg-discipline');
+            if (select) {
+                select.value = discipline;
+                updateRegTopics();
+            }
             window.scrollTo({top:0,behavior:'smooth'});
         }
         function escapeHtml(value) {
@@ -1104,7 +1150,7 @@
                         const u=userProgress.find(x=>x.id===t.id)||t;
                         const itemPct=u.completed?100:((Number(u.hours)||0)>0?Math.min(90,Math.round((Number(u.hours)||0)/Math.max(Number(t.hours)||1,1)*50)):0);
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
-                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${(Number(u.hours)||0).toFixed(1)} h</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
+                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${(Number(u.hours)||0).toFixed(1)} h</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
                     inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${hours.toFixed(1)} h</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });
@@ -1114,63 +1160,9 @@
             });
         }
 
-        // Renderização do Cronograma & Prioridades com Filtros e KPIs Reativos
+        // Atualiza os KPIs e os painéis de acompanhamento. A tabela extensa foi removida da interface.
         function renderCronograma() {
-            const tbody = document.getElementById('cronograma-tbody');
-            tbody.innerHTML = '';
-
-            const priorityFilter = document.getElementById('filter-priority').value;
-            const disciplineFilter = document.getElementById('filter-discipline').value;
-
-            let list = [...masterEditalData];
-            list.sort((a, b) => getPriorityWeight(a.priority) - getPriorityWeight(b.priority));
-
-            let filteredList = list.filter(item => {
-                let matchPriority = (priorityFilter === 'all' || item.priority === priorityFilter);
-                let matchDiscipline = (disciplineFilter === 'all' || item.discipline === disciplineFilter);
-                return matchPriority && matchDiscipline;
-            });
-
-            filteredList.forEach(item => {
-                const userItem = userProgress.find(u => u.id === item.id);
-                const isCompleted = userItem ? userItem.completed : false;
-                const hours = userItem ? userItem.hours : 0;
-                const questions = userItem ? userItem.questions : 0;
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-900/30 transition';
-
-                const priorityClass = item.priority === 'Vermelha' ? 'priority-red' : item.priority === 'Amarela' ? 'priority-yellow' : 'priority-green';
-
-                tr.innerHTML = `
-                    <td class="p-3.5 text-center">
-                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleItem('${item.id}')" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
-                    </td>
-                    <td class="p-3.5">
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border ${priorityClass}">${item.priority}</span>
-                    </td>
-                    <td class="p-3.5 text-xs font-bold text-blue-600 dark:text-blue-400">
-                        ${item.discipline}
-                    </td>
-                    <td class="p-3.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        ${item.topic}
-                    </td>
-                    <td class="p-3.5 text-xs text-slate-600 dark:text-slate-300">
-                        ${item.subtopic}
-                    </td>
-                    <td class="p-3.5 text-center font-mono text-xs text-slate-500">${item.weight}</td>
-                    <td class="p-3.5 text-center font-mono text-xs font-bold">${hours.toFixed(1)}h</td>
-                    <td class="p-3.5 text-center font-mono text-xs font-bold text-amber-600">${questions || 0}</td>
-                    <td class="p-3.5 text-center">
-                        <button onclick="openModal('${item.id}')" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition" title="Anotações">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            updateStats(filteredList, disciplineFilter);
+            updateStats(masterEditalData, 'all');
             renderPriorityDisciplineProgress();
             renderRecentRotation();
         }
@@ -1236,7 +1228,7 @@
 
             // Rodapé com KPIs agrupados da disciplina filtrada
             const footerDiv = document.getElementById('footer-discipline-kpis');
-            if (disciplineFilter !== 'all') {
+            if (footerDiv && disciplineFilter !== 'all') {
                 const discTopics = masterEditalData.filter(i => i.discipline === disciplineFilter);
                 let discH = 0, discQ = 0, discR = 0, discDone = 0;
                 discTopics.forEach(t => {
@@ -1259,7 +1251,7 @@
                 `;
                 footerDiv.classList.remove('hidden');
                 footerDiv.classList.add('flex');
-            } else {
+            } else if (footerDiv) {
                 footerDiv.classList.remove('flex');
                 footerDiv.classList.add('hidden');
             }
@@ -1484,6 +1476,7 @@
 
             updateEditalTopicsFilter();
             renderEditalVerticalizado();
+            renderSyllabusManager();
         }
 
         function updateEditalTopicsFilter() {
@@ -1771,27 +1764,194 @@
           const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise;let out='';
           for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const c=await page.getTextContent();out+=c.items.map(x=>x.str).join(' ')+'\\n';if(out.length>90000)break;}return out;
         }
-        async function importSyllabusFile(){
-          const f=document.getElementById('edital-file').files[0];if(!f)return showCustomDialog('Selecione um arquivo','Escolha uma planilha ou arquivo primeiro.');
+        // Cadastro manual e importação estruturada. Cada linha representa um item rastreável de estudo.
+        let _editingSyllabusItemId = null;
+        function normalizeSyllabusKey(value){
+          return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+        }
+        function getSyllabusPriority(value){
+          const v=normalizeSyllabusKey(value);
+          if(['vermelha','vermelho','alta','high','red','urgente'].includes(v)) return 'Vermelha';
+          if(['verde','green','baixa','low'].includes(v)) return 'Verde';
+          if(['amarela','amarelo','media','medio','medium','moderada','moderado','yellow'].includes(v)) return 'Amarela';
+          return ['Vermelha','Amarela','Verde'].includes(String(value))?String(value):'Amarela';
+        }
+        function parseSpreadsheetNumber(value){
+          if(typeof value==='number' && Number.isFinite(value)) return value;
+          let t=String(value??'').trim().replace(/\s/g,''); if(!t) return null;
+          if(t.includes(',') && t.includes('.')) t=t.lastIndexOf(',')>t.lastIndexOf('.')?t.replace(/\./g,'').replace(',','.'):t.replace(/,/g,'');
+          else if(t.includes(',')) t=t.replace(',','.');
+          const n=Number(t);return Number.isFinite(n)?n:null;
+        }
+        function clearManualSyllabusForm(){
+          _editingSyllabusItemId=null;
+          ['manual-discipline','manual-topic','manual-subtopic','manual-weight'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+          const pri=document.getElementById('manual-priority');if(pri)pri.value='Amarela';
+          const btn=document.getElementById('manual-save-btn');if(btn)btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i>Adicionar item';
+          const status=document.getElementById('manual-syllabus-form-status');if(status)status.textContent='Novo item: informe disciplina e tópico; o subtópico é opcional.';
+        }
+        function editSyllabusItem(index){
+          const item=masterEditalData[index];if(!item)return;
+          _editingSyllabusItemId=item.id;
+          document.getElementById('manual-discipline').value=item.discipline||'';
+          document.getElementById('manual-topic').value=item.topic||'';
+          document.getElementById('manual-subtopic').value=item.subtopic||'';
+          document.getElementById('manual-priority').value=getSyllabusPriority(item.priority);
+          document.getElementById('manual-weight').value=item.weight||'';
+          document.getElementById('manual-save-btn').innerHTML='<i class="fa-solid fa-floppy-disk mr-1"></i>Salvar alteração';
+          document.getElementById('manual-syllabus-form-status').textContent='Editando item existente. O histórico, as horas, as questões, as revisões e a conclusão serão preservados.';
+          document.getElementById('manual-syllabus-form').scrollIntoView({behavior:'smooth',block:'center'});
+        }
+        function saveManualSyllabusItem(){
+          const discipline=document.getElementById('manual-discipline').value.trim();
+          const topic=document.getElementById('manual-topic').value.trim();
+          const subtopic=document.getElementById('manual-subtopic').value.trim();
+          const priority=getSyllabusPriority(document.getElementById('manual-priority').value);
+          const weight=document.getElementById('manual-weight').value.trim();
+          if(!discipline||!topic)return showCustomDialog('Campos obrigatórios','Preencha a disciplina e o tópico. O subtópico pode ficar em branco.');
+          const key=[discipline,topic,subtopic].map(normalizeSyllabusKey).join('|');
+          const duplicate=masterEditalData.find(x=>[x.discipline,x.topic,x.subtopic].map(normalizeSyllabusKey).join('|')===key&&x.id!==_editingSyllabusItemId);
+          if(duplicate)return showCustomDialog('Item já cadastrado','Essa combinação de disciplina, tópico e subtópico já existe. Edite o item existente na lista abaixo.');
+          const wasEditing=!!_editingSyllabusItemId;
+          if(_editingSyllabusItemId){
+            const idx=masterEditalData.findIndex(x=>x.id===_editingSyllabusItemId);
+            if(idx<0){clearManualSyllabusForm();return showCustomDialog('Item não encontrado','O item mudou desde que o formulário foi aberto. Selecione-o novamente para editar.');}
+            const old=masterEditalData[idx];
+            masterEditalData[idx]={...old,discipline,topic,subtopic,priority,weight};
+            const pidx=userProgress.findIndex(x=>x.id===old.id);
+            if(pidx>=0)userProgress[pidx]={...userProgress[pidx],discipline,topic,subtopic,priority,weight};
+            else userProgress.push({...masterEditalData[idx]});
+            const sessionMatch=studySessions.filter(x=>x.itemId===old.id);
+            sessionMatch.forEach(x=>{ if(x.discipline===old.discipline&&x.topic===old.topic&&x.subtopic===old.subtopic){x.discipline=discipline;x.topic=topic;x.subtopic=subtopic;} });
+          }else{
+            const item={id:'manual_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8),discipline,topic,subtopic,priority,weight,hours:0,questions:0,reviews:0,completed:false,notes:''};
+            masterEditalData.push(item);userProgress.push({...item});
+          }
+          saveData();clearManualSyllabusForm();refreshSyllabusViews();
+          showCustomDialog('Conteúdo salvo',wasEditing?'As alterações foram salvas.':'O item foi cadastrado.');
+        }
+        function deleteSyllabusItem(index){
+          const item=masterEditalData[index];if(!item)return;
+          if(!confirm('Excluir este tópico/subtópico do edital? O registro de estudo associado deixará de aparecer no progresso; o histórico das sessões anteriores será preservado.'))return;
+          masterEditalData=masterEditalData.filter(x=>x.id!==item.id);
+          userProgress=userProgress.filter(x=>x.id!==item.id);
+          if(_editingSyllabusItemId===item.id)clearManualSyllabusForm();
+          saveData();refreshSyllabusViews();
+        }
+        function refreshSyllabusViews(){
+          initRegistrationForm();initCronogramaFilters();initEditalFilters();
+          renderPriorityDisciplineProgress();renderRecentRotation();renderDashboard();renderSessionsList();renderSyllabusManager();applyPriorityColors();
+        }
+        function renderSyllabusManager(){
+          const listEl=document.getElementById('manual-syllabus-list');if(!listEl)return;
+          const search=(document.getElementById('manual-list-search')?.value||'').trim().toLocaleLowerCase('pt-BR');
+          const filter=document.getElementById('manual-list-discipline')?.value||'all';
+          const allDisciplines=[...new Set(masterEditalData.map(x=>String(x.discipline||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+          const listFilter=document.getElementById('manual-list-discipline');
+          if(listFilter){const prior=listFilter.value||'all';listFilter.innerHTML='<option value="all">Todas as disciplinas</option>'+allDisciplines.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');listFilter.value=allDisciplines.includes(prior)?prior:'all';}
+          const datalist=document.getElementById('manual-discipline-options');if(datalist)datalist.innerHTML=allDisciplines.map(d=>`<option value="${escapeHtml(d)}"></option>`).join('');
+          const count=document.getElementById('manual-syllabus-count');if(count)count.textContent=`(${masterEditalData.length} itens)`;
+          let matches=masterEditalData.map((item,index)=>({...item,_index:index})).filter(x=>filter==='all'||x.discipline===filter);
+          if(search)matches=matches.filter(x=>[x.discipline,x.topic,x.subtopic].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(search)));
+          if(!matches.length){listEl.innerHTML='<p class="rounded-lg border border-dashed border-slate-300 p-4 text-center text-xs text-slate-500">Nenhum item encontrado com os filtros informados.</p>';return;}
+          const grouped=new Map();matches.forEach(x=>{if(!grouped.has(x.discipline))grouped.set(x.discipline,[]);grouped.get(x.discipline).push(x);});
+          listEl.innerHTML=[...grouped.entries()].map(([disc,items])=>`<details class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"><summary class="cursor-pointer bg-slate-50 dark:bg-slate-900 px-3 py-3 text-sm font-bold text-slate-800 dark:text-slate-100">${escapeHtml(disc)} <span class="ml-1 text-xs font-normal text-slate-500">${items.length} itens</span></summary><div class="p-2 space-y-2">${items.map(x=>`<div class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 flex flex-col sm:flex-row sm:items-center gap-2"><div class="min-w-0 flex-1"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(x.topic||'Tópico sem nome')}</div><div class="text-xs text-slate-600 dark:text-slate-300 mt-1">${escapeHtml(x.subtopic||'Sem subtópico cadastrado')}</div><div class="text-[10px] text-slate-500 mt-1">Prioridade: ${escapeHtml(getPriorityLabel(x.priority||'Amarela'))}${x.weight?' · Peso: '+escapeHtml(x.weight):''}</div></div><div class="flex gap-2 shrink-0"><button type="button" onclick="editSyllabusItem(${x._index})" class="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800"><i class="fa-solid fa-pen mr-1"></i>Editar</button><button type="button" onclick="deleteSyllabusItem(${x._index})" class="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800"><i class="fa-solid fa-trash mr-1"></i>Excluir</button></div></div>`).join('')}</div></details>`).join('');
+        }
+        function downloadSyllabusTemplate(){
+          if(!window.XLSX)return showCustomDialog('Modelo indisponível','A biblioteca de planilhas não carregou. Confira sua conexão e tente novamente.');
+          const rows=[
+            ['Disciplina','Tópico','Subtópico','Prioridade','Peso edital','Horas estudadas','Questões resolvidas'],
+            ['Noções de AFO','Orçamento Público','Conceito','Vermelha','5 questões','',''],
+            ['Noções de AFO','Orçamento Público','Princípios orçamentários','Vermelha','5 questões','',''],
+            ['Noções de AFO','Orçamento Público','Ciclo orçamentário','Vermelha','5 questões','',''],
+            ['Noções de AFO','Orçamento-Programa','Conceitos e objetivos','Amarela','5 questões','',''],
+            ['Noções de AFO','Receita e Despesa Orçamentária','Etapas, estágios, classificação e restos a pagar','Amarela','5 questões','','']
+          ];
+          const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(rows);
+          ws['!cols']=[{wch:32},{wch:34},{wch:60},{wch:18},{wch:18},{wch:18},{wch:20}];
+          XLSX.utils.book_append_sheet(wb,ws,'Edital');
+          const guide=XLSX.utils.aoa_to_sheet([
+            ['COMO PREENCHER O MODELO'],
+            ['Uma linha por tópico ou subtópico. Repita Disciplina e Tópico para todos os subtópicos daquele tópico.'],
+            ['Para tópico sem subdivisões, preencha Disciplina e Tópico e deixe Subtópico em branco.'],
+            ['Prioridade aceita: Vermelha/Alta, Amarela/Média ou Verde/Baixa.'],
+            ['Peso edital é informativo, por exemplo “5 questões”.'],
+            ['Horas estudadas e Questões resolvidas são opcionais; na atualização de itens existentes, os campos vazios não apagam o progresso.'],
+            ['Mantenha os nomes dos cabeçalhos da primeira linha. Exclua as linhas de exemplo antes de usar, se não forem pertinentes.']
+          ]);
+          guide['!cols']=[{wch:120}];XLSX.utils.book_append_sheet(wb,guide,'Instruções');
+          XLSX.writeFile(wb,'Modelo_Importacao_Edital_Planejador.xlsx');
+        }
+        async function importManualSyllabusFile(){
+          const file=document.getElementById('manual-import-file')?.files?.[0];if(!file)return showCustomDialog('Selecione uma planilha','Escolha um arquivo Excel, CSV ou JSON.');
           try{
             let rows=[];
-            if(f.name.toLowerCase().endsWith('.pdf')){const text=await extractPdfText(f);document.getElementById('ai-results').textContent='Texto extraído do PDF ('+text.length+' caracteres). Agora clique em Analisar edital com IA.';window._editalText=text;return;}
-            if(f.name.toLowerCase().endsWith('.json')){const obj=JSON.parse(await f.text());rows=Array.isArray(obj)?obj:(obj.topics||obj.data||[]);}
-            else {const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});}
-            const normalized=rows.map((r,i)=>{const get=(...keys)=>{const k=Object.keys(r).find(k=>keys.includes(k.toLowerCase().trim()));return k?r[k]:'';};
-              return {id:String(get('id')||('imp_'+Date.now()+'_'+i)),discipline:String(get('disciplina','discipline','matéria','materia')||'Disciplina não informada'),topic:String(get('tópico','topico','topic')||'Tópico não informado'),subtopic:String(get('subtópico','subtopico','subtopic','assunto')||''),priority:String(get('prioridade','priority')||'Amarela'),weight:String(get('peso','weight','questões','questoes')||''),hours:Number(get('horas','hours')||0),questions:Number(get('questões realizadas','questoes realizadas','questions')||0),reviews:0,completed:false,notes:''};});
-            if(!normalized.length)throw new Error('Não encontrei linhas na primeira aba.');
-            const mode=confirm('OK = substituir o edital atual. Cancelar = adicionar ao edital atual.');
-            if(mode)masterEditalData=normalized;else masterEditalData=masterEditalData.concat(normalized);
-            userProgress=masterEditalData.map(x=>({...x,completed:!!x.completed}));saveData();initCronogramaFilters();initEditalFilters();
-            document.getElementById('ai-results').textContent='Importação concluída: '+normalized.length+' linhas processadas.';
-          }catch(e){showCustomDialog('Erro ao importar',e.message);}
+            const name=file.name.toLowerCase();
+            if(name.endsWith('.json')){const obj=JSON.parse(await file.text());rows=Array.isArray(obj)?obj:(obj.rows||obj.topics||obj.data||[]);}
+            else{
+              if(!window.XLSX)throw new Error('A biblioteca Excel não carregou. Verifique a conexão e recarregue a página.');
+              const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+              // Lê a primeira aba que contenha o cabeçalho Disciplina, ignorando uma aba de instruções, se houver.
+              for(const sheetName of wb.SheetNames){
+                const candidate=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:''});
+                if(candidate.length&&candidate.some(r=>Object.keys(r).some(k=>normalizeSyllabusKey(k)==='disciplina'))){rows=candidate;break;}
+              }
+              if(!rows.length&&wb.SheetNames.length)rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+            }
+            if(!Array.isArray(rows)||!rows.length)throw new Error('Nenhuma linha de dados foi encontrada. Confira se a primeira linha contém os cabeçalhos.');
+            const getRaw=(r,aliases)=>{const found=Object.keys(r).find(k=>aliases.includes(normalizeSyllabusKey(k)));return found===undefined?undefined:r[found];};
+            const normalized=[];let skipped=0;const stamp=Date.now();
+            rows.forEach((r,i)=>{
+              const discipline=String(getRaw(r,['disciplina','materia','subject'])??'').trim();
+              const topic=String(getRaw(r,['topico','topic','assunto'])??'').trim();
+              const subVal=getRaw(r,['subtopico','subtopic','subitem','subassunto','conteudoespecifico']);
+              const subtopic=String(subVal??'').trim();
+              if(!discipline||!topic){skipped++;return;}
+              const priority=getSyllabusPriority(getRaw(r,['prioridade','priority'])??'Amarela');
+              const weight=String(getRaw(r,['pesoedital','peso','weight','quantidadedequestoesnoedital','questoesnoedital'])??'').trim();
+              const hoursVal=getRaw(r,['horasestudadas','horas','hours']);
+              const questionsVal=getRaw(r,['questoesresolvidas','questoesrealizadas','questoes','questions']);
+              const hours=parseSpreadsheetNumber(hoursVal);const questions=parseSpreadsheetNumber(questionsVal);
+              normalized.push({id:'excel_'+stamp.toString(36)+'_'+i,discipline,topic,subtopic,priority,weight,hours:hours??0,questions:questions??0,reviews:0,completed:false,notes:'',_hasHours:hours!==null,_hasQuestions:questions!==null});
+            });
+            if(!normalized.length)throw new Error('Não encontrei linhas válidas. Cada linha precisa ter Disciplina e Tópico; Subtópico é opcional.');
+            const mode=document.getElementById('manual-import-mode').value;
+            if(mode==='replace'&&!confirm('Substituir o edital atual por '+normalized.length+' itens? Esta opção reinicia o progresso e não pode ser desfeita automaticamente.'))return;
+            const keyOf=x=>[x.discipline,x.topic,x.subtopic].map(normalizeSyllabusKey).join('|');
+            if(mode==='replace'){
+              masterEditalData=normalized.map(({_hasHours,_hasQuestions,...x})=>x);
+              userProgress=masterEditalData.map(x=>({...x}));
+            }else{
+              const existingByKey=new Map(masterEditalData.map((x,i)=>[keyOf(x),{x,i}]));
+              const newRows=[];const incomingNewByKey=new Map();
+              normalized.forEach(({_hasHours,_hasQuestions,...incoming})=>{
+                const key=keyOf(incoming);const existing=existingByKey.get(key);
+                if(existing){
+                  Object.assign(masterEditalData[existing.i],{priority:incoming.priority,weight:incoming.weight});
+                  const progress=userProgress.find(x=>x.id===existing.x.id);
+                  if(progress){Object.assign(progress,{discipline:incoming.discipline,topic:incoming.topic,subtopic:incoming.subtopic,priority:incoming.priority,weight:incoming.weight});if(_hasHours)progress.hours=incoming.hours;if(_hasQuestions)progress.questions=incoming.questions;}
+                  if(_hasHours)masterEditalData[existing.i].hours=incoming.hours;
+                  if(_hasQuestions)masterEditalData[existing.i].questions=incoming.questions;
+                }else if(incomingNewByKey.has(key)){
+                  const n=newRows[incomingNewByKey.get(key)];n.priority=incoming.priority;n.weight=incoming.weight;
+                  if(_hasHours)n.hours=incoming.hours;if(_hasQuestions)n.questions=incoming.questions;
+                }else{
+                  const n={...incoming};incomingNewByKey.set(key,newRows.length);newRows.push(n);userProgress.push({...n});
+                }
+              });
+              masterEditalData=masterEditalData.concat(newRows);
+            }
+            saveData();refreshSyllabusViews();
+            const inp=document.getElementById('manual-import-file');if(inp)inp.value='';
+            showCustomDialog('Importação concluída',`${normalized.length} linhas válidas processadas.${skipped?' '+skipped+' linhas ignoradas por falta de disciplina ou tópico.':''} ${mode==='merge'?'Itens existentes foram atualizados sem apagar o progresso.':'O edital foi substituído.'}`);
+          }catch(e){showCustomDialog('Erro ao importar estrutura',e.message||String(e));}
         }
+
         async function analyzeEditalAI(){
           const key=localStorage.getItem('tce_gemini_key')||document.getElementById('gemini-key').value.trim();
           if(!key)return showCustomDialog('Configure a IA','Abra Configurações, informe sua chave Gemini e clique em Guardar chave.');
           let text=window._editalText||'';
-          const f=document.getElementById('edital-file').files[0];
+          const f=document.getElementById('ai-edital-file').files[0];
           const out=document.getElementById('ai-results');
           try{
             if(!text){
@@ -1806,8 +1966,8 @@
             }
             if(!text.trim())throw new Error('Não foi possível extrair texto do arquivo. Se for PDF digitalizado como imagem, será necessário OCR.');
             out.textContent='Analisando edital com IA…';
-            const prompt='Analise o texto de edital de concurso abaixo. Retorne SOMENTE JSON válido com as chaves: concurso, banca, datas_importantes (array de {data,evento}), grupos_prova (array de {grupo,quantidade_questoes,peso}), disciplinas (array de {disciplina,topicos (array de strings),quantidade_questoes,peso}), observacoes. Não invente informação: use null ou liste como não informado quando ausente. Texto: '+text.slice(0,85000);
-            const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json'}})});
+            const prompt='Analise o texto do edital abaixo e devolva SOMENTE JSON válido neste formato: {"concurso":string|null,"banca":string|null,"datas_importantes":[{"data":string|null,"evento":string}],"grupos_prova":[{"grupo":string,"quantidade_questoes":number|null,"peso":string|null}],"disciplinas":[{"disciplina":string,"peso":string|null,"quantidade_questoes":number|null,"topicos":[{"topico":string,"subtopicos":[string]}]}],"observacoes":[string]}. REGRAS: preserve a hierarquia disciplina > tópico > subtópico; extraia todos os itens do conteúdo programático que estiverem no texto, sem resumir listas longas em um único tópico genérico; distribua cada item no tópico e subtópico adequados; quando houver tópico sem subdivisão, use subtopicos:[]; mantenha a numeração original quando existir; não crie conteúdo que não conste no documento; se faltar informação, use null ou array vazio. Texto do edital: '+text.slice(0,85000);
+            const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json'}})});
             const j=await resp.json();if(!resp.ok)throw new Error(j.error?.message||'Falha na API Gemini.');
             const result=j.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';const parsed=JSON.parse(result);
             out.innerHTML='<h4 class="font-bold mb-2">Resultado da análise (confira com o edital oficial)</h4><pre class="whitespace-pre-wrap text-xs bg-slate-50 dark:bg-slate-900 p-3 rounded-lg overflow-auto max-h-96"></pre><button class="mt-3 px-3 py-2 rounded bg-emerald-700 text-white text-xs" onclick="applyAIAnalysis()">Aplicar disciplinas e tópicos ao edital</button>';
@@ -1816,10 +1976,23 @@
         }
         function applyAIAnalysis(){
           const a=window._aiParsed;if(!a||!Array.isArray(a.disciplinas))return;
-          const rows=[];a.disciplinas.forEach(d=>(d.topicos||[]).forEach((t,i)=>rows.push({id:'ai_'+Date.now()+'_'+rows.length,discipline:d.disciplina||'Disciplina',topic:t,subtopic:'',priority:'Amarela',weight:d.peso||'',hours:0,questions:0,reviews:0,completed:false,notes:''})));
-          if(!rows.length)return showCustomDialog('Sem tópicos','A análise não retornou tópicos aplicáveis.');
-          masterEditalData=rows;userProgress=rows.map(x=>({...x}));saveData();initCronogramaFilters();initEditalFilters();
-          showCustomDialog('Edital aplicado',rows.length+' tópicos foram importados. Confira e corrija qualquer interpretação da IA.');
+          const rows=[];const stamp=Date.now();
+          a.disciplinas.forEach(d=>{
+            const discipline=String(d.disciplina||d.nome||'Disciplina').trim();
+            (d.topicos||d.topics||[]).forEach(t=>{
+              const isObj=t&&typeof t==='object'&&!Array.isArray(t);
+              const topic=String(isObj?(t.topico||t.tópico||t.nome||t.topic||''):(t||'')).trim();
+              if(!topic)return;
+              const subtopics=isObj?(t.subtopicos||t.subtópicos||t.subtopics||t.itens||[]):[];
+              const cleanSubs=Array.isArray(subtopics)?subtopics.map(x=>String(x&&typeof x==='object'?(x.subtopico||x.nome||x.texto||x.item||''):x||'').trim()).filter(Boolean):[];
+              const values=cleanSubs.length?cleanSubs:[''];
+              values.forEach(subtopic=>rows.push({id:'ai_'+stamp.toString(36)+'_'+rows.length,discipline,topic,subtopic,priority:getSyllabusPriority(d.prioridade||d.priority||'Amarela'),weight:String(d.peso||d.weight||''),hours:0,questions:0,reviews:0,completed:false,notes:''}));
+            });
+          });
+          if(!rows.length)return showCustomDialog('Sem tópicos','A análise não retornou tópicos aplicáveis. Revise a análise ou use o cadastro manual/importação Excel.');
+          if(!confirm('Aplicar '+rows.length+' itens extraídos pela IA e substituir o edital atual? Confira o resultado com o documento oficial.'))return;
+          masterEditalData=rows;userProgress=rows.map(x=>({...x}));saveData();refreshSyllabusViews();
+          showCustomDialog('Edital aplicado',rows.length+' itens (tópicos/subtópicos) foram importados. Confira e corrija qualquer interpretação da IA.');
         }
 
         // Supabase: mantém o funcionamento local e sincroniza os dados do usuário autenticado.
