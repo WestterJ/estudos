@@ -54,3 +54,10 @@ CHECKLIST APÓS PUBLICAR
 [ ] Sincronização: baixar os dados existentes antes de enviar qualquer cópia local diferente.
 [ ] Instalação PWA no celular/desktop.
 [ ] Conferência das políticas RLS da tabela study_planner_data.
+
+
+VERSÃO V3 - ATUALIZAÇÃO DE 16/10/2026
+- Removido o painel grande “Sugestões para os próximos estudos” da tela inicial.
+- Mantido apenas um indicador compacto da próxima recomendação no formulário de registro, com botão para selecionar a disciplina.
+- Adicionada estratégia “Prioridade + data”: dentro de cada prioridade, recomenda primeiro as disciplinas há mais tempo sem estudo; disciplinas nunca estudadas vêm antes.
+- Atualizado o cache do service worker para forçar a atualização do PWA.
