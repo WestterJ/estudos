@@ -1,12 +1,20 @@
-PLANEJADOR DE ESTUDOS — PWA COM LOGIN GOOGLE + LOGIN TRADICIONAL
+PLANEJADOR DE ESTUDOS — PWA V2 COM LOGIN GOOGLE + LOGIN TRADICIONAL
 
 CONTEÚDO DO PACOTE
-- index.html: aplicativo Planejador de Estudos baseado na versão V6.
+- index.html: Planejador de Estudos PWA V2 (painel de sugestões por prioridade/progresso, grupos recolhíveis, registro de último salvamento e sem módulo Pomodoro).
 - manifest.webmanifest: configuração de instalação como PWA.
 - service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
 - CONFIGURAR_TABELA_SE_NECESSARIO.sql: SQL opcional, apenas se a tabela de estudos ainda não existir.
+
+MUDANÇAS DA V2
+- “Últimos estudos” e “Sugestões para os próximos estudos” ficam acima do progresso por prioridade/disciplina.
+- As seções de prioridade e disciplina começam recolhidas e podem ser abertas/fechadas.
+- Em Personalização, escolha a estratégia das sugestões: “Prioridade primeiro” ou “Prioridade + progresso”. A preferência é por concurso e acompanha a sincronização da nuvem.
+- O quadro fixo “Pesos & Questões” foi removido porque mostrava valores estáticos de uma prova e podia confundir em um aplicativo multi-concursos. O cronograma de datas continua no Dashboard.
+- O botão superior de armazenamento mostra somente “Nuvem” ou “Local” e a data/hora do último salvamento confirmado. Ao alterar dados com conta conectada, aparece “Local” até a sincronização com a nuvem ser confirmada.
+- O cache do service worker foi atualizado para forçar a instalação da versão V2 quando a nova publicação for carregada.
 
 PUBLICAR / INSTALAR
 1. Extraia o ZIP.

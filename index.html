@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Planejador de Estudos | Concursos</title>
+    <title>Planejador de Estudos | Concursos — V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -39,7 +39,8 @@
         .header-nav .tab-btn:hover{background:rgba(255,255,255,.20)!important}
         .header-nav .tab-btn.active-tab{background:var(--app-gold)!important;color:var(--app-navy)!important;border-color:var(--app-gold)!important}
         .quick-toolbar{background:#fff;border:1px solid var(--app-border);border-radius:14px;padding:10px 12px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 1px 3px #0f172a0a}
-        .cloud-indicator{display:inline-flex;align-items:center;gap:7px;border:1px solid;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;white-space:nowrap}
+        .cloud-indicator{display:inline-flex;align-items:center;gap:7px;border:1px solid;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700;white-space:nowrap;max-width:290px;overflow:hidden;text-overflow:ellipsis}
+        .cloud-indicator span{overflow:hidden;text-overflow:ellipsis}
         .cloud-indicator.local{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
         .cloud-indicator.cloud{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
         .cloud-indicator.error{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
@@ -48,7 +49,20 @@
         .dark .gauge:before{background:#1e293b}.dark .gauge span{color:#6ee7b7}.dark .priority-group,.dark .home-discipline-group,.dark .edital-group{background:#1e293b;border-color:#334155}.dark .priority-group-head{border-color:#334155}.dark .home-topic-row{border-color:#334155}.dark .quick-toolbar{background:#1e293b;border-color:#334155}.dark .quick-toolbar label{color:#cbd5e1}.dark .quick-toolbar input,.dark .quick-toolbar select{background:#0f172a;color:#f1f5f9;border-color:#475569}.dark .quick-toolbar .right-tools>button:not(.app-primary){background:#334155;color:#f8fafc}
         .gauge span{position:relative;z-index:1;font-size:12px;font-weight:800;color:#064e3b}
         .priority-group{border:1px solid var(--app-border);border-radius:15px;background:#fff;overflow:hidden}
-        .priority-group-head{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:800;border-bottom:1px solid #eef2f6}
+        .priority-group>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px}
+        .priority-group>summary::-webkit-details-marker{display:none}
+        .priority-group-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:800;border-bottom:1px solid #eef2f6}
+        .priority-group-head .priority-chevron{margin-left:auto;transition:transform .16s ease;flex:0 0 auto}
+        .priority-group[open]>.priority-group-head .priority-chevron{transform:rotate(90deg)}
+        .activity-panel{position:relative;overflow:hidden}
+        .activity-panel:before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:#2563eb}
+        .activity-panel.suggestions-panel:before{background:#059669}
+        .activity-panel-head{padding-bottom:10px;border-bottom:1px solid #eef2f6}
+        .dark .activity-panel-head{border-color:#334155}
+        .activity-count{font-size:10px;font-weight:800;border-radius:999px;padding:5px 9px;background:#eff6ff;color:#1d4ed8;white-space:nowrap}
+        .suggestions-count{background:#ecfdf5;color:#047857}
+        .recent-study-card,.next-study-card{transition:transform .12s ease,border-color .12s ease}
+        .recent-study-card:hover,.next-study-card:hover{transform:translateY(-1px);border-color:#94a3b8}
         .home-discipline-group{border:1px solid #e2e8f0;border-radius:13px;background:#fff;overflow:hidden}
         .home-discipline-group>summary{display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;list-style:none}
         .home-discipline-group>summary::-webkit-details-marker,.edital-group>summary::-webkit-details-marker{display:none}
@@ -191,10 +205,6 @@
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Dashboard & KPIs</span>
             </button>
-            <button onclick="switchTab('pomodoro')" id="tab-pomodoro" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-stopwatch"></i>
-                <span>Pomodoro</span>
-            </button>
             <button onclick="switchTab('personalizacao')" id="tab-personalizacao" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-sliders"></i><span>Personalização</span>
             </button>
@@ -319,6 +329,17 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><span class="activity-count">Recentes</span></div>
+                <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
+              </section>
+              <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p id="suggestion-panel-subtitle" class="text-[11px] text-slate-500 mt-1">Sugestões baseadas na estratégia configurada.</p></div><span class="activity-count suggestions-count">Próximos</span></div>
+                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
+              </section>
+            </div>
+
             <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
               <div class="flex items-start justify-between flex-wrap gap-2">
                 <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada disciplina para ver tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
@@ -326,17 +347,6 @@
               </div>
               <div id="priority-progress-container" class="space-y-3"></div>
             </section>
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <section class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="flex items-center justify-between gap-2"><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><span class="text-[10px] text-slate-400">Mais recentes primeiro</span></div>
-                <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-              <section class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="flex items-center justify-between gap-2"><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><span class="text-[10px] text-slate-400">Prioridade + progresso</span></div>
-                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-            </div>
 
 
 
@@ -528,7 +538,7 @@
                     </div>
                 </div>
 
-                <!-- Coluna Direita: Informações (Datas e Pesos/Questões) -->
+                <!-- Coluna Direita: Datas importantes do concurso -->
                 <div class="space-y-6">
                     <!-- Quadro de Datas Importantes -->
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
@@ -560,57 +570,9 @@
                         </ul>
                     </div>
 
-                    <!-- Quadro de Pesos e Quantidade de Questões -->
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                        <h4 class="font-bold text-sm flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
-                            <i class="fa-solid fa-scale-balanced"></i>
-                            <span id="contest-weights-title">Pesos & Questões (FCC)</span>
-                        </h4>
-                        <div id="contest-weight-details" class="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
-                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
-                                <p class="font-bold text-slate-800 dark:text-slate-200 mb-0.5">Conhecimentos Gerais (25 questões)</p>
-                                <p class="text-[11px] text-slate-500">Português (10 questões, peso 1) | RLM (10 questões, peso 1) | Legislação (5 questões, peso 1)</p>
-                            </div>
-                            <div class="p-2.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50">
-                                <p class="font-bold text-blue-700 dark:text-blue-300 mb-0.5">Conhecimentos Específicos (45 questões)</p>
-                                <p class="text-[11px] text-blue-600/80 dark:text-blue-400">Direito Adm., LRF, AFO, Contabilidade, Licitações, etc. (<strong>Peso 2</strong>)</p>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
-            </div>
-        </div>
-
-        <!-- ABA 5: POMODORO -->
-        <div id="content-pomodoro" class="tab-content hidden flex-1 flex flex-col items-center justify-center p-2">
-            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 max-w-md w-full text-center space-y-6">
-                <div class="flex justify-center space-x-2">
-                    <button onclick="setPomodoroMode('pomodoro')" id="pomo-btn-pomodoro" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition">Foco (25m)</button>
-                    <button onclick="setPomodoroMode('shortBreak')" id="pomo-btn-shortBreak" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 transition">Pausa (5m)</button>
-                    <button onclick="setPomodoroMode('longBreak')" id="pomo-btn-longBreak" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 transition">Pausa Longa (15m)</button>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Vincular ao Subtópico:</label>
-                    <select id="pomodoro-subject" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                        <!-- Preenchido via JS -->
-                    </select>
-                </div>
-
-                <div class="text-5xl sm:text-6xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400 font-mono py-2" id="pomo-timer-display">
-                    25:00
-                </div>
-
-                <div class="flex items-center justify-center space-x-3">
-                    <button onclick="togglePomodoro()" id="pomo-toggle-btn" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2">
-                        <i id="pomo-icon" class="fa-solid fa-play"></i>
-                        <span id="pomo-toggle-text">Iniciar Foco</span>
-                    </button>
-                    <button onclick="resetPomodoro()" class="p-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 transition" title="Reiniciar">
-                        <i class="fa-solid fa-rotate-right"></i>
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -627,6 +589,21 @@
               <button onclick="saveContestSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Salvar concurso</button>
               <button onclick="addContest()" class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-sm font-semibold">Criar outro concurso</button>
             </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
+            <div class="flex items-start gap-3 flex-wrap mb-3">
+              <div class="flex-1"><h3 class="font-bold"><i class="fa-solid fa-route mr-2 text-blue-600"></i>Estratégia das sugestões de estudo</h3><p class="text-xs text-slate-500 mt-1">Define como o painel inicial escolhe as disciplinas sugeridas. A configuração é individual por concurso.</p></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
+              <label class="block text-xs font-semibold">Ordem das próximas disciplinas
+                <select id="study-suggestion-mode" onchange="updateSuggestionModeHelp()" class="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:bg-slate-900 dark:border-slate-600">
+                  <option value="priority_first">Prioridade primeiro — concluir a prioridade mais alta antes de avançar</option>
+                  <option value="priority_progress">Prioridade + progresso — ordenar por prioridade, progresso e alternância</option>
+                </select>
+              </label>
+              <button onclick="saveSuggestionMode()" class="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar estratégia</button>
+            </div>
+            <p id="study-suggestion-help" class="text-xs text-slate-500 mt-3">No modo “Prioridade primeiro”, as sugestões ficam restritas à prioridade mais alta que ainda tenha tópicos pendentes.</p>
           </div>
           <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
             <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -727,7 +704,7 @@
           <input type="hidden" id="edit-session-id">
           <label class="span-3">Data<input id="edit-session-date" type="date" required class="mt-1 rounded-lg border p-2 text-sm"></label>
           <label class="span-4">Tipo de conteúdo<select id="edit-session-type1" class="mt-1 rounded-lg border p-2 text-sm"><option>Conhecimentos Específicos</option><option>Conhecimentos Gerais</option></select></label>
-          <label class="span-5">Tipo de estudo<select id="edit-session-type2" class="mt-1 rounded-lg border p-2 text-sm"><option>Estudo Teórico</option><option>Resolução de Questões</option><option>Revisão</option><option>Simulado</option><option>Estudo (Pomodoro)</option></select></label>
+          <label class="span-5">Tipo de estudo<select id="edit-session-type2" class="mt-1 rounded-lg border p-2 text-sm"><option>Estudo Teórico</option><option>Resolução de Questões</option><option>Revisão</option><option>Simulado</option></select></label>
           <label class="span-4">Disciplina<select id="edit-session-discipline" onchange="updateEditSessionTopics()" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
           <label class="span-8">Tópico e subtópico<select id="edit-session-item" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
           <label class="span-3">Duração (minutos)<input id="edit-session-minutes" type="number" min="1" required class="mt-1 rounded-lg border p-2 text-sm"></label>
@@ -915,7 +892,6 @@
             }
 
             if (tabId === 'dashboard') renderDashboard();
-            if (tabId === 'pomodoro') updatePomodoroSelect();
             if (tabId === 'registro') initRegistrationForm();
             if (tabId === 'edital') initEditalFilters();
             if (tabId === 'cronograma') initCronogramaFilters();
@@ -983,6 +959,34 @@
         function getSessionsNewestFirst() {
             return [...studySessions].sort((a,b) => parseBRDate(b.date) - parseBRDate(a.date));
         }
+        function getSuggestionMode() {
+            const value=localStorage.getItem('tce_'+activeContest+'_suggestion_mode');
+            return value==='priority_first' ? 'priority_first' : 'priority_progress';
+        }
+        function updateSuggestionModeHelp() {
+            const select=document.getElementById('study-suggestion-mode');
+            const help=document.getElementById('study-suggestion-help');
+            const subtitle=document.getElementById('suggestion-panel-subtitle');
+            if(!select) return;
+            const first=select.value==='priority_first';
+            const text=first
+              ? 'As sugestões ficam restritas à prioridade mais alta que ainda tenha tópicos pendentes. As prioridades inferiores só aparecem quando a atual estiver concluída.'
+              : 'A prioridade continua sendo o critério principal. Dentro dela, o app favorece disciplinas com menor progresso e evita sugerir repetidamente as que você estudou mais recentemente.';
+            if(help) help.textContent=text;
+            if(subtitle) subtitle.textContent=first?'Uma prioridade por vez':'Prioridade, progresso e alternância';
+        }
+        function saveSuggestionMode() {
+            const select=document.getElementById('study-suggestion-mode');
+            if(!select) return;
+            const mode=select.value==='priority_first'?'priority_first':'priority_progress';
+            localStorage.setItem('tce_'+activeContest+'_suggestion_mode',mode);
+            saveData();
+            updateSuggestionModeHelp();
+            renderRecentRotation();
+            showCustomDialog('Estratégia salva',mode==='priority_first'
+              ? 'As sugestões vão se concentrar na prioridade mais alta com assuntos pendentes até ela ser concluída.'
+              : 'As sugestões vão considerar prioridade, percentual de conclusão e disciplinas estudadas recentemente.');
+        }
         function renderRecentRotation() {
             const container = document.getElementById('recent-rotation-container');
             const nextContainer = document.getElementById('next-study-container');
@@ -992,47 +996,68 @@
 
             const sorted = getSessionsNewestFirst();
             const recentMap = new Map();
-            sorted.forEach(s => {
-                const key = s.discipline || 'Sem disciplina';
-                if (!recentMap.has(key)) recentMap.set(key, s);
+            sorted.forEach(session => {
+                const key = session.discipline || 'Sem disciplina';
+                if (!recentMap.has(key)) recentMap.set(key, session);
             });
             const recent = Array.from(recentMap.values()).slice(0, 5);
             if (!recent.length) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum estudo registrado. Use “Lançar estudo” para começar.</p>`;
-            } else recent.forEach(s => {
+                container.innerHTML = `<div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-5 text-center"><i class="fa-solid fa-book-open text-2xl text-slate-300"></i><p class="text-xs font-semibold text-slate-500 mt-2">Seu histórico começa aqui</p><p class="text-[11px] text-slate-400 mt-1">Use “Lançar estudo” para registrar a primeira sessão.</p></div>`;
+            } else recent.forEach((session,index) => {
                 const card = document.createElement('div');
-                card.className = 'flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-3';
-                card.innerHTML = `<div class="min-w-0"><div class="text-xs font-bold text-blue-700 dark:text-blue-300">${escapeHtml(s.discipline || 'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(s.topic || '')}${s.subtopic ? ' · ' + escapeHtml(s.subtopic) : ''}</div><div class="text-[10px] text-slate-400 mt-1">${escapeHtml(s.date || '')}</div></div><div class="text-right shrink-0"><div class="font-bold text-xs text-emerald-700">${((s.minutes||0)/60).toFixed(1)} h</div><div class="text-[10px] text-amber-700">${s.questions||0} ${(s.questions||0)===1?'questão':'questões'}</div></div>`;
+                card.className = 'recent-study-card flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-3';
+                const duration=((Number(session.minutes)||0)/60).toFixed(1);
+                const questions=Number(session.questions)||0;
+                card.innerHTML = `<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline || 'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(session.topic || 'Estudo registrado')}${session.subtopic ? ' · ' + escapeHtml(session.subtopic) : ''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date || '')}</div></div></div><div class="text-right shrink-0 min-w-[64px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${duration} h</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
             });
 
             if (nextContainer) {
-                const recentDisciplines = new Set(recent.slice(0,2).map(s => s.discipline));
-                const priorities = Object.fromEntries(Object.entries(getPrioritySettings()).map(([k,v])=>[k,100/(Number(v.weight)||1)]));
+                const recentDisciplines = new Set(recent.slice(0,2).map(session => session.discipline));
+                const prioritySettings=getPrioritySettings();
+                const priorityOrder=Object.keys(prioritySettings).sort((a,b)=>(Number(prioritySettings[b].weight)||1)-(Number(prioritySettings[a].weight)||1));
+                const priorityRank=Object.fromEntries(priorityOrder.map((priority,index)=>[priority,index]));
                 const grouped = new Map();
-                masterEditalData.forEach(t => {
-                    if (!grouped.has(t.discipline)) grouped.set(t.discipline, []);
-                    grouped.get(t.discipline).push(t);
+                masterEditalData.forEach(topic => {
+                    if (!grouped.has(topic.discipline)) grouped.set(topic.discipline, []);
+                    grouped.get(topic.discipline).push(topic);
                 });
-                const suggestions = [...grouped.entries()].map(([discipline, topics]) => {
-                    const vals = topics.map(t => userProgress.find(u=>u.id===t.id) || t);
-                    const done = vals.filter(u=>u.completed).length;
-                    const pct = topics.length ? Math.round(done/topics.length*100) : 0;
-                    const hours = vals.reduce((sum,u)=>sum+(Number(u.hours)||0),0);
-                    const questions = vals.reduce((sum,u)=>sum+(Number(u.questions)||0),0);
-                    const priority = topics.reduce((best,t)=>(priorities[t.priority]||4)<(priorities[best]||4)?t.priority:best, 'Verde');
-                    const notDone = topics.filter(t=>{const u=userProgress.find(x=>x.id===t.id);return !(u&&u.completed)}).length;
-                    return {discipline,topics,done,pct,hours,questions,priority,notDone,score:(priorities[priority]||100)+(pct*0.5)+(recentDisciplines.has(discipline)?35:0)};
-                }).filter(x=>x.notDone>0).sort((a,b)=>a.score-b.score).slice(0,4);
-                if (!suggestions.length) nextContainer.innerHTML = '<p class="text-xs text-emerald-700 py-4">Todas as disciplinas estão marcadas como concluídas. Faça revisões e simulados para consolidar o conteúdo.</p>';
-                suggestions.forEach(item=>{
+                let suggestions = [...grouped.entries()].map(([discipline,topics]) => {
+                    const vals=topics.map(topic=>userProgress.find(u=>u.id===topic.id)||topic);
+                    const done=vals.filter(value=>!!value.completed).length;
+                    const pct=topics.length?Math.round(done/topics.length*100):0;
+                    const hours=vals.reduce((sum,value)=>sum+(Number(value.hours)||0),0);
+                    const questions=vals.reduce((sum,value)=>sum+(Number(value.questions)||0),0);
+                    const pendingTopics=topics.filter(topic=>!(userProgress.find(u=>u.id===topic.id)||topic).completed);
+                    const pendingPriorities=pendingTopics.map(topic=>topic.priority||'Amarela');
+                    const priority=pendingPriorities.sort((a,b)=>(priorityRank[a]??99)-(priorityRank[b]??99))[0] || topics[0]?.priority || 'Amarela';
+                    const rank=priorityRank[priority]??99;
+                    const pending=pendingTopics.length;
+                    const lastSession=sorted.find(session=>session.discipline===discipline);
+                    return {discipline,topics,done,pct,hours,questions,priority,rank,pending,lastDate:lastSession?.date||'',recent:recentDisciplines.has(discipline)};
+                }).filter(item=>item.pending>0);
+
+                const mode=getSuggestionMode();
+                if(mode==='priority_first' && suggestions.length){
+                    const highestRank=Math.min(...suggestions.map(item=>item.rank));
+                    suggestions=suggestions.filter(item=>item.rank===highestRank)
+                      .sort((a,b)=>a.pct-b.pct || Number(a.recent)-Number(b.recent) || a.discipline.localeCompare(b.discipline,'pt-BR'));
+                } else {
+                    suggestions.sort((a,b)=>a.rank-b.rank || a.pct-b.pct || Number(a.recent)-Number(b.recent) || a.discipline.localeCompare(b.discipline,'pt-BR'));
+                }
+                const shown=suggestions.slice(0,4);
+                if (!shown.length) {
+                    nextContainer.innerHTML = '<div class="rounded-xl border border-emerald-200 dark:border-emerald-900 p-5 text-center bg-emerald-50/60 dark:bg-emerald-950/20"><i class="fa-solid fa-circle-check text-2xl text-emerald-600"></i><p class="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-2">Tudo concluído!</p><p class="text-[11px] text-slate-500 mt-1">Faça revisões e simulados para consolidar o conteúdo.</p></div>';
+                }
+                shown.forEach((item,index)=>{
                     const card=document.createElement('div');
-                    card.className='flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
-                    const color=''; const colorStyle='color:'+(getPrioritySettings()[item.priority]?.color||'#64748b');
-                    card.innerHTML=`<div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.notDone} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div></div><button onclick="openDisciplineInCronograma('${String(item.discipline).replace(/'/g, "\'")}')" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
+                    card.className='next-study-card flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
+                    const colorStyle='color:'+(prioritySettings[item.priority]?.color||'#64748b');
+                    card.innerHTML=`<div class="flex items-start gap-3 min-w-0"><div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 grid place-items-center text-xs font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.pending} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div>${item.lastDate?`<div class="text-[10px] text-slate-400 mt-1">Último estudo: ${escapeHtml(item.lastDate)}</div>`:'<div class="text-[10px] text-emerald-700 mt-1">Ainda não estudada</div>'}</div></div><button onclick="openDisciplineInCronograma('${String(item.discipline).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2"><i class="fa-solid fa-arrow-right mr-1"></i>Estudar</button>`;
                     nextContainer.appendChild(card);
                 });
             }
+            updateSuggestionModeHelp();
         }
         function openDisciplineInCronograma(discipline) {
             switchTab('cronograma');
@@ -1046,6 +1071,8 @@
             return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
         }
 
+        window._openHomePriorities = window._openHomePriorities instanceof Set ? window._openHomePriorities : new Set();
+        window._openHomeDisciplines = window._openHomeDisciplines instanceof Set ? window._openHomeDisciplines : new Set();
         function renderPriorityDisciplineProgress() {
             const container=document.getElementById('priority-progress-container');
             if(!container) return;
@@ -1062,7 +1089,7 @@
             priorityOrder.forEach(priority=>{
                 const priorityTopics=masterEditalData.filter(t=>(t.priority||'Amarela')===priority);
                 if(!priorityTopics.length) return;
-                const group=document.createElement('div');group.className='priority-group';
+                const group=document.createElement('div');group.className='priority-group-shell';
                 const met=priorityMeta[priority];
                 const discMap=new Map();priorityTopics.forEach(t=>{if(!discMap.has(t.discipline))discMap.set(t.discipline,[]);discMap.get(t.discipline).push(t)});
                 const completedPri=priorityTopics.filter(t=>{const u=userProgress.find(x=>x.id===t.id);return u&&u.completed}).length;
@@ -1078,11 +1105,12 @@
                         const u=userProgress.find(x=>x.id===t.id)||t;
                         const itemPct=u.completed?100:((Number(u.hours)||0)>0?Math.min(90,Math.round((Number(u.hours)||0)/Math.max(Number(t.hours)||1,1)*50)):0);
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
-                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${(Number(u.hours)||0).toFixed(1)} h</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="window._openHomeDiscipline='${escapeHtml(discipline)}';toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
+                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${(Number(u.hours)||0).toFixed(1)} h</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
-                    inner+=`<details class="home-discipline-group" ${window._openHomeDiscipline===discipline?'open':''} ontoggle="window._openHomeDiscipline=this.open?this.dataset.discipline:null" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${hours.toFixed(1)} h</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
+                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${hours.toFixed(1)} h</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });
-                group.innerHTML=`<div class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span></div><div class="p-2.5 space-y-2.5">${inner}</div>`;
+                const priorityIsOpen=window._openHomePriorities.has(priority);
+                group.innerHTML=`<details class="priority-group" data-priority="${priority}" ${priorityIsOpen?'open':''} ontoggle="if(!window._openHomePriorities)window._openHomePriorities=new Set();this.open?window._openHomePriorities.add(this.dataset.priority):window._openHomePriorities.delete(this.dataset.priority)"><summary class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span><i class="fa-solid fa-chevron-right priority-chevron"></i></summary><div class="p-2.5 space-y-2.5">${inner}</div></details>`;
                 container.appendChild(group);
             });
         }
@@ -1146,7 +1174,6 @@
             updateStats(filteredList, disciplineFilter);
             renderPriorityDisciplineProgress();
             renderRecentRotation();
-            saveData();
         }
 
         function toggleItem(id) {
@@ -1157,6 +1184,7 @@
                 userProgress.push(userItem);
             }
             userItem.completed = !userItem.completed;
+            saveData();
             renderCronograma();
         }
 
@@ -1577,7 +1605,7 @@
           }
           const cfg=contests[id]||{name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
           document.getElementById('contest-name').value=cfg.name;document.getElementById('contest-board').value=cfg.board;document.getElementById('contest-date').value=cfg.date;
-          initCronogramaFilters();initEditalFilters();renderSessionsList();updateContestHeader();applyPriorityColors();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();saveData();
+          initCronogramaFilters();initEditalFilters();renderSessionsList();updateContestHeader();applyPriorityColors();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();saveData();
           showCustomDialog('Concurso selecionado', 'Concurso ativo: '+cfg.name+'. O progresso é separado por concurso neste navegador.');
         }
         function saveContestSettings(){
@@ -1643,6 +1671,8 @@
 
         function renderCustomization(){
           renderPrioritySettings();
+          const modeSelect=document.getElementById('study-suggestion-mode');if(modeSelect)modeSelect.value=getSuggestionMode();
+          updateSuggestionModeHelp();
           const disciplines=[...new Set(masterEditalData.map(x=>String(x.discipline||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
           const saved=getDisciplineSettings();
           const ps=getPrioritySettings();
@@ -1797,6 +1827,7 @@
         let sbClient = null;
         let sbUser = null;
         let cloudSaveTimer = null;
+        let dataRevision = 0;
         const SB_TABLE = 'study_planner_data';
 
         function collectContestSnapshots() {
@@ -1809,10 +1840,11 @@
                         const id=key.slice('tce_contest_data_'.length);const snap=JSON.parse(localStorage.getItem(key));
                         snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||'{}');
                         snap.disciplineSettings=JSON.parse(localStorage.getItem('tce_'+id+'_discipline_settings')||'{}');
+                        snap.suggestionMode=localStorage.getItem('tce_'+id+'_suggestion_mode')||'priority_progress';
                         snapshots[id]=snap;
                     } catch(e) {}
                 }
-                snapshots[activeContest]={masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings()};
+                snapshots[activeContest]={masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode()};
             } catch(e) {}
             return snapshots;
         }
@@ -1850,17 +1882,47 @@
             }
         }
 
+        function formatSavedAt(value) {
+            if(!value) return 'ainda não salvo';
+            const date=new Date(value);
+            if(Number.isNaN(date.getTime())) return 'ainda não salvo';
+            return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+        }
+        function storageStatusKeys() {
+            const uid=sbUser&&sbUser.id;
+            return uid ? {
+                mode:'tce_last_saved_mode_'+uid,
+                local:'tce_last_local_saved_at_'+uid,
+                cloud:'tce_last_cloud_saved_at_'+uid
+            } : {mode:'tce_last_saved_mode_local',local:'tce_last_local_saved_at',cloud:null};
+        }
+        function recordLocalSave() {
+            const now=new Date().toISOString();
+            const keys=storageStatusKeys();
+            localStorage.setItem(keys.local,now);
+            localStorage.setItem(keys.mode,'Local');
+            return now;
+        }
+        function recordCloudSave(timestamp=new Date().toISOString()) {
+            if(!sbUser || !sbUser.id) return;
+            const keys=storageStatusKeys();
+            localStorage.setItem(keys.cloud,timestamp);
+            localStorage.setItem(keys.mode,'Nuvem');
+        }
         function updateCloudStatus(message) {
             const el=document.getElementById('cloud-status');if(el)el.textContent=message;
             const button=document.getElementById('header-cloud-status');
-            const label=document.getElementById('header-cloud-status-text');
-            if(!button||!label)return;
-            const error=/erro|falha|não foi possível|expirad/i.test(message||'');
-            const cloud=!!sbUser && !error;
+            if(!button)return;
+            const keys=storageStatusKeys();
+            const modeValue=localStorage.getItem(keys.mode)||'Local';
+            const cloud=!!(sbUser && keys.cloud && modeValue==='Nuvem' && localStorage.getItem(keys.cloud));
+            const mode=cloud?'Nuvem':'Local';
+            const savedAt=cloud?localStorage.getItem(keys.cloud):localStorage.getItem(keys.local);
+            const savedLabel=formatSavedAt(savedAt);
             button.classList.remove('local','cloud','error');
-            button.classList.add(error?'error':cloud?'cloud':'local');
-            button.innerHTML=`<i class="fa-solid ${error?'fa-triangle-exclamation':cloud?'fa-cloud-arrow-up':'fa-hard-drive'}"></i><span id="header-cloud-status-text">${error?'Falha na sincronização':cloud?'Supabase • Nuvem':'Local • Neste navegador'}</span>`;
-            button.title=message+' — clique para abrir configurações';
+            button.classList.add(cloud?'cloud':'local');
+            button.innerHTML=`<i class="fa-solid ${cloud?'fa-cloud-arrow-up':'fa-hard-drive'}"></i><span id="header-cloud-status-text">${mode} · ${savedLabel}</span>`;
+            button.title=`Último salvamento: ${mode} · ${savedLabel}. Clique para abrir as configurações.`;
         }
 
         async function testSupabaseConnection() {
@@ -1965,6 +2027,11 @@
                 updateCloudStatus('Conectado; nuvem ainda vazia');
                 return;
             }
+            if(data.updated_at) {
+                const keys=storageStatusKeys();
+                if(keys.cloud) localStorage.setItem(keys.cloud,data.updated_at);
+                if(!localStorage.getItem(keys.mode)) localStorage.setItem(keys.mode,'Nuvem');
+            }
             showCustomDialog('Dados encontrados na nuvem', 'Para evitar sobrescrever seu progresso, escolha “Baixar dados da nuvem” para usar os dados remotos ou “Enviar dados atuais à nuvem” para substituir os dados remotos pelos deste navegador.');
             updateCloudStatus('Conectado; dados remotos encontrados');
         }
@@ -1978,9 +2045,10 @@
             if (!sbUser) return showCustomDialog('Entre primeiro', 'Faça login antes de sincronizar.');
             updateCloudStatus('Sincronizando...');
             if (mode === 'upload') {
-                const payload = { userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), contestSnapshots: collectContestSnapshots() };
+                const payload = { userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), suggestionMode:getSuggestionMode(), contestSnapshots: collectContestSnapshots() };
+                const savedAt=new Date().toISOString();
                 const { error } = await sbClient.from(SB_TABLE).upsert({
-                    user_id: sbUser.id, data: payload, updated_at: new Date().toISOString()
+                    user_id: sbUser.id, data: payload, updated_at: savedAt
                 }, { onConflict: 'user_id' });
                 if (error) {
                     updateCloudStatus('Erro ao enviar');
@@ -1988,10 +2056,11 @@
                 }
                 localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
                 localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
+                recordCloudSave(savedAt);
                 updateCloudStatus('Sincronizado com a nuvem');
                 return showCustomDialog('Sincronização concluída', 'Os dados atuais deste navegador foram enviados à nuvem.');
             }
-            const { data, error } = await sbClient.from(SB_TABLE).select('data').eq('user_id', sbUser.id).maybeSingle();
+            const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
             if (error) {
                 updateCloudStatus('Erro ao baixar');
                 return showCustomDialog('Falha ao baixar', error.message);
@@ -2004,12 +2073,14 @@
             if (data.data.contests && typeof data.data.contests === 'object') { contests = data.data.contests; localStorage.setItem('tce_contests', JSON.stringify(contests)); }
             if (data.data.prioritySettings && typeof data.data.prioritySettings === 'object') localStorage.setItem('tce_'+activeContest+'_priority_settings',JSON.stringify(data.data.prioritySettings));
             if (data.data.disciplineSettings && typeof data.data.disciplineSettings === 'object') localStorage.setItem('tce_'+activeContest+'_discipline_settings',JSON.stringify(data.data.disciplineSettings));
+            if (data.data.suggestionMode) localStorage.setItem('tce_'+activeContest+'_suggestion_mode', data.data.suggestionMode);
             if (data.data.contestSnapshots && typeof data.data.contestSnapshots === 'object') {
                 Object.entries(data.data.contestSnapshots).forEach(([id,snapshot])=>{
                     if(snapshot && typeof snapshot==='object') {
                         localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
                         if(snapshot.prioritySettings)localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
                         if(snapshot.disciplineSettings)localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
+                        if(snapshot.suggestionMode)localStorage.setItem('tce_'+id+'_suggestion_mode',snapshot.suggestionMode);
                     }
                 });
                 const activeSnapshot=data.data.contestSnapshots[activeContest];
@@ -2023,9 +2094,10 @@
             localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
             localStorage.setItem('tce_master_edital', JSON.stringify(masterEditalData));
+            if(data.updated_at) recordCloudSave(data.updated_at); else recordCloudSave(new Date().toISOString());
             initCronogramaFilters();
             renderSessionsList();
-            renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();updateContestHeader();applyPriorityColors();
+            renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
             updateCloudStatus('Dados baixados da nuvem');
             showCustomDialog('Download concluído', 'O progresso e o histórico da nuvem foram carregados neste navegador.');
         }
@@ -2035,15 +2107,23 @@
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
             localStorage.setItem('tce_master_edital', JSON.stringify(masterEditalData));
             localStorage.setItem('tce_contest_data_'+activeContest, JSON.stringify({masterEditalData,userProgress,studySessions}));
+            recordLocalSave();
+            updateCloudStatus('Salvamento local realizado');
+            dataRevision++;
             if (sbClient && sbUser) {
                 clearTimeout(cloudSaveTimer);
                 cloudSaveTimer = setTimeout(async () => {
+                    const revisionAtRequest=dataRevision;
+                    const savedAt=new Date().toISOString();
+                    const uidAtRequest=sbUser && sbUser.id;
+                    const payload={ userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), suggestionMode:getSuggestionMode(), contestSnapshots: collectContestSnapshots() };
                     const { error } = await sbClient.from(SB_TABLE).upsert({
-                        user_id: sbUser.id,
-                        data: { userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), contestSnapshots: collectContestSnapshots() },
-                        updated_at: new Date().toISOString()
+                        user_id: uidAtRequest,
+                        data: payload,
+                        updated_at: savedAt
                     }, { onConflict: 'user_id' });
-                    updateCloudStatus(error ? 'Falha na sincronização automática' : 'Sincronizado com a nuvem');
+                    if (!error && sbUser && sbUser.id===uidAtRequest && revisionAtRequest===dataRevision) recordCloudSave(savedAt);
+                    updateCloudStatus(error ? 'Falha na sincronização automática' : (revisionAtRequest===dataRevision?'Sincronizado com a nuvem':'Salvamento novo aguardando sincronização'));
                 }, 900);
             }
         }
@@ -2057,17 +2137,11 @@
             const date=cfg.date||'';document.getElementById('countdown-badge').dataset.examDate=date;updateCountdown();
             const caption=document.getElementById('edital-contest-caption');if(caption)caption.textContent=`Conteúdo programático de ${name}, dividido por tópico e subtópico.`;
             const datesList=document.getElementById('contest-dates-list');
-            const weightsTitle=document.getElementById('contest-weights-title');
-            const weightsContent=document.getElementById('contest-weight-details');
             if(datesList && !window._defaultContestDatesHtml) window._defaultContestDatesHtml=datesList.innerHTML;
-            if(weightsContent && !window._defaultContestWeightHtml) window._defaultContestWeightHtml=weightsContent.innerHTML;
-            if(weightsTitle)weightsTitle.textContent=`Pesos & Questões${cfg.board?' ('+cfg.board+')':''}`;
             if(activeContest==='tce-go-2026-2027'){
                 if(datesList && window._defaultContestDatesHtml)datesList.innerHTML=window._defaultContestDatesHtml;
-                if(weightsContent && window._defaultContestWeightHtml)weightsContent.innerHTML=window._defaultContestWeightHtml;
             }else{
                 if(datesList) datesList.innerHTML=`<li class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-700/50 pb-1.5"><span>Data da prova:</span><strong class="font-mono text-blue-700 dark:text-blue-300">${cfg.date?new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR'):'Não informada'}</strong></li><li class="text-[11px] text-slate-500 pt-1">As demais datas devem ser conferidas no edital deste concurso.</li>`;
-                if(weightsContent) weightsContent.innerHTML=`<div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900"><p class="font-bold text-blue-800 dark:text-blue-200">Quantitativos e pesos ainda não cadastrados</p><p class="text-[11px] mt-1 text-slate-600 dark:text-slate-300">Importe o edital na seção Edital Verticalizado e confira a distribuição de questões e pesos antes de utilizá-los no planejamento.</p></div>`;
             }
         }
 
@@ -2262,115 +2336,10 @@
             });
         }
 
-        // Pomodoro
-        let pomoTime = 25 * 60;
-        let pomoInterval = null;
-        let pomoRunning = false;
-        let pomoMode = 'pomodoro';
-
-        function updatePomodoroSelect() {
-            const select = document.getElementById('pomodoro-subject');
-            select.innerHTML = '';
-            masterEditalData.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.innerText = `${item.discipline} - ${item.subtopic}`;
-                select.appendChild(opt);
-            });
-        }
-
-        function setPomodoroMode(mode) {
-            pomoMode = mode;
-            if (mode === 'pomodoro') pomoTime = 25 * 60;
-            if (mode === 'shortBreak') pomoTime = 5 * 60;
-            if (mode === 'longBreak') pomoTime = 15 * 60;
-
-            stopPomodoro();
-            updatePomodoroDisplay();
-
-            ['pomodoro', 'shortBreak', 'longBreak'].forEach(m => {
-                const btn = document.getElementById(`pomo-btn-${m}`);
-                if (m === mode) {
-                    btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition';
-                } else {
-                    btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 transition';
-                }
-            });
-        }
-
-        function updatePomodoroDisplay() {
-            const mins = Math.floor(pomoTime / 60);
-            const secs = pomoTime % 60;
-            document.getElementById('pomo-timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function togglePomodoro() {
-            if (pomoRunning) {
-                stopPomodoro();
-            } else {
-                startPomodoro();
-            }
-        }
-
-        function startPomodoro() {
-            pomoRunning = true;
-            document.getElementById('pomo-toggle-btn').className = 'px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2';
-            document.getElementById('pomo-icon').className = 'fa-solid fa-pause';
-            document.getElementById('pomo-toggle-text').innerText = 'Pausar';
-
-            pomoInterval = setInterval(() => {
-                if (pomoTime > 0) {
-                    pomoTime--;
-                    updatePomodoroDisplay();
-                } else {
-                    stopPomodoro();
-                    showCustomDialog('Sessão Concluída', 'Pomodoro finalizado e computado nas suas horas!', 'fa-solid fa-stopwatch');
-                    if (pomoMode === 'pomodoro') {
-                        const selectedId = document.getElementById('pomodoro-subject').value;
-                        const item = masterEditalData.find(i => i.id === selectedId);
-                        if (item) {
-                            let userItem = userProgress.find(u => u.id === selectedId);
-                            if (!userItem) {
-                                userItem = { ...item, hours: 0, questions: 0, reviews: 0, completed: false };
-                                userProgress.push(userItem);
-                            }
-                            userItem.hours += 0.416;
-                            studySessions.unshift({
-                                id: crypto.randomUUID(),
-                                date: new Date().toLocaleDateString('pt-BR'),
-                                type1: 'Conhecimentos Específicos',
-                                type2: 'Estudo (Pomodoro)',
-                                discipline: item.discipline,
-                                topic: item.topic,
-                                subtopic: item.subtopic,
-                                minutes: 25,
-                                questions: 0,
-                                isReview: 0
-                            });
-                            localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
-                            saveData();
-                            renderRecentRotation();
-                        }
-                    }
-                }
-            }, 1000);
-        }
-
-        function stopPomodoro() {
-            pomoRunning = false;
-            clearInterval(pomoInterval);
-            document.getElementById('pomo-toggle-btn').className = 'px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition flex items-center space-x-2';
-            document.getElementById('pomo-icon').className = 'fa-solid fa-play';
-            document.getElementById('pomo-toggle-text').innerText = 'Iniciar Foco';
-        }
-
-        function resetPomodoro() {
-            stopPomodoro();
-            setPomodoroMode(pomoMode);
-        }
-
         loadSupabaseSettings();
         applyPriorityColors();
+        const initialSuggestionMode=document.getElementById('study-suggestion-mode');if(initialSuggestionMode)initialSuggestionMode.value=getSuggestionMode();
+        updateSuggestionModeHelp();
         if(!contests[activeContest]) contests[activeContest]={name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
         const contestOption=document.getElementById('contest-selector').options[0];contestOption.textContent=contests[activeContest].name;
         initCronogramaFilters();
