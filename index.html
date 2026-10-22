@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Planejador de Estudos | Concursos — V5</title>
+    <title>Planejador de Estudos | Concursos — V6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -245,10 +245,10 @@
                         <i class="fa-solid fa-rotate-right"></i><span>Resetar</span>
                     </button>
                     <button onclick="exportData()" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-download"></i><span>Exportar</span>
+                        <i class="fa-solid fa-download"></i><span>Backup completo</span>
                     </button>
                     <label class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-upload"></i><span>Importar</span>
+                        <i class="fa-solid fa-upload"></i><span>Restaurar backup</span>
                         <input type="file" id="import-file" onchange="importData(event)" class="hidden" accept=".json">
                     </label>
                 </div>
@@ -1581,39 +1581,82 @@
             });
         }
 
-        let contests = JSON.parse(localStorage.getItem('tce_contests')||'{}');
-        let activeContest = localStorage.getItem('tce_active_contest')||'tce-go-2026-2027';
+        let contests = {};
+        try { contests = JSON.parse(localStorage.getItem('tce_contests') || '{}') || {}; } catch(e) { contests = {}; }
+        if (!contests || typeof contests !== 'object' || Array.isArray(contests)) contests = {};
+        let activeContest = localStorage.getItem('tce_active_contest') || 'tce-go-2026-2027';
+        if (!Object.keys(contests).length) contests['tce-go-2026-2027']={name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
+        if (!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
         function contestKey(suffix){return 'tce_'+activeContest+'_'+suffix;}
+
+        // Reconstrói SEMPRE o seletor a partir da lista persistida, e não apenas do concurso ativo.
+        function renderContestSelector(){
+          const sel=document.getElementById('contest-selector'); if(!sel) return;
+          if(!contests || typeof contests!=='object' || Array.isArray(contests)) contests={};
+          if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+          // Reindexa snapshots locais para recuperar concursos cuja lista de nomes tenha sido perdida.
+          for(let i=0;i<localStorage.length;i++){
+            const key=localStorage.key(i);
+            if(!key || !key.startsWith('tce_contest_data_')) continue;
+            const id=key.slice('tce_contest_data_'.length);
+            if(contests[id]) continue;
+            try{const snap=JSON.parse(localStorage.getItem(key)||'null');contests[id]={name:snap?.contestName||snap?.name||id,board:'',date:''};}catch(e){}
+          }
+          const ids=Object.keys(contests).sort((a,b)=>a==='tce-go-2026-2027'?-1:b==='tce-go-2026-2027'?1:String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
+          sel.innerHTML='';
+          ids.forEach(id=>{
+            const option=document.createElement('option'); option.value=id; option.textContent=contests[id]?.name||id;
+            sel.appendChild(option);
+          });
+          sel.value=activeContest;
+          try { localStorage.setItem('tce_contests',JSON.stringify(contests)); } catch(e) {}
+        }
+        function saveCurrentContestSnapshot(id=activeContest, timestamp=new Date().toISOString()){
+          try {
+            const snapshot={contestName:contests[id]?.name||id,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
+            localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
+            return snapshot;
+          } catch(e) { console.warn('Não foi possível guardar o snapshot do concurso',id,e); return null; }
+        }
+        function restoreSnapshotToMemory(snapshot){
+          if(!snapshot || typeof snapshot!=='object') return false;
+          if(Array.isArray(snapshot.masterEditalData)) masterEditalData=snapshot.masterEditalData;
+          if(Array.isArray(snapshot.userProgress)) userProgress=snapshot.userProgress;
+          else if(Array.isArray(snapshot.masterEditalData)) userProgress=JSON.parse(JSON.stringify(snapshot.masterEditalData));
+          if(Array.isArray(snapshot.studySessions)) studySessions=snapshot.studySessions;
+          return true;
+        }
         function changeContest(id){
+          if(!id || id===activeContest) { renderContestSelector(); return; }
           const oldId=activeContest;
-          try{localStorage.setItem('tce_contest_data_'+oldId,JSON.stringify({masterEditalData,userProgress,studySessions}));}catch(e){}
+          saveCurrentContestSnapshot(oldId);
           activeContest=id;localStorage.setItem('tce_active_contest',id);
           const snap=localStorage.getItem('tce_contest_data_'+id);
-          if(snap){try{const d=JSON.parse(snap);masterEditalData=d.masterEditalData||masterEditalData;userProgress=d.userProgress||masterEditalData;studySessions=d.studySessions||[];}catch(e){}}
-          else if(id!==oldId){
+          if(snap){try{restoreSnapshotToMemory(JSON.parse(snap));}catch(e){console.warn('Snapshot de concurso inválido',e);}}
+          else {
             if(id==='tce-go-2026-2027') masterEditalData=JSON.parse(JSON.stringify(window._defaultMasterEdital||[]));
-            else masterEditalData=[]; // concursos novos começam vazios para não misturar matérias de outro edital
+            else masterEditalData=[]; // concursos novos começam vazios, sem misturar os editais
             userProgress=JSON.parse(JSON.stringify(masterEditalData));studySessions=[];
           }
-          const cfg=contests[id]||{name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
-          document.getElementById('contest-name').value=cfg.name;document.getElementById('contest-board').value=cfg.board;document.getElementById('contest-date').value=cfg.date;
-          initCronogramaFilters();initEditalFilters();renderSessionsList();updateContestHeader();applyPriorityColors();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();saveData();
-          showCustomDialog('Concurso selecionado', 'Concurso ativo: '+cfg.name+'. O progresso é separado por concurso neste navegador.');
+          localStorage.setItem('tce_contests',JSON.stringify(contests));
+          const cfg=contests[id]||{name:id,board:'',date:''};
+          document.getElementById('contest-name').value=cfg.name||id;document.getElementById('contest-board').value=cfg.board||'';document.getElementById('contest-date').value=cfg.date||'';
+          renderContestSelector();initCronogramaFilters();initEditalFilters();renderSessionsList();updateContestHeader();applyPriorityColors();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();saveData();
+          showCustomDialog('Concurso selecionado', 'Concurso ativo: '+(cfg.name||id)+'. Cada concurso mantém edital, progresso, histórico e personalizações separados.');
         }
         function saveContestSettings(){
           const name=document.getElementById('contest-name').value.trim()||'Novo concurso';
-          contests[activeContest]={name,board:document.getElementById('contest-board').value.trim(),date:document.getElementById('contest-date').value};
+          contests[activeContest]={...(contests[activeContest]||{}),name,board:document.getElementById('contest-board').value.trim(),date:document.getElementById('contest-date').value,_updatedAt:new Date().toISOString()};
           localStorage.setItem('tce_contests',JSON.stringify(contests));
-          const sel=document.getElementById('contest-selector');let opt=[...sel.options].find(o=>o.value===activeContest);
-          if(!opt){opt=document.createElement('option');opt.value=activeContest;sel.appendChild(opt);}opt.textContent=name;opt.selected=true;
-          updateContestHeader();saveData();
+          renderContestSelector();updateContestHeader();saveData();
           showCustomDialog('Concurso salvo','Configurações básicas do concurso foram salvas.');
         }
         function addContest(){
-          const name=prompt('Nome do novo concurso:');if(!name)return;
-          const id='concurso-'+Date.now();contests[id]={name,board:'',date:''};localStorage.setItem('tce_contests',JSON.stringify(contests));
-          const o=document.createElement('option');o.value=id;o.textContent=name;document.getElementById('contest-selector').appendChild(o);
-          document.getElementById('contest-selector').value=id;changeContest(id);
+          const name=prompt('Nome do novo concurso:');if(!name||!name.trim())return;
+          const id='concurso-'+Date.now();contests[id]={name:name.trim(),board:'',date:'',_updatedAt:new Date().toISOString()};
+          localStorage.setItem('tce_contests',JSON.stringify(contests));
+          localStorage.setItem('tce_contest_data_'+id,JSON.stringify({masterEditalData:[],userProgress:[],studySessions:[],_snapshotUpdatedAt:new Date().toISOString()}));
+          renderContestSelector();changeContest(id);
         }
         function renderPrioritySettings() {
           const settings=getPrioritySettings();
@@ -2009,16 +2052,85 @@
                     const key=localStorage.key(i);
                     if(!key || !key.startsWith('tce_contest_data_')) continue;
                     try {
-                        const id=key.slice('tce_contest_data_'.length);const snap=JSON.parse(localStorage.getItem(key));
-                        snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||'{}');
-                        snap.disciplineSettings=JSON.parse(localStorage.getItem('tce_'+id+'_discipline_settings')||'{}');
-                        snap.suggestionMode=localStorage.getItem('tce_'+id+'_suggestion_mode')||'priority_progress';
+                        const id=key.slice('tce_contest_data_'.length);
+                        const snap=JSON.parse(localStorage.getItem(key));
+                        if(!snap || typeof snap!=='object') continue;
+                        snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||JSON.stringify(snap.prioritySettings||{}));
+                        snap.disciplineSettings=JSON.parse(localStorage.getItem('tce_'+id+'_discipline_settings')||JSON.stringify(snap.disciplineSettings||{}));
+                        snap.suggestionMode=localStorage.getItem('tce_'+id+'_suggestion_mode')||snap.suggestionMode||'priority_progress';
                         snapshots[id]=snap;
-                    } catch(e) {}
+                    } catch(e) { console.warn('Snapshot local ignorado:',key,e); }
                 }
-                snapshots[activeContest]={masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode()};
-            } catch(e) {}
+                const old=(()=>{try{return JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'{}')||{};}catch(e){return {};}})();
+                snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
+            } catch(e) { console.warn('Não foi possível reunir os snapshots dos concursos',e); }
             return snapshots;
+        }
+
+        function buildCurrentCloudPayload(timestamp=new Date().toISOString()) {
+            const activeSnapshot={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
+            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(activeSnapshot));
+            return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
+        }
+
+        function mergeContestSnapshots(remotePayload, localPayload) {
+            const remoteSnapshots=(remotePayload && remotePayload.contestSnapshots && typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{};
+            const localSnapshots=(localPayload && localPayload.contestSnapshots && typeof localPayload.contestSnapshots==='object')?localPayload.contestSnapshots:{};
+            const merged={...remoteSnapshots};
+            // Compatibilidade com versões antigas que só guardavam o concurso ativo no nível principal.
+            const remoteActive=remotePayload && remotePayload.activeContest;
+            if(remoteActive && !merged[remoteActive] && (Array.isArray(remotePayload.masterEditalData)||Array.isArray(remotePayload.userProgress))) {
+                merged[remoteActive]={masterEditalData:remotePayload.masterEditalData||[],userProgress:remotePayload.userProgress||remotePayload.masterEditalData||[],studySessions:remotePayload.studySessions||[],prioritySettings:remotePayload.prioritySettings||{},disciplineSettings:remotePayload.disciplineSettings||{},suggestionMode:remotePayload.suggestionMode||'priority_progress'};
+            }
+            Object.entries(localSnapshots).forEach(([id,localSnap])=>{
+                if(!localSnap || typeof localSnap!=='object') return;
+                const remoteSnap=merged[id];
+                if(!remoteSnap || id===localPayload.activeContest) { merged[id]=localSnap; return; }
+                const localTime=Date.parse(localSnap._snapshotUpdatedAt||'')||0;
+                const remoteTime=Date.parse(remoteSnap._snapshotUpdatedAt||'')||0;
+                // Se não há data confiável, conserva a cópia remota em concursos que não estão ativos.
+                if(localTime && localTime>remoteTime) merged[id]=localSnap;
+            });
+            return merged;
+        }
+
+        async function upsertCloudPayloadSafely(localPayload, uid) {
+            if(!sbClient || !uid) throw new Error('Sessão Supabase não disponível.');
+            const {data:remoteRow,error:readError}=await sbClient.from(SB_TABLE).select('data').eq('user_id',uid).maybeSingle();
+            if(readError) throw readError; // Nunca tenta gravar por cima se não conseguiu ler a cópia atual.
+            const remotePayload=remoteRow && remoteRow.data && typeof remoteRow.data==='object'?remoteRow.data:{};
+            const mergedSnapshots=mergeContestSnapshots(remotePayload,localPayload);
+            const remoteContests=remotePayload.contests && typeof remotePayload.contests==='object'?remotePayload.contests:{};
+            const localContests=localPayload.contests && typeof localPayload.contests==='object'?localPayload.contests:{};
+            const mergedContests={...remoteContests};
+            Object.entries(localContests).forEach(([id,localCfg])=>{
+                const remoteCfg=remoteContests[id];
+                if(!remoteCfg) { mergedContests[id]=localCfg; return; }
+                if(id===localPayload.activeContest) { mergedContests[id]={...remoteCfg,...localCfg}; return; }
+                const localTime=Date.parse(localCfg?._updatedAt||'')||0;
+                const remoteTime=Date.parse(remoteCfg?._updatedAt||'')||0;
+                // Não deixar um nome genérico reconstruído a partir do ID apagar o nome remoto conhecido.
+                if(!localTime && localCfg?.name===id && remoteCfg?.name && remoteCfg.name!==id) return;
+                if(localTime && localTime>remoteTime) mergedContests[id]={...remoteCfg,...localCfg};
+            });
+            Object.keys(mergedSnapshots).forEach(id=>{
+                if(!mergedContests[id]) mergedContests[id]={name:mergedSnapshots[id]?.contestName||(id==='tce-go-2026-2027'?'TCE-GO 2026/2027':id),board:'',date:''};
+            });
+            const mergedPayload={...remotePayload,...localPayload,contests:mergedContests,contestSnapshots:mergedSnapshots};
+            const savedAt=new Date().toISOString();
+            const {error:writeError}=await sbClient.from(SB_TABLE).upsert({user_id:uid,data:mergedPayload,updated_at:savedAt},{onConflict:'user_id'});
+            if(writeError) throw writeError;
+            return savedAt;
+        }
+
+        function persistSnapshotMapToLocal(snapshotMap) {
+            Object.entries(snapshotMap||{}).forEach(([id,snapshot])=>{
+                if(!snapshot || typeof snapshot!=='object') return;
+                localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
+                if(snapshot.prioritySettings) localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
+                if(snapshot.disciplineSettings) localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
+                if(snapshot.suggestionMode) localStorage.setItem('tce_'+id+'_suggestion_mode',snapshot.suggestionMode);
+            });
         }
 
         function saveSupabaseSettings() {
@@ -2204,7 +2316,7 @@
                 if(keys.cloud) localStorage.setItem(keys.cloud,data.updated_at);
                 if(!localStorage.getItem(keys.mode)) localStorage.setItem(keys.mode,'Nuvem');
             }
-            showCustomDialog('Dados encontrados na nuvem', 'Para evitar sobrescrever seu progresso, escolha “Baixar dados da nuvem” para usar os dados remotos ou “Enviar dados atuais à nuvem” para substituir os dados remotos pelos deste navegador.');
+            showCustomDialog('Dados encontrados na nuvem', 'Para evitar sobrescrever seu progresso, escolha “Baixar dados da nuvem” para carregar os dados remotos ou “Enviar dados atuais à nuvem” para mesclar os concursos locais com os remotos. A sincronização preserva concursos remotos que não estão ativos neste navegador.');
             updateCloudStatus('Conectado; dados remotos encontrados');
         }
 
@@ -2217,20 +2329,17 @@
             if (!sbUser) return showCustomDialog('Entre primeiro', 'Faça login antes de sincronizar.');
             updateCloudStatus('Sincronizando...');
             if (mode === 'upload') {
-                const payload = { userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), suggestionMode:getSuggestionMode(), contestSnapshots: collectContestSnapshots() };
-                const savedAt=new Date().toISOString();
-                const { error } = await sbClient.from(SB_TABLE).upsert({
-                    user_id: sbUser.id, data: payload, updated_at: savedAt
-                }, { onConflict: 'user_id' });
-                if (error) {
+                try {
+                    const payload=buildCurrentCloudPayload();
+                    const savedAt=await upsertCloudPayloadSafely(payload,sbUser.id);
+                    localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
+                    localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+                    recordCloudSave(savedAt);updateCloudStatus('Sincronizado com a nuvem');
+                    return showCustomDialog('Sincronização concluída','Os dados locais foram enviados com mesclagem segura: concursos remotos que não estão ativos neste navegador são preservados.');
+                } catch(error) {
                     updateCloudStatus('Erro ao enviar');
-                    return showCustomDialog('Falha ao enviar', error.message + '\\nConfira a tabela e as políticas RLS.');
+                    return showCustomDialog('Falha ao enviar',String(error.message||error)+'\nNada foi enviado porque a leitura/mesclagem segura falhou. Confira a tabela e as políticas RLS.');
                 }
-                localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
-                localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
-                recordCloudSave(savedAt);
-                updateCloudStatus('Sincronizado com a nuvem');
-                return showCustomDialog('Sincronização concluída', 'Os dados atuais deste navegador foram enviados à nuvem.');
             }
             const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
             if (error) {
@@ -2238,47 +2347,54 @@
                 return showCustomDialog('Falha ao baixar', error.message);
             }
             if (!data || !data.data) return showCustomDialog('Nuvem vazia', 'Não há dados salvos para esta conta.');
-            if (Array.isArray(data.data.userProgress)) userProgress = data.data.userProgress;
-            if (Array.isArray(data.data.studySessions)) studySessions = data.data.studySessions;
-            if (Array.isArray(data.data.masterEditalData)) masterEditalData = data.data.masterEditalData;
-            if (data.data.activeContest) { activeContest = data.data.activeContest; localStorage.setItem('tce_active_contest', activeContest); }
-            if (data.data.contests && typeof data.data.contests === 'object') { contests = data.data.contests; localStorage.setItem('tce_contests', JSON.stringify(contests)); }
-            if (data.data.prioritySettings && typeof data.data.prioritySettings === 'object') localStorage.setItem('tce_'+activeContest+'_priority_settings',JSON.stringify(data.data.prioritySettings));
-            if (data.data.disciplineSettings && typeof data.data.disciplineSettings === 'object') localStorage.setItem('tce_'+activeContest+'_discipline_settings',JSON.stringify(data.data.disciplineSettings));
-            if (data.data.suggestionMode) localStorage.setItem('tce_'+activeContest+'_suggestion_mode', data.data.suggestionMode);
-            if (data.data.contestSnapshots && typeof data.data.contestSnapshots === 'object') {
-                Object.entries(data.data.contestSnapshots).forEach(([id,snapshot])=>{
-                    if(snapshot && typeof snapshot==='object') {
-                        localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
-                        if(snapshot.prioritySettings)localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
-                        if(snapshot.disciplineSettings)localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
-                        if(snapshot.suggestionMode)localStorage.setItem('tce_'+id+'_suggestion_mode',snapshot.suggestionMode);
-                    }
-                });
-                const activeSnapshot=data.data.contestSnapshots[activeContest];
-                if(activeSnapshot){
-                    if(Array.isArray(activeSnapshot.masterEditalData)) masterEditalData=activeSnapshot.masterEditalData;
-                    if(Array.isArray(activeSnapshot.userProgress)) userProgress=activeSnapshot.userProgress;
-                    if(Array.isArray(activeSnapshot.studySessions)) studySessions=activeSnapshot.studySessions;
-                }
+
+            // O download combina os mapas de concursos: o remoto vence para IDs presentes nos dois lados;
+            // os concursos existentes só localmente são preservados em vez de desaparecerem.
+            let localContests={};try{localContests=JSON.parse(localStorage.getItem('tce_contests')||'{}')||{};}catch(e){}
+            const remoteContests=data.data.contests&&typeof data.data.contests==='object'?data.data.contests:{};
+            contests={...localContests,...remoteContests};
+            const localSnapshots=collectContestSnapshots();
+            let remoteSnapshots=data.data.contestSnapshots&&typeof data.data.contestSnapshots==='object'?data.data.contestSnapshots:{};
+            if(data.data.activeContest && !remoteSnapshots[data.data.activeContest] && (Array.isArray(data.data.masterEditalData)||Array.isArray(data.data.userProgress))) {
+                remoteSnapshots={...remoteSnapshots,[data.data.activeContest]:{contestName:data.data.contests?.[data.data.activeContest]?.name||data.data.activeContest,masterEditalData:data.data.masterEditalData||[],userProgress:data.data.userProgress||data.data.masterEditalData||[],studySessions:data.data.studySessions||[],prioritySettings:data.data.prioritySettings||{},disciplineSettings:data.data.disciplineSettings||{},suggestionMode:data.data.suggestionMode||'priority_progress'}};
             }
-            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify({masterEditalData,userProgress,studySessions}));
+            const allSnapshots={...localSnapshots,...remoteSnapshots};
+            if(data.data.activeContest) activeContest=data.data.activeContest;
+            if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+            Object.keys(allSnapshots).forEach(id=>{if(!contests[id])contests[id]={name:allSnapshots[id]?.contestName||id,board:'',date:''};});
+            localStorage.setItem('tce_active_contest',activeContest);
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            persistSnapshotMapToLocal(allSnapshots);
+            const activeSnapshot=allSnapshots[activeContest];
+            if(activeSnapshot) restoreSnapshotToMemory(activeSnapshot);
+            else {
+                if(Array.isArray(data.data.masterEditalData))masterEditalData=data.data.masterEditalData;
+                if(Array.isArray(data.data.userProgress))userProgress=data.data.userProgress;
+                if(Array.isArray(data.data.studySessions))studySessions=data.data.studySessions;
+            }
+            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify({...buildCurrentSnapshotForStorage(),_snapshotUpdatedAt:activeSnapshot?._snapshotUpdatedAt||new Date().toISOString()}));
             localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
             localStorage.setItem('tce_master_edital', JSON.stringify(masterEditalData));
+            renderContestSelector();
             if(data.updated_at) recordCloudSave(data.updated_at); else recordCloudSave(new Date().toISOString());
-            initCronogramaFilters();
-            renderSessionsList();
-            renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
+            initCronogramaFilters();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
             updateCloudStatus('Dados baixados da nuvem');
-            showCustomDialog('Download concluído', 'O progresso e o histórico da nuvem foram carregados neste navegador.');
+            showCustomDialog('Download concluído','Os dados foram carregados. Concursos locais e remotos foram combinados; os IDs existentes nos dois lados usam os dados remotos.');
+        }
+
+        function buildCurrentSnapshotForStorage(timestamp=new Date().toISOString()) {
+            return {contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
         }
 
         function saveData() {
+            const savedAtLocal=new Date().toISOString();
             localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
             localStorage.setItem('tce_master_edital', JSON.stringify(masterEditalData));
-            localStorage.setItem('tce_contest_data_'+activeContest, JSON.stringify({masterEditalData,userProgress,studySessions}));
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            localStorage.setItem('tce_active_contest',activeContest);
+            localStorage.setItem('tce_contest_data_'+activeContest, JSON.stringify(buildCurrentSnapshotForStorage(savedAtLocal)));
             recordLocalSave();
             updateCloudStatus('Salvamento local realizado');
             dataRevision++;
@@ -2286,16 +2402,17 @@
                 clearTimeout(cloudSaveTimer);
                 cloudSaveTimer = setTimeout(async () => {
                     const revisionAtRequest=dataRevision;
-                    const savedAt=new Date().toISOString();
                     const uidAtRequest=sbUser && sbUser.id;
-                    const payload={ userProgress, studySessions, masterEditalData, activeContest, contests, prioritySettings:getPrioritySettings(), disciplineSettings:getDisciplineSettings(), suggestionMode:getSuggestionMode(), contestSnapshots: collectContestSnapshots() };
-                    const { error } = await sbClient.from(SB_TABLE).upsert({
-                        user_id: uidAtRequest,
-                        data: payload,
-                        updated_at: savedAt
-                    }, { onConflict: 'user_id' });
-                    if (!error && sbUser && sbUser.id===uidAtRequest && revisionAtRequest===dataRevision) recordCloudSave(savedAt);
-                    updateCloudStatus(error ? 'Falha na sincronização automática' : (revisionAtRequest===dataRevision?'Sincronizado com a nuvem':'Salvamento novo aguardando sincronização'));
+                    try {
+                        const payload=buildCurrentCloudPayload(new Date().toISOString());
+                        const savedAt=await upsertCloudPayloadSafely(payload,uidAtRequest);
+                        if (sbUser && sbUser.id===uidAtRequest && revisionAtRequest===dataRevision) {
+                            recordCloudSave(savedAt);updateCloudStatus('Sincronizado com a nuvem');
+                        } else updateCloudStatus('Salvamento novo aguardando sincronização');
+                    } catch(error) {
+                        console.warn('Falha no salvamento seguro dos concursos:',error);
+                        updateCloudStatus('Falha na sincronização automática');
+                    }
                 }, 900);
             }
         }
@@ -2305,7 +2422,7 @@
             const name=cfg.name||activeContest||'Concurso selecionado';
             const meta=[cfg.board?'Banca '+cfg.board:null,cfg.date?'Prova em '+new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR'):null].filter(Boolean).join(' · ');
             const sub=document.getElementById('contest-subtitle');if(sub)sub.textContent=meta?`${name} · ${meta}`:name;
-            const sel=document.getElementById('contest-selector');if(sel){let opt=[...sel.options].find(o=>o.value===activeContest);if(!opt){opt=document.createElement('option');opt.value=activeContest;sel.appendChild(opt)}opt.textContent=name;opt.selected=true;}
+            renderContestSelector();
             const date=cfg.date||'';document.getElementById('countdown-badge').dataset.examDate=date;updateCountdown();
             const caption=document.getElementById('edital-contest-caption');if(caption)caption.textContent=`Conteúdo programático de ${name}, dividido por tópico e subtópico.`;
             const datesList=document.getElementById('contest-dates-list');
@@ -2351,36 +2468,104 @@
         }
 
         function exportData() {
-            const backup = { userProgress, studySessions };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", "tce_go_completo_backup.json");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
+            try {
+                // O backup inclui todos os concursos e snapshots locais, sem credenciais Supabase.
+                saveCurrentContestSnapshot(activeContest);
+                const backup={
+                    app:'Planejador de Estudos',
+                    backupVersion:2,
+                    exportedAt:new Date().toISOString(),
+                    activeContest,
+                    contests:{...contests},
+                    contestSnapshots:collectContestSnapshots(),
+                    // Mantidos para compatibilidade com leitores antigos, referem-se ao concurso ativo.
+                    userProgress,
+                    studySessions,
+                    masterEditalData
+                };
+                const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+                const url=URL.createObjectURL(blob);
+                const dlAnchor=document.createElement('a');
+                dlAnchor.href=url;dlAnchor.download='planejador_estudos_backup_completo.json';
+                document.body.appendChild(dlAnchor);dlAnchor.click();dlAnchor.remove();
+                setTimeout(()=>URL.revokeObjectURL(url),1000);
+                showCustomDialog('Backup completo gerado',`O arquivo inclui ${Object.keys(backup.contests).length} concurso(s) cadastrado(s), seus editais, progresso, históricos e personalizações. Guarde uma cópia fora do dispositivo.`);
+            } catch(error) {
+                showCustomDialog('Falha ao exportar backup',String(error.message||error));
+            }
+        }
+
+        function applyImportedBackup(parsed) {
+            const now=new Date().toISOString();
+            const importedSnapshots=parsed.contestSnapshots && typeof parsed.contestSnapshots==='object' && !Array.isArray(parsed.contestSnapshots) ? parsed.contestSnapshots : null;
+            const hasContestBackup=!!importedSnapshots || (parsed.contests && typeof parsed.contests==='object');
+            if(hasContestBackup) {
+                const incomingContests=parsed.contests && typeof parsed.contests==='object' && !Array.isArray(parsed.contests)?parsed.contests:{};
+                contests={...contests,...incomingContests};
+                if(importedSnapshots) {
+                    const normalized={};
+                    Object.entries(importedSnapshots).forEach(([id,snap])=>{
+                        if(!id || !snap || typeof snap!=='object') return;
+                        normalized[id]={...snap,_snapshotUpdatedAt:now};
+                    });
+                    persistSnapshotMapToLocal(normalized);
+                    Object.keys(normalized).forEach(id=>{if(!contests[id])contests[id]={name:normalized[id]?.contestName||id,board:'',date:''};});
+                }
+                if(parsed.activeContest) activeContest=parsed.activeContest;
+                if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+                localStorage.setItem('tce_active_contest',activeContest);
+                localStorage.setItem('tce_contests',JSON.stringify(contests));
+                const importedActive=importedSnapshots && importedSnapshots[activeContest];
+                if(importedActive) restoreSnapshotToMemory({...importedActive,_snapshotUpdatedAt:now});
+                else {
+                    if(Array.isArray(parsed.masterEditalData)) masterEditalData=parsed.masterEditalData;
+                    if(Array.isArray(parsed.userProgress)) userProgress=parsed.userProgress;
+                    if(Array.isArray(parsed.studySessions)) studySessions=parsed.studySessions;
+                }
+                // Stamp the selected contest as current and persist all of the merged backup.
+                localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(buildCurrentSnapshotForStorage(now)));
+                localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
+                localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+                localStorage.setItem('tce_master_edital',JSON.stringify(masterEditalData));
+                renderContestSelector();
+                initCronogramaFilters();initRegistrationForm();initEditalFilters();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
+                saveData();
+                showCustomDialog('Backup restaurado com mesclagem',`Foram importados ${importedSnapshots?Object.keys(importedSnapshots).length:0} snapshot(s). Os concursos que já existiam e não estão no arquivo foram preservados. A sincronização com a nuvem será mesclada com os outros concursos remotos.`);
+                return;
+            }
+            // Formato antigo V1–V5: só contém progresso e sessões do concurso ativo.
+            if(Array.isArray(parsed.userProgress)) userProgress=parsed.userProgress;
+            else throw new Error('O JSON não contém um backup reconhecido do Planejador.');
+            if(Array.isArray(parsed.studySessions)) studySessions=parsed.studySessions;
+            if(Array.isArray(parsed.masterEditalData)) masterEditalData=parsed.masterEditalData;
+            localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
+            localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+            saveData();
+            initCronogramaFilters();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderEditalVerticalizado();
+            showCustomDialog('Backup antigo importado','Este JSON antigo contém somente o progresso e as sessões do concurso que estava ativo. Os outros concursos foram preservados no dispositivo e na mesclagem da nuvem, mas não podem ser recuperados de um arquivo que nunca os incluiu.');
         }
 
         function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
+            const file=event.target.files && event.target.files[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=function(e){
                 try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.userProgress) {
-                        userProgress = parsed.userProgress;
-                        if (parsed.studySessions) {
-                            studySessions = parsed.studySessions;
-                            localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
-                        }
-                        initCronogramaFilters();
-                        showCustomDialog('Sucesso', 'Dados importados com sucesso!', 'fa-solid fa-circle-check');
-                    }
-                } catch (err) {
-                    showCustomDialog('Erro', 'Arquivo JSON inválido.', 'fa-solid fa-circle-xmark');
+                    const parsed=JSON.parse(e.target.result);
+                    if(!parsed || typeof parsed!=='object' || Array.isArray(parsed)) throw new Error('Formato JSON inválido.');
+                    const isFull=!!(parsed.contestSnapshots || parsed.contests);
+                    const count=isFull?Object.keys(parsed.contestSnapshots||{}).length:1;
+                    showCustomDialog('Confirmar importação',isFull
+                        ? `O backup contém ${Object.keys(parsed.contests||{}).length} concurso(s) e ${count} snapshot(s). Os dados dos IDs presentes no arquivo serão restaurados, e concursos que só existam atualmente serão preservados. Deseja continuar?`
+                        : 'Este é um backup antigo, limitado ao concurso ativo. Ele substituirá o progresso e as sessões desse concurso, sem excluir os outros concursos. Deseja continuar?',
+                        'fa-solid fa-triangle-exclamation',()=>{try{applyImportedBackup(parsed);}catch(error){showCustomDialog('Não foi possível importar',String(error.message||error));}});
+                } catch(error) {
+                    showCustomDialog('Erro', 'Arquivo JSON inválido ou incompatível. '+String(error.message||error), 'fa-solid fa-circle-xmark');
+                } finally {
+                    event.target.value='';
                 }
             };
+            reader.onerror=()=>showCustomDialog('Falha ao ler arquivo','Não foi possível ler o arquivo JSON selecionado.');
             reader.readAsText(file);
         }
 
@@ -2512,8 +2697,8 @@
         applyPriorityColors();
         const initialSuggestionMode=document.getElementById('study-suggestion-mode');if(initialSuggestionMode)initialSuggestionMode.value=getSuggestionMode();
         updateSuggestionModeHelp();
-        if(!contests[activeContest]) contests[activeContest]={name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
-        const contestOption=document.getElementById('contest-selector').options[0];contestOption.textContent=contests[activeContest].name;
+        if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+        renderContestSelector();
         initCronogramaFilters();
         initRegistrationForm();
         initEditalFilters();
@@ -2628,7 +2813,7 @@
     else { try { userProgress=JSON.parse(localStorage.getItem('tce_go_pro_data'))||JSON.parse(JSON.stringify(masterEditalData)); } catch(_) { userProgress=JSON.parse(JSON.stringify(masterEditalData)); } }
     if(snapshot && Array.isArray(snapshot.studySessions)) studySessions=snapshot.studySessions;
     else { try { studySessions=JSON.parse(localStorage.getItem('tce_go_pro_sessions'))||[]; } catch(_) { studySessions=[]; } }
-    try { const opt=$('contest-selector').options[0]; if(opt && contests[activeContest]) opt.textContent=contests[activeContest].name; } catch(_) {}
+    try { renderContestSelector(); } catch(_) {}
     try { if(contests[activeContest]) { $('contest-name').value=contests[activeContest].name||''; $('contest-board').value=contests[activeContest].board||''; $('contest-date').value=contests[activeContest].date||''; } } catch(_) {}
     try { initCronogramaFilters(); initRegistrationForm(); initEditalFilters(); updateContestHeader(); applyPriorityColors(); renderSessionsList(); renderRecentRotation(); renderPriorityDisciplineProgress(); renderDashboard(); } catch(e) { console.warn('A interface será atualizada após carregar os dados da conta:',e); }
   }

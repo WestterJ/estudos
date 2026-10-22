@@ -76,3 +76,18 @@ VERSÃO V5 - ATUALIZAÇÃO DE 16/10/2026
 - A aplicação da análise de IA avisa antes de substituir o conteúdo atual. Sempre confira os itens extraídos contra o edital oficial.
 - Não é necessário SQL adicional nem criar outro projeto Supabase. As novas propriedades de conteúdo continuam dentro do campo JSONB já utilizado na tabela study_planner_data.
 
+
+
+VERSÃO V6 - 21/10/2026 — CORREÇÃO DE MÚLTIPLOS CONCURSOS E BACKUP COMPLETO
+- Corrigida reconstrução do seletor: todos os concursos cadastrados em tce_contests são exibidos após refresh; o app também reindexa snapshots tce_contest_data_* que permaneçam no navegador caso a lista de nomes tenha sido perdida.
+- Os snapshots dos concursos são mantidos separados por ID, incluindo edital, progresso, histórico e personalizações.
+- O salvamento automático e o envio manual mesclam os snapshots locais e remotos; o snapshot do concurso ativo recebe a atualização local e os concursos remotos não ativos são preservados. Se a leitura da nuvem falhar, o app não tenta substituir o registro.
+- O download combina a lista local e remota de concursos, preserva IDs encontrados apenas no armazenamento local e usa a versão remota para IDs coincidentes.
+- Backup completo JSON V2 inclui metadados, lista de concursos, snapshots e personalizações; não inclui URL/chave/credenciais Supabase.
+- A restauração de V2 mescla os concursos do arquivo e preserva concursos existentes fora do backup. O formato antigo V1–V5 (userProgress/studySessions) continua aceito, mas só restaura o concurso ativo porque não continha os outros.
+- O service worker usa um novo nome de cache para forçar atualização da interface.
+
+RECUPERAÇÃO DOS DADOS ANTERIORES
+- Antes de sincronizar ou restaurar novamente, exporte um backup completo V6 e preserve qualquer JSON antigo que ainda tenha.
+- A versão V6 não consegue recriar os dados de uma cópia que já tenha sido sobrescrita sem fonte alternativa. Verifique cópias locais em outros navegadores/dispositivos e, se o plano Supabase oferecer backups, o menu Database > Backups. No plano gratuito, backups do banco não ficam disponíveis para download pelo Dashboard.
+- O JSON de V5 contém somente progresso/sessões do concurso ativo; ele não permite recuperar outros concursos que não estejam armazenados separadamente em outro lugar.
