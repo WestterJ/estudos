@@ -22,7 +22,7 @@ PUBLICAR / INSTALAR
 1. Extraia o ZIP.
 2. Publique TODOS os arquivos e a pasta icons/ no mesmo diretório de um site HTTPS (por exemplo, Netlify ou GitHub Pages). index.html, manifest.webmanifest e service-worker.js devem ficar na raiz da publicação.
 3. Não abra index.html diretamente com file:// para autenticar. OAuth e service worker precisam de HTTPS ou localhost.
-4. Acesse o endereço publicado. Informe a URL e a chave pública do projeto Supabase Nutri. Essa configuração fica salva no navegador.
+4. Acesse o endereço publicado. A URL e a chave pública do Supabase já vêm de supabase-config.js; basta entrar com e-mail e senha ou com o Google.
 5. Clique em “Continuar com Google” ou use e-mail e senha. Ambos permanecem disponíveis.
 6. Depois de autenticar, se já houver um registro na nuvem, a aplicação orienta a baixar os dados remotos ou enviar os dados locais. Leia a mensagem com cuidado para evitar sobrescrever progresso.
 7. Para instalar no celular, abra o endereço HTTPS no navegador e use “Instalar”/“Adicionar à tela inicial” quando a opção aparecer.
@@ -132,3 +132,11 @@ VERSÃO V9 — SINCRONIZAÇÃO AUTOMÁTICA NA ABERTURA
 - O cache do service worker foi versionado para V9, forçando a instalação da nova versão.
 - Não altera a tabela, os nomes de colunas, o projeto Supabase nem as chaves de configuração.
 - Requer teste na hospedagem real; o teste local não comprova conectividade Supabase.
+
+
+VERSÃO V10 - CHAVE PÚBLICA FIXA, IA PELO SERVIDOR E AUTENTICAÇÃO
+- supabase-config.js (novo): guarda a URL e a chave PÚBLICA (publishable) do Supabase. Ninguém digita mais esses dados na tela de login nem em Configurações. Chaves secret/service_role e a chave do Gemini NUNCA entram neste arquivo nem no HTML.
+- A análise de edital por IA passou a usar a Edge Function dynamic-service (modo "edital") com o token da sessão do usuário. A chave do Gemini fica como segredo GEMINI_API_KEY no Supabase. O campo de chave Gemini foi removido; chaves antigas guardadas no navegador são apagadas automaticamente (inclusive das cópias locais por conta).
+- Autenticação mantida: e-mail e senha (entrar, criar conta, recuperar senha) e Google OAuth. Publique este pacote no mesmo endereço já autorizado em Authentication > URL Configuration.
+- Corrigida a URL padrão do projeto, que tinha um caractere trocado.
+- Bibliotecas Tailwind e Supabase agora com versão fixa. O service worker passa a guardar supabase-config.js.
