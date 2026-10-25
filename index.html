@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V6</title>
+    <title>Planejador de Estudos | Concursos — V10.3</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -29,7 +29,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script src="./supabase-config.js"></script>
     <script>
-      window.APP_VERSION = 'V10.1';
+      // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME.txt.
+      window.APP_VERSION = 'V10.3';
       // V10: URL e chave PÚBLICA do Supabase vêm de supabase-config.js (ninguém digita); a chave do Gemini nunca fica no navegador.
       try {
         var cfg = window.PLANEJADOR_SUPABASE;
@@ -72,7 +73,16 @@
         .priority-group-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:800;border-bottom:1px solid #eef2f6}
         .priority-group-head .priority-chevron{margin-left:auto;transition:transform .16s ease;flex:0 0 auto}
         .priority-group[open]>.priority-group-head .priority-chevron{transform:rotate(90deg)}
-        .activity-panel{position:relative;overflow:hidden}
+        .activity-panel{position:relative;overflow:hidden;align-self:start}
+        .activity-panel-head[role=button]{cursor:pointer;user-select:none}
+        .activity-panel-head[role=button]:focus-visible{outline:2px solid #2563eb;outline-offset:3px;border-radius:8px}
+        .activity-panel .panel-chevron{transition:transform .2s ease}
+        .activity-panel:not(.collapsed) .panel-chevron{transform:rotate(180deg)}
+        .activity-panel.collapsed > :not(.activity-panel-head):not(.panel-summary){display:none}
+        .activity-panel.collapsed .activity-panel-head{border-bottom-color:transparent;padding-bottom:0}
+        .activity-panel.collapsed .activity-panel-head p{display:none}
+        .activity-panel:not(.collapsed) > .panel-summary{display:none}
+        .activity-panel .panel-summary{min-height:1rem}
         .activity-panel:before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:#2563eb}
         .activity-panel.suggestions-panel:before{background:#059669}
         .activity-panel-head{padding-bottom:10px;border-bottom:1px solid #eef2f6}
@@ -865,7 +875,7 @@
         }
         let studySessions = JSON.parse(localStorage.getItem('tce_go_pro_sessions')) || defaultInitialSessions;
 
-        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); }
+        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = 'Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
         preencherVersao(); document.addEventListener('DOMContentLoaded', preencherVersao);
 
         // V10.1: avisos informativos viram toasts (não bloqueiam a tela); só confirmações e textos longos usam caixa.
@@ -1179,6 +1189,40 @@
             updateRegTopics();
             showCustomDialog('Disciplina selecionada', 'A disciplina '+item.discipline+' foi selecionada conforme a estratégia configurada. Escolha o tópico e registre o estudo.');
         }
+        // Cartões recolhíveis: Últimos estudos, Sugestões, Revisões sugeridas e Últimas revisões (iniciam fechados).
+        // Resumo do cartão fechado: disciplina + o dado mais útil do primeiro item (posições entre os textos do cartão).
+        const PANEL_SUMMARY_PARTS={'recent-rotation-container':[0,2,3],'next-study-container':[0,1],'review-due-container':[0,2],'recent-reviews-container':[0,2]};
+        function getPanelSummaryText(container){
+            const first=container.firstElementChild; if(!first) return '';
+            const msg=first.querySelector('p'); if(msg) return msg.textContent.trim();
+            const texts=[...first.querySelectorAll('div')].filter(d=>!d.firstElementChild&&!d.closest('button')).map(d=>d.textContent.trim()).filter(t=>t&&!/^\d+$/.test(t));
+            const picks=(PANEL_SUMMARY_PARTS[container.id]||[0,1]).map(i=>texts[i]).filter(Boolean);
+            return picks.join(' · ');
+        }
+        function initCollapsiblePanels(){
+            ['recent-rotation-container','next-study-container','review-due-container','recent-reviews-container'].forEach(id=>{
+                const container=document.getElementById(id); const panel=container&&container.closest('.activity-panel');
+                const head=panel&&panel.querySelector('.activity-panel-head');
+                if(!panel||!head||panel.dataset.collapsibleReady) return;
+                panel.dataset.collapsibleReady='1';
+                const summary=document.createElement('div');
+                summary.className='panel-summary mt-2 text-[11px] font-medium text-slate-600 dark:text-slate-300';
+                head.insertAdjacentElement('afterend',summary);
+                const chevron=document.createElement('i');
+                chevron.className='fa-solid fa-chevron-down panel-chevron ml-1 shrink-0 text-xs text-slate-400';
+                chevron.setAttribute('aria-hidden','true'); head.appendChild(chevron);
+                head.setAttribute('role','button'); head.tabIndex=0; head.setAttribute('aria-expanded','false');
+                panel.classList.add('collapsed');
+                const toggle=()=>{const closed=panel.classList.toggle('collapsed'); head.setAttribute('aria-expanded',String(!closed));};
+                head.addEventListener('click',toggle);
+                head.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+                const refresh=()=>{summary.textContent=getPanelSummaryText(container);};
+                new MutationObserver(refresh).observe(container,{childList:true});
+                refresh();
+            });
+        }
+        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCollapsiblePanels); else initCollapsiblePanels();
+
         function renderRecentRotation() {
             const container=document.getElementById('recent-rotation-container');
             if(!container) return;

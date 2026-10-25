@@ -1,9 +1,10 @@
-PLANEJADOR DE ESTUDOS — PWA V8 COM MESCLAGEM DE REGISTROS ENTRE DISPOSITIVOS
+PLANEJADOR DE ESTUDOS — PWA V10.3
 
 CONTEÚDO DO PACOTE
-- index.html: Planejador de Estudos PWA V8 (inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
+- index.html: Planejador de Estudos PWA V10.3 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
 - manifest.webmanifest: configuração de instalação como PWA.
-- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth.
+- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-3-cartoes-recolhiveis.
+- index-V7.html e index-V8.html: cópias históricas dessas versões, mantidas só como referência; não precisam ser publicadas.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
 - CONFIGURAR_TABELA_SE_NECESSARIO.sql: SQL opcional, apenas se a tabela de estudos ainda não existir.
@@ -140,3 +141,16 @@ VERSÃO V10 - CHAVE PÚBLICA FIXA, IA PELO SERVIDOR E AUTENTICAÇÃO
 - Autenticação mantida: e-mail e senha (entrar, criar conta, recuperar senha) e Google OAuth. Publique este pacote no mesmo endereço já autorizado em Authentication > URL Configuration.
 - Corrigida a URL padrão do projeto, que tinha um caractere trocado.
 - Bibliotecas Tailwind e Supabase agora com versão fixa. O service worker passa a guardar supabase-config.js.
+
+
+VERSÃO V10.1 — AVISOS SEM POP-UPS
+- Avisos informativos passaram a aparecer como mensagens rápidas (toasts) que não bloqueiam a tela; só confirmações e textos longos usam caixa de diálogo.
+
+VERSÃO V10.2 — 25/10/2026 — DESEMPENHO DOS MENUS
+- Registro: o histórico mostra 30 sessões por vez (botão "Mostrar mais 30") e o formulário de edição de cada sessão é montado só ao clicar em "Editar campos nesta tela".
+- Edital e Dashboard: buscas repetidas de progresso e de prioridades substituídas por consulta direta.
+- Os botões do menu respondem imediatamente e a tela é desenhada em seguida.
+
+VERSÃO V10.3 — 25/10/2026 — CARTÕES RECOLHÍVEIS E REVISÃO DE VERSÕES
+- Últimos estudos, Sugestões para os próximos estudos, Revisões sugeridas e Últimas revisões viram cartões que abrem e fecham ao clicar no título. Iniciam fechados e, fechados, mostram um resumo do primeiro item.
+- Versão unificada: o título da aba e o selo do cabeçalho vêm de window.APP_VERSION em index.html (antes o título mostrava V6 e este arquivo indicava V8). Cache do service worker: planejador-estudos-v10-3-cartoes-recolhiveis.
