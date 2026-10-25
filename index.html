@@ -203,26 +203,26 @@
             </div>
         </div>
         <div class="tab-nav header-nav flex overflow-x-auto gap-2 no-scrollbar">
-            <button onclick="switchTab('cronograma')" id="tab-cronograma" class="tab-btn active-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-list-check"></i>
                 <span>Cronograma & Prioridades</span>
             </button>
-            <button onclick="switchTab('registro')" id="tab-registro" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span>Registro de Estudos</span>
             </button>
-            <button onclick="switchTab('edital')" id="tab-edital" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('edital',true)" id="tab-edital" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-book-open"></i>
                 <span>Edital Verticalizado</span>
             </button>
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Dashboard & KPIs</span>
             </button>
-            <button onclick="switchTab('personalizacao')" id="tab-personalizacao" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-sliders"></i><span>Personalização</span>
             </button>
-            <button onclick="switchTab('configuracoes')" id="tab-configuracoes" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
+            <button onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-gear"></i><span>Configurações</span>
             </button>
         </div>
@@ -991,7 +991,7 @@
         }
 
         // Alternância de Abas
-        function switchTab(tabId) {
+        function switchTab(tabId, defer) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'active-tab');
@@ -1006,11 +1006,16 @@
                 activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'active-tab');
             }
 
-            if (tabId === 'dashboard') renderDashboard();
-            if (tabId === 'registro') initRegistrationForm();
-            if (tabId === 'edital') initEditalFilters();
-            if (tabId === 'cronograma') initCronogramaFilters();
-            if (tabId === 'personalizacao') renderCustomization();
+            const token = window._tabToken = (window._tabToken || 0) + 1;
+            const renderTab = () => {
+                if (window._tabToken !== token) return;
+                if (tabId === 'dashboard') renderDashboard();
+                if (tabId === 'registro') initRegistrationForm();
+                if (tabId === 'edital') initEditalFilters();
+                if (tabId === 'cronograma') initCronogramaFilters();
+                if (tabId === 'personalizacao') renderCustomization();
+            };
+            if (defer) requestAnimationFrame(() => setTimeout(renderTab, 0)); else renderTab();
             
         }
 
@@ -1061,7 +1066,7 @@
             return m ? new Date(`${m[3]}-${m[2]}-${m[1]}T12:00:00`) : new Date(value);
         }
         function getSessionsNewestFirst() {
-            return [...studySessions].sort((a,b) => parseBRDate(b.date) - parseBRDate(a.date));
+            return studySessions.map(x=>({x,t:parseBRDate(x.date).getTime()||0})).sort((a,b)=>b.t-a.t).map(o=>o.x);
         }
         function localTodayISO() {
             const d=new Date();
@@ -1586,10 +1591,13 @@
             const typeFilter=document.getElementById('hist-filter-type')?.value||'all';
             const discFilter=document.getElementById('hist-filter-disc')?.value||'all';
             const trackFilter=document.getElementById('hist-filter-track')?.value||'all';
+            const _fk=[typeFilter,discFilter,trackFilter].join('|');
+            if(window._sessionsFilterKey!==_fk){window._sessionsFilterKey=_fk;window._sessionsLimit=30;}
+            const _limit=window._sessionsLimit||30;
             const filteredSessions=getSessionsNewestFirst().filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
             const badge=document.getElementById('session-count-badge');if(badge)badge.innerText=`${filteredSessions.length} ${filteredSessions.length===1?'registro':'registros'}`;
             if(!filteredSessions.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado para os filtros selecionados.</p>';return;}
-            filteredSessions.forEach(s=>{
+            filteredSessions.slice(0,_limit).forEach(s=>{
                 const div=document.createElement('div');
                 div.className='p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 flex flex-col gap-2 text-xs';
                 const revision=isRevisionSession(s);
@@ -1597,12 +1605,25 @@
                     <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><span class="font-bold ${revision?'text-purple-700 dark:text-purple-300':'text-blue-700 dark:text-blue-300'}">${escapeHtml(s.type2||'Estudo')}</span><span class="text-slate-400">•</span><span class="font-semibold">${escapeHtml(s.discipline||'')}</span><span class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">${escapeHtml(s.type1||'Conhecimentos Específicos')}</span><span class="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">${escapeHtml(s.studyTrack||'Trilha não informada')}</span></div>
                     <div class="text-slate-700 dark:text-slate-200 font-medium mt-1">${escapeHtml(s.topic||'')}${s.subtopic?': '+escapeHtml(s.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(s.date||'')}${revision?' · Revisão':''}</div></div>
                     <div class="flex flex-wrap items-center gap-2 font-mono shrink-0"><span class="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-bold">${(Number(s.minutes||0)/60).toFixed(1)} h</span><span class="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1 rounded font-bold">${Number(s.questions||0)} ${Number(s.questions||0)===1?'questão':'questões'}</span><button type="button" class="delete-session-btn text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-slate-700" title="Excluir registro"><i class="fa-solid fa-trash"></i></button></div>
-                    </div>${getInlineSessionEditorMarkup(s)}`;
+                    </div><div class="session-edit-slot"><button type="button" class="session-edit-open mt-2 cursor-pointer select-none text-xs font-bold text-blue-700 dark:text-blue-300"><i class="fa-solid fa-pen-to-square mr-1"></i>Editar campos nesta tela</button></div>`;
                 div.querySelector('.delete-session-btn')?.addEventListener('click',()=>deleteSession(s.id));
-                const form=div.querySelector('.inline-session-edit');
-                if(form){form.addEventListener('submit',saveInlineSession);form.querySelector('[name="discipline"]')?.addEventListener('change',()=>populateInlineTopicSelect(form));form.querySelector('.inline-edit-cancel')?.addEventListener('click',()=>{const details=form.closest('details');if(details)details.open=false;});}
+                div.querySelector('.session-edit-open')?.addEventListener('click',()=>{
+                    const slot=div.querySelector('.session-edit-slot');
+                    slot.innerHTML=getInlineSessionEditorMarkup(s);
+                    const det=slot.querySelector('details');
+                    const form=slot.querySelector('.inline-session-edit');
+                    if(form){form.addEventListener('submit',saveInlineSession);form.querySelector('[name="discipline"]')?.addEventListener('change',()=>populateInlineTopicSelect(form));form.querySelector('.inline-edit-cancel')?.addEventListener('click',()=>{if(det)det.open=false;});}
+                    if(det)det.open=true;
+                });
                 container.appendChild(div);
             });
+            if(filteredSessions.length>_limit){
+                const more=document.createElement('button');more.type='button';
+                more.className='w-full py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800';
+                more.textContent=`Mostrar mais 30 (restam ${filteredSessions.length-_limit})`;
+                more.addEventListener('click',()=>{window._sessionsLimit=_limit+30;renderSessionsList();});
+                container.appendChild(more);
+            }
         }
 
         function updateEditSessionTopics(selectedId) {
@@ -1719,6 +1740,7 @@
             const topicFilter = document.getElementById('edital-filter-topic').value;
 
             updateEditalTopicsFilter();
+            const _ps=getPrioritySettings();const _prog=new Map(userProgress.map(u=>[u.id,u]));
 
             let list = [...masterEditalData];
             if (discFilter !== 'all') {
@@ -1746,7 +1768,7 @@
                 
                 let topicsHtml = '';
                 topics.forEach(t => {
-                    const u = userProgress.find(x => x.id === t.id);
+                    const u = _prog.get(t.id);
                     const isCompleted = u ? u.completed : false;
                     const hours = u ? u.hours : 0;
                     const questions = u ? u.questions : 0;
@@ -1759,7 +1781,7 @@
                                 <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${t.topic}</div>
                                 <div class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">${t.subtopic}</div>
                                 <div class="text-[10px] text-slate-500 flex flex-wrap items-center gap-2 mt-1.5">
-                                    <span>Prioridade: <strong style="color:${getPrioritySettings()[t.priority]?.color||'#64748b'}">${escapeHtml(getPriorityLabel(t.priority))}</strong></span>
+                                    <span>Prioridade: <strong style="color:${_ps[t.priority]?.color||'#64748b'}">${escapeHtml(_ps[t.priority]?.label||t.priority||'Média')}</strong></span>
                                     <span>•</span>
                                     <span>Peso: <strong>${t.weight}</strong></span>
                                     <span>•</span>
@@ -1775,7 +1797,7 @@
                 });
 
                 const completedInDisc = topics.filter(t => {
-                    const u = userProgress.find(x => x.id === t.id);
+                    const u = _prog.get(t.id);
                     return u && u.completed;
                 }).length;
 
@@ -2996,6 +3018,7 @@
 
         function renderDashboard() {
             initDashFilter();
+            const _prog=new Map(userProgress.map(u=>[u.id,u]));
             const container = document.getElementById('dashboard-disciplines-container');
             container.innerHTML = '';
 
@@ -3030,7 +3053,7 @@
                 let completedCount = 0;
 
                 topics.forEach(t => {
-                    const u = userProgress.find(x => x.id === t.id);
+                    const u = _prog.get(t.id);
                     const isDone = u && u.completed;
                     const h = u ? u.hours : 0;
                     const q = u ? u.questions : 0;
