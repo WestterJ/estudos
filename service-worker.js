@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planejador-estudos-v10-5-menu-lateral';
+const CACHE_NAME = 'planejador-estudos-v10-6-sem-dados-nativos';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

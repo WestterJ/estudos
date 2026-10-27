@@ -1,10 +1,9 @@
-PLANEJADOR DE ESTUDOS — PWA V10.5
+PLANEJADOR DE ESTUDOS — PWA V10.6
 
 CONTEÚDO DO PACOTE
-- index.html: Planejador de Estudos PWA V10.5 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
+- index.html: Planejador de Estudos PWA V10.6 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
 - manifest.webmanifest: configuração de instalação como PWA.
-- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-5-menu-lateral.
-- index-V7.html e index-V8.html: cópias históricas dessas versões, mantidas só como referência; não precisam ser publicadas.
+- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-6-sem-dados-nativos.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
 - CONFIGURAR_TABELA_SE_NECESSARIO.sql: SQL opcional, apenas se a tabela de estudos ainda não existir.
@@ -169,3 +168,13 @@ VERSÃO V10.4 — 26/10/2026 — TABELA DE REGISTROS, DATAS IMPORTANTES E CONFIG
 VERSÃO V10.5 — 27/10/2026 — MENU LATERAL E HORAS EM HH:MM
 - Os botões do menu superior viraram um menu lateral retrátil. No computador ele fica fixo à esquerda e pode ser recolhido para só ícones (botão "Recolher menu"; a escolha fica guardada neste navegador). No celular e em telas estreitas vira uma gaveta aberta pelo botão ☰ do cabeçalho, que fecha ao escolher uma seção, ao tocar fora ou com Esc.
 - Horas passam a aparecer como 1.5h (01:30) no lugar de 1.5h (0d01h30). Acima de 24 horas continua em horas totais (ex.: 26:45).
+
+
+VERSÃO V10.6 — 27/10/2026 — SEM DADOS NATIVOS, CONCURSO NO MENU LATERAL E TRILHAS
+- Removido o conteúdo de exemplo embutido no código (concurso TCE-GO, 38 tópicos, sessões, progresso e datas). Toda conta nova começa vazia, com o concurso "Meu concurso", e mostra um guia de primeiros passos. Ao entrar em outro aparelho com uma conta que já tem dados, o concurso vazio padrão não se mistura com os da conta.
+- index-V7.html e index-V8.html saíram do pacote porque ainda traziam o concurso de exemplo. Se estiverem publicados, apague-os.
+- O seletor de concurso e o botão "Lançar estudo" foram para o topo do menu lateral; o botão de tema ficou no rodapé dele. No celular há também um botão flutuante "+" para lançar estudo.
+- Cursos / trilhas agora são cadastrados em Personalização (adicionar, renomear, excluir) e escolhidos em uma lista no Registro de Estudos. O campo Questões começa em 0 e volta a 0 depois de salvar.
+- Tabela do histórico compacta: Atividade e Conteúdo empilhados, Disciplina e Tópico empilhados, ações em ícones; mostra 20 linhas por vez.
+- Subtítulo do cabeçalho mostra os dias que faltam: Prova em dd/mm/aaaa (faltam N dias).
+- Resetar progresso agora salva o resultado e não traz de volta, na sincronização, as sessões apagadas.

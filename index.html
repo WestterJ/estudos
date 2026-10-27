@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.5</title>
+    <title>Planejador de Estudos | Concursos — V10.6</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -30,7 +30,7 @@
     <script src="./supabase-config.js"></script>
     <script>
       // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME.txt.
-      window.APP_VERSION = 'V10.5';
+      window.APP_VERSION = 'V10.6';
       // V10: URL e chave PÚBLICA do Supabase vêm de supabase-config.js (ninguém digita); a chave do Gemini nunca fica no navegador.
       try {
         var cfg = window.PLANEJADOR_SUPABASE;
@@ -113,14 +113,39 @@
         .app-sidebar .tab-btn i{width:20px;flex:none;text-align:center;font-size:15px}
         .app-sidebar .tab-btn.active-tab{box-shadow:inset 4px 0 0 var(--app-gold),0 2px 5px #003a7026}
         .dark .app-sidebar .tab-btn.active-tab{background:var(--app-gold)!important;color:var(--app-navy)!important;box-shadow:none}
-        .sidebar-collapse-btn{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--app-border);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-        .sidebar-collapse-btn:hover{background:#f1f5f9}.dark .sidebar-collapse-btn{border-color:#334155;color:#94a3b8}.dark .sidebar-collapse-btn:hover{background:#0f172a}
-        .sidebar-collapse-btn i{width:20px;text-align:center;transition:transform .2s ease}
+        .sidebar-foot-btn{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--app-border);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+        .sidebar-foot-btn:hover{background:#f1f5f9}.dark .sidebar-foot-btn{border-color:#334155;color:#94a3b8}.dark .sidebar-foot-btn:hover{background:#0f172a}
+        .sidebar-foot-btn i{width:20px;text-align:center;transition:transform .2s ease}
         body.sidebar-collapsed .app-sidebar{width:68px;padding-left:8px;padding-right:8px}
         body.sidebar-collapsed .app-sidebar .nav-label{display:none}
-        body.sidebar-collapsed .app-sidebar .tab-btn,body.sidebar-collapsed .sidebar-collapse-btn{justify-content:center;padding-left:0;padding-right:0}
+        body.sidebar-collapsed .app-sidebar .tab-btn,body.sidebar-collapsed .sidebar-launch,body.sidebar-collapsed .sidebar-foot-btn{justify-content:center;padding-left:0;padding-right:0}
         body.sidebar-collapsed .sidebar-collapse-btn i{transform:rotate(180deg)}
         .sidebar-backdrop{display:none}
+                /* ===== V10.6: concurso e ação rápida no menu lateral, tabela compacta ===== */
+        .sidebar-contest{display:flex;flex-direction:column;gap:4px}
+        .sidebar-label{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;padding:0 4px}
+        .sidebar-select{width:100%;box-sizing:border-box;font-size:12px;font-weight:600;padding:9px 10px;border-radius:10px;border:1px solid var(--app-border);background:#f8fafc;color:#334155;outline:none}
+        .dark .sidebar-select{background:#0f172a;border-color:#334155;color:#e2e8f0}
+        .sidebar-select:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+        .sidebar-icon-btn{display:none;align-items:center;justify-content:center;width:100%;padding:10px 0;border-radius:9px;border:1px solid var(--app-border);background:transparent;color:#64748b;cursor:pointer}
+        .dark .sidebar-icon-btn{border-color:#334155;color:#94a3b8}
+        .sidebar-launch{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;border-radius:12px;font-size:13px;font-weight:800;border:0;cursor:pointer;white-space:nowrap}
+        .sidebar-divider{height:1px;margin:2px;background:var(--app-border)}
+        .dark .sidebar-divider{background:#334155}
+        .sidebar-foot{display:flex;flex-direction:column;gap:6px}
+        .fab-launch{display:none}
+        body.sidebar-collapsed .sidebar-select,body.sidebar-collapsed .sidebar-label{display:none}
+        body.sidebar-collapsed .sidebar-icon-btn{display:flex}
+        .tbl-field.tbl-sub{font-size:11px;color:#64748b;padding-top:2px;padding-bottom:2px}
+        .dark .tbl-field.tbl-sub{color:#94a3b8}
+        .sess-ico{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;border:0;font-size:12px;cursor:pointer}
+        @media (max-width:1023px){
+            body.sidebar-collapsed .sidebar-select{display:block}
+            body.sidebar-collapsed .sidebar-label{display:block}
+            body.sidebar-collapsed .sidebar-icon-btn{display:none}
+            .fab-launch{display:flex;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;align-items:center;justify-content:center;font-size:20px;z-index:40;border:0;box-shadow:0 8px 20px rgba(15,23,42,.3);cursor:pointer}
+            body.sidebar-open .fab-launch,body[data-tab="registro"] .fab-launch{display:none}
+        }
         .mobile-menu-btn{display:none;width:40px;height:40px;flex:none;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.10);color:#fff;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
         @media (max-width:1023px){
             .mobile-menu-btn{display:inline-flex}
@@ -269,6 +294,13 @@
     <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebarMobile()"></div>
     <div class="app-shell">
         <aside id="app-sidebar" class="app-sidebar" aria-label="Menu principal">
+          <div class="sidebar-contest">
+            <label for="contest-selector" class="sidebar-label nav-label">Concurso</label>
+            <select id="contest-selector" onchange="changeContest(this.value)" class="sidebar-select" aria-label="Concurso"></select>
+            <button type="button" id="sidebar-contest-icon" class="sidebar-icon-btn" onclick="toggleSidebar()" title="Concurso ativo. Expanda o menu para trocar" aria-label="Expandir o menu para trocar de concurso"><i class="fa-solid fa-flag-checkered"></i></button>
+          </div>
+          <button type="button" id="sidebar-launch" class="app-primary sidebar-launch" onclick="launchStudyFromSidebar()" title="Lançar estudo"><i class="fa-solid fa-plus"></i><span class="nav-label">Lançar estudo</span></button>
+          <div class="sidebar-divider" role="presentation"></div>
           <nav class="sidebar-nav" aria-label="Seções do planejador">
             <button type="button" onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab bg-blue-600 text-white shadow-sm" title="Cronograma & Prioridades" aria-current="page"><i class="fa-solid fa-list-check"></i><span class="nav-label">Cronograma & Prioridades</span></button>
             <button type="button" onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Registro de Estudos"><i class="fa-solid fa-clock-rotate-left"></i><span class="nav-label">Registro de Estudos</span></button>
@@ -278,26 +310,14 @@
             <span class="sidebar-spacer"></span>
             <button type="button" onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Configurações"><i class="fa-solid fa-gear"></i><span class="nav-label">Configurações</span></button>
           </nav>
-          <button type="button" id="sidebar-toggle" class="sidebar-collapse-btn" onclick="toggleSidebar()" aria-expanded="true" aria-controls="app-sidebar" title="Recolher menu"><i class="fa-solid fa-angles-left"></i><span class="nav-label">Recolher menu</span></button>
+          <div class="sidebar-foot">
+            <button type="button" id="sidebar-theme" class="sidebar-foot-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro"><i id="theme-icon" class="fa-solid fa-moon"></i><span class="nav-label">Alternar tema</span></button>
+            <button type="button" id="sidebar-toggle" class="sidebar-foot-btn sidebar-collapse-btn" onclick="toggleSidebar()" aria-expanded="true" aria-controls="app-sidebar" title="Recolher menu"><i class="fa-solid fa-angles-left"></i><span class="nav-label">Recolher menu</span></button>
+          </div>
+          <span id="countdown-badge" hidden data-exam-date=""><span id="countdown-text"></span></span>
         </aside>
+        <button type="button" id="fab-launch" class="fab-launch app-primary" onclick="launchStudyFromSidebar()" aria-label="Lançar estudo" title="Lançar estudo"><i class="fa-solid fa-plus"></i></button>
 <main class="flex-1 min-w-0 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col">
-        <section class="quick-toolbar" aria-label="Concurso e ações rápidas">
-          <div class="flex items-center flex-wrap gap-2">
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Concurso
-              <select id="contest-selector" onchange="changeContest(this.value)" class="ml-1 text-xs rounded-lg border border-slate-300 p-2 text-slate-700 bg-slate-50 min-w-[190px]">
-                <option value="tce-go-2026-2027">TCE-GO 2026/2027</option>
-              </select>
-            </label>
-          </div>
-          <div class="right-tools flex items-center flex-wrap gap-2">
-            <div id="countdown-badge" class="flex items-center space-x-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg text-xs font-semibold" data-exam-date="2027-01-17">
-              <i class="fa-regular fa-clock"></i><span id="countdown-text">Calculando prova...</span>
-            </div>
-            <button onclick="switchTab('registro');window.scrollTo({top:0,behavior:'smooth'})" class="app-primary px-3 py-2 rounded-lg text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Lançar estudo</button>
-            <button onclick="toggleDarkMode()" class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition" title="Alternar tema"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
-          </div>
-        </section>
-        
         <!-- ABA 1: CRONOGRAMA & PRIORIDADES -->
         <div id="content-cronograma" class="tab-content flex-1 flex flex-col space-y-4 sm:space-y-6">
             
@@ -433,8 +453,8 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Curso / trilha:</label>
-                            <input id="reg-track" list="study-tracks-list" value="Curso regular" maxlength="100" placeholder="Ex.: Curso intensivo" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                            <datalist id="study-tracks-list"><option value="Curso regular"><option value="Curso intensivo"><option value="Estudo individual"><option value="Simulados"><option value="Outro"></datalist>
+                            <select id="reg-track" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></select>
+                            
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Disciplina:</label>
@@ -451,7 +471,7 @@
                             </div>
                             <div>
                                 <label class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Questões:</label>
-                                <input type="number" id="reg-questions" min="0" value="10" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
+                                <input type="number" id="reg-questions" min="0" value="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
                             </div>
                         </div>
                         <div class="xl:col-span-4 flex flex-wrap items-center justify-between gap-2">
@@ -616,9 +636,9 @@
             <h2 class="font-bold text-lg mb-1">Personalização do concurso</h2>
             <p class="text-xs text-slate-500 mb-4">Defina grupos, prioridades e pesos por disciplina para o concurso selecionado.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div><label class="block text-xs mb-1">Nome do concurso</label><input id="contest-name" class="w-full rounded-lg border p-2 text-sm" value="TCE-GO 2026/2027"></div>
-              <div><label class="block text-xs mb-1">Banca</label><input id="contest-board" class="w-full rounded-lg border p-2 text-sm" value="FCC"></div>
-              <div><label class="block text-xs mb-1">Data da prova</label><input id="contest-date" type="date" class="w-full rounded-lg border p-2 text-sm" value="2027-01-17"></div>
+              <div><label class="block text-xs mb-1">Nome do concurso</label><input id="contest-name" class="w-full rounded-lg border p-2 text-sm" placeholder="Ex.: Concurso do Tribunal 2027"></div>
+              <div><label class="block text-xs mb-1">Banca</label><input id="contest-board" class="w-full rounded-lg border p-2 text-sm" placeholder="Ex.: FCC"></div>
+              <div><label class="block text-xs mb-1">Data da prova</label><input id="contest-date" type="date" class="w-full rounded-lg border p-2 text-sm"></div>
             </div>
             <div class="flex flex-wrap gap-2 mt-4">
               <button onclick="saveContestSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Salvar concurso</button>
@@ -664,6 +684,17 @@
               <button onclick="saveDisciplineCustomizations()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar disciplinas</button>
               <span class="text-[11px] text-slate-500">Remover uma disciplina exclui seus tópicos do edital e do cronograma, mas preserva os lançamentos históricos já feitos.</span>
             </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
+            <h2 class="font-bold text-lg mb-1">Cursos e trilhas de estudo</h2>
+            <p class="text-xs text-slate-500 mb-4">Cadastre as opções que aparecem no campo “Curso / trilha” do Registro de Estudos (ex.: Curso regular, Simulados, Estudo individual).</p>
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+              <input id="new-track-name" maxlength="60" class="flex-1 rounded-lg border border-slate-300 p-2.5 text-sm dark:bg-slate-900 dark:border-slate-600" placeholder="Nome do curso ou trilha (ex.: Curso intensivo)" onkeydown="if(event.key==='Enter'){event.preventDefault();addStudyTrack();}">
+              <button onclick="addStudyTrack()" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Adicionar</button>
+            </div>
+            <ul id="study-tracks-manager" class="space-y-2"></ul>
+            <p class="mt-3 text-[11px] text-slate-500">Renomear uma trilha atualiza também os registros que já usam esse nome. Excluir apenas retira a opção da lista.</p>
           </div>
         </div>
         <div id="content-configuracoes" class="tab-content hidden flex-1 flex flex-col space-y-5">
@@ -770,67 +801,11 @@
 
     <script>
         // Banco de Dados Oficial Completo extraído do Edital e da Planilha ODS (Todas as disciplinas, tópicos e subtópicos)
-        let masterEditalData = [
-            // Legislação Institucional
-            { id: 'tce_1', discipline: 'Legislação Institucional', topic: 'Constituição Federal de 1988 (Administração e Controle)', subtopic: '3.1 CF/88: Fiscalização Contábil, Financeira e Orçamentária', priority: 'Vermelha', weight: '5 questões', hours: 4.3, questions: 20, reviews: 2, completed: true, notes: 'Foco nos Arts. 70 a 75.' },
-            { id: 'tce_2', discipline: 'Legislação Institucional', topic: 'Constituição do Estado de Goiás (TCE-GO)', subtopic: '3.2 Constituição Estadual: Tribunal de Contas do Estado', priority: 'Vermelha', weight: '5 questões', hours: 4.0, questions: 20, reviews: 2, completed: true, notes: 'Competências do TCE-GO.' },
-            { id: 'tce_3', discipline: 'Legislação Institucional', topic: 'Lei Orgânica do TCE-GO (Lei nº 16.168/2007)', subtopic: '3.3 Lei Orgânica do TCE-GO e Regimento Interno', priority: 'Vermelha', weight: '5 questões', hours: 5.0, questions: 15, reviews: 1, completed: true, notes: 'Organização e jurisdição.' },
-            { id: 'tce_4', discipline: 'Legislação Institucional', topic: 'Regimento Interno do TCE-GO (Resolução nº 22/2008)', subtopic: '3.4 Resolução nº 22/2008 - Atribuições e Processos', priority: 'Vermelha', weight: '5 questões', hours: 3.5, questions: 15, reviews: 1, completed: true, notes: '' },
-            { id: 'tce_5', discipline: 'Legislação Institucional', topic: 'Plano de Cargos e Carreiras do TCE-GO (Lei nº 15.122/2005)', subtopic: '3.5 Lei Estadual nº 15.122/2005 - PCCR', priority: 'Amarela', weight: '5 questões', hours: 3.0, questions: 12, reviews: 1, completed: true, notes: '' },
-            { id: 'tce_6', discipline: 'Legislação Institucional', topic: 'Regime Jurídico dos Servidores de Goiás (Lei nº 20.756/2020)', subtopic: '3.6 Lei Estadual nº 20.756/2020 - Estatuto dos Servidores', priority: 'Amarela', weight: '5 questões', hours: 2.5, questions: 10, reviews: 1, completed: true, notes: '' },
-            { id: 'tce_7', discipline: 'Legislação Institucional', topic: 'Código de Ética do TCE-GO', subtopic: '3.7 Código de Ética e Conduta Profissional', priority: 'Verde', weight: '5 questões', hours: 2.0, questions: 10, reviews: 1, completed: true, notes: '' },
-            { id: 'tce_8', discipline: 'Legislação Institucional', topic: 'Políticas institucionais do TCE-GO', subtopic: '3.8 Resoluções normativas de governança e gestão', priority: 'Verde', weight: '5 questões', hours: 1.5, questions: 8, reviews: 1, completed: true, notes: '' },
-            { id: 'tce_9', discipline: 'Legislação Institucional', topic: 'Sistema de Planejamento e Gestão', subtopic: '3.9 Resolução Administrativa nº 15/2024 e Planejamento Institucional', priority: 'Verde', weight: '5 questões', hours: 1.0, questions: 5, reviews: 1, completed: true, notes: '' },
-
-            // Noções de Controle Externo (10 tópicos completos da ODS)
-            { id: 'tce_10', discipline: 'Noções de Controle Externo', topic: 'Sistema Constitucional de Controle', subtopic: 'controle interno e controle externo', priority: 'Vermelha', weight: '4 questões', hours: 1.0, questions: 5, reviews: 0, completed: true, notes: '' },
-            { id: 'tce_11', discipline: 'Noções de Controle Externo', topic: 'Instrumentos de Fiscalização', subtopic: 'auditoria, levantamento, monitoramento, acompanhamento e inspeção', priority: 'Vermelha', weight: '4 questões', hours: 0.5, questions: 4, reviews: 0, completed: true, notes: '' },
-            { id: 'tce_12', discipline: 'Noções de Controle Externo', topic: 'Tipos de Auditoria', subtopic: 'de conformidade, operacional e financeira', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_13', discipline: 'Noções de Controle Externo', topic: 'Normas de Auditoria Governamental', subtopic: 'normas da INTOSAI', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_14', discipline: 'Noções de Controle Externo', topic: 'Normas de Auditoria Governamental', subtopic: 'Normas Brasileiras de Auditoria do Setor Público (NBASP 100, 200, 300, 400)', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_15', discipline: 'Noções de Controle Externo', topic: 'Planejamento de Auditoria', subtopic: 'determinação de escopo e amostragem estatística', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_16', discipline: 'Noções de Controle Externo', topic: 'Planejamento de Auditoria', subtopic: 'matriz de risco', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_17', discipline: 'Noções de Controle Externo', topic: 'Programas de Auditoria', subtopic: '6.1', priority: 'Vermelha', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_18', discipline: 'Noções de Controle Externo', topic: 'Técnicas de Auditoria', subtopic: 'exame documental, inspeção física, conferência de cálculos, observação, entrevista', priority: 'Amarela', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_19', discipline: 'Noções de Controle Externo', topic: 'Evidências e Achados', subtopic: 'Evidências e caracterização de achados de auditoria', priority: 'Amarela', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_20', discipline: 'Noções de Controle Externo', topic: 'Evidências e Achados', subtopic: 'matriz de achados e matriz de responsabilização', priority: 'Amarela', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_21', discipline: 'Noções de Controle Externo', topic: 'Comunicação de Resultados', subtopic: 'relatórios de auditoria', priority: 'Verde', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_22', discipline: 'Noções de Controle Externo', topic: 'Comunicação de Resultados', subtopic: 'monitoramento das determinações e recomendações', priority: 'Verde', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_23', discipline: 'Noções de Controle Externo', topic: 'Prestações e Tomadas de Contas', subtopic: 'Prestações e Tomadas de contas', priority: 'Verde', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_24', discipline: 'Noções de Controle Externo', topic: 'Prestações e Tomadas de Contas', subtopic: 'processo de controle externo, contraditório e ampla defesa, responsabilização e sanções', priority: 'Verde', weight: '4 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Noções de AFO
-            { id: 'tce_25', discipline: 'Noções de AFO', topic: 'Orçamento Público e LRF', subtopic: 'PPA, LDO, LOA, Lei 4.320/1964 e LC 101/2000', priority: 'Vermelha', weight: '5 questões', hours: 3.0, questions: 20, reviews: 1, completed: true, notes: 'Limites de pessoal.' },
-            { id: 'tce_26', discipline: 'Noções de AFO', topic: 'Receita e Despesa Orçamentária', subtopic: 'Etapas, estágios, classificação e restos a pagar', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Contabilidade Pública
-            { id: 'tce_27', discipline: 'Contabilidade Pública', topic: 'NBC TSP e MCASP', subtopic: 'NBC TSP Estrutura Conceitual e Demonstrações Contábeis', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_28', discipline: 'Contabilidade Pública', topic: 'Procedimentos Contábeis Patrimoniais', subtopic: 'MCASP Parte II - Variações patrimoniais e depreciação', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Licitações e Contratos
-            { id: 'tce_29', discipline: 'Licitações e Contratos', topic: 'Lei 14.133/2021', subtopic: 'Planejamento, ETP, Termo de Referência e Contratação Direta', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_30', discipline: 'Licitações e Contratos', topic: 'Contratos Administrativos', subtopic: 'Formalização, execução, fiscalização e sanções', priority: 'Amarela', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Língua Portuguesa
-            { id: 'tce_31', discipline: 'Língua Portuguesa', topic: 'Interpretação e Gramática', subtopic: 'Compreensão de textos, Morfossintaxe, Crase e Regência', priority: 'Amarela', weight: '10 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_32', discipline: 'Língua Portuguesa', topic: 'Redação Oficial', subtopic: 'Padrão Ofício e comunicação dos atos oficiais', priority: 'Verde', weight: '10 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Matemática e Raciocínio Lógico
-            { id: 'tce_33', discipline: 'Matemática e Raciocínio Lógico', topic: 'Matemática Básica e Lógica', subtopic: 'Razões, proporções, porcentagem e lógica proposicional', priority: 'Verde', weight: '10 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-
-            // Direito Administrativo
-            { id: 'tce_34', discipline: 'Noções de Direito Administrativo', topic: 'Princípios e Poderes', subtopic: 'Princípios da Administração Pública, Poderes e Deveres', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' },
-            { id: 'tce_35', discipline: 'Noções de Direito Administrativo', topic: 'Atos e Improbidade', subtopic: 'Atos Administrativos e Lei de Improbidade (Lei 8.429/1992)', priority: 'Vermelha', weight: '5 questões', hours: 0, questions: 0, reviews: 0, completed: false, notes: '' }
-        ];
-
-        // Histórico de sessões iniciais sincronizado com as horas reais (totalizando 28.5h)
-        let defaultInitialSessions = [
-            { id: 's_1', date: '01/10/2026', type1: 'Conhecimentos Específicos', type2: 'Estudo Teórico', discipline: 'Legislação Institucional', topic: 'Constituição Federal de 1988 (Administração e Controle)', subtopic: '3.1 CF/88: Fiscalização Contábil, Financeira e Orçamentária', minutes: 258, questions: 20, isReview: 1 },
-            { id: 's_2', date: '02/10/2026', type1: 'Conhecimentos Específicos', type2: 'Resolução de Questões', discipline: 'Legislação Institucional', topic: 'Constituição do Estado de Goiás (TCE-GO)', subtopic: '3.2 Constituição Estadual: Tribunal de Contas do Estado', minutes: 240, questions: 20, isReview: 1 },
-            { id: 's_3', date: '03/10/2026', type1: 'Conhecimentos Específicos', type2: 'Estudo Teórico', discipline: 'Legislação Institucional', topic: 'Lei Orgânica do TCE-GO (Lei nº 16.168/2007)', subtopic: '3.3 Lei Orgânica do TCE-GO e Regimento Interno', minutes: 300, questions: 15, isReview: 1 },
-            { id: 's_4', date: '04/10/2026', type1: 'Conhecimentos Específicos', type2: 'Simulado', discipline: 'Noções de AFO', topic: 'Orçamento Público e LRF', subtopic: 'PPA, LDO, LOA, Lei 4.320/1964 e LC 101/2000', minutes: 180, questions: 20, isReview: 0 },
-            { id: 's_5', date: '05/10/2026', type1: 'Conhecimentos Específicos', type2: 'Estudo Teórico', discipline: 'Noções de Controle Externo', topic: 'Sistema Constitucional de Controle', subtopic: 'controle interno e controle externo', minutes: 60, questions: 5, isReview: 0 }
-        ];
+        // Nenhum conteúdo de concurso vem embutido: cada usuário começa vazio e cadastra ou importa o seu edital.
+        const DEFAULT_CONTEST_ID = 'meu-concurso';
+        const DEFAULT_CONTEST_NAME = 'Meu concurso';
+        let masterEditalData = [];
+        let defaultInitialSessions = [];
 
         // Guarde o modelo inicial antes de carregar os dados locais do concurso ativo.
         window._defaultMasterEdital = JSON.parse(JSON.stringify(masterEditalData));
@@ -838,17 +813,6 @@
         try { userProgress = JSON.parse(localStorage.getItem('tce_go_pro_data')); } catch(e) {}
         if (!Array.isArray(userProgress)) userProgress = JSON.parse(JSON.stringify(masterEditalData));
         try { masterEditalData = JSON.parse(localStorage.getItem('tce_master_edital')) || masterEditalData; } catch(e) {}
-        // Disciplinas citadas pelo usuário que podem não existir no edital carregado. Inserimos marcadores explícitos, sem inventar tópicos oficiais.
-        const selectedAtStart = localStorage.getItem('tce_active_contest') || 'tce-go-2026-2027';
-        if (selectedAtStart === 'tce-go-2026-2027') {
-            const _dead0 = getTombstones(selectedAtStart).items;
-            [ 'Noções de Direito Constitucional', 'Noções de Administração Pública', 'Administração Estratégica' ].forEach((name, idx) => {
-                const placeholder = { id:'pending_discipline_'+(idx+1), discipline:name, topic:'Conteúdo programático pendente de importação', subtopic:'Importe a planilha ou analise o edital oficial para incluir os tópicos corretos.', priority:'Amarela', weight:'', studyWeight:2, hours:0, questions:0, reviews:0, completed:false, notes:'Disciplina adicionada como marcador; confirme o conteúdo no edital oficial.', placeholder:true };
-                if (!_dead0.includes(placeholder.id) && !masterEditalData.some(x => x.discipline === name)) masterEditalData.push({...placeholder});
-                if (!_dead0.includes(placeholder.id) && !userProgress.some(x => x.id === placeholder.id || x.discipline === name)) userProgress.push({...placeholder});
-                if (!window._defaultMasterEdital.some(x => x.discipline === name)) window._defaultMasterEdital.push({...placeholder});
-            });
-        }
         let studySessions = JSON.parse(localStorage.getItem('tce_go_pro_sessions')) || defaultInitialSessions;
 
         function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = 'Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
@@ -953,8 +917,9 @@
 
         // Countdown para 17 de Janeiro de 2027
         function updateCountdown() {
+            try{refreshContestSubtitle();}catch(e){}
             const badge=document.getElementById('countdown-badge');
-            const dateStr=badge ? (badge.hasAttribute('data-exam-date') ? badge.dataset.examDate : '2027-01-17') : '2027-01-17';
+            const dateStr=badge?(badge.dataset.examDate||''):'';
             const examDate=new Date(`${dateStr}T08:00:00`);
             const now=new Date();const diff=examDate-now;
             if(!dateStr || Number.isNaN(examDate.getTime())){document.getElementById('countdown-text').innerText='Data da prova não definida';return}
@@ -979,6 +944,7 @@
         // Alternância de Abas
         function switchTab(tabId, defer) {
             document.body.classList.remove('sidebar-open');
+            document.body.dataset.tab = tabId;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'active-tab');
@@ -1195,60 +1161,64 @@
 
         // Tópicos do edital padrão embutido no aplicativo (só são "legados" quando o concurso já tem edital próprio).
         function getLegacyIdSet(){
-            const defIds=new Set((window._defaultMasterEdital||[]).map(x=>String(x.id)));
-            const isDef=x=>defIds.has(String(x.id))||/^pending_discipline_/.test(String(x.id));
+            const isDef=x=>/^tce_\d+$/.test(String(x.id))||/^pending_discipline_/.test(String(x.id));
             return masterEditalData.some(x=>!isDef(x))?new Set(masterEditalData.filter(isDef).map(x=>String(x.id))):new Set();
         }
         function diagnoseTopics(){
-            const legacyIds=getLegacyIdSet();
-            const custom=masterEditalData.filter(x=>!legacyIds.has(String(x.id)));
-            const legacy=masterEditalData.filter(x=>legacyIds.has(String(x.id)));
-            const customDisc=new Set(custom.filter(x=>!/^pending_discipline_/.test(String(x.id))).map(x=>x.discipline));
+            const isDefId=x=>/^tce_\d+$/.test(String(x.id))||/^pending_discipline_/.test(String(x.id));
+            const isSampleSession=x=>/^s_\d+$/.test(String(x.id));
+            const sample=masterEditalData.filter(isDefId);
+            const custom=masterEditalData.filter(x=>!isDefId(x));
+            const customDisc=new Set(custom.map(x=>x.discipline));
+            const sampleSessionIds=studySessions.filter(isSampleSession).map(x=>String(x.id));
+            const realSessions=studySessions.filter(x=>!isSampleSession(x));
             const idSet=new Set(masterEditalData.map(x=>String(x.id)));
             const keyOf=x=>[x.discipline,x.topic,x.subtopic].map(v=>String(v||'')).join('\u0001');
             const byKey=new Map();masterEditalData.forEach(x=>{const k=keyOf(x);if(!byKey.has(k))byKey.set(k,[]);byKey.get(k).push(String(x.id));});
             const usedIds=new Set(),orphans=[];
-            studySessions.forEach(s=>{
-                if(s.itemId&&idSet.has(String(s.itemId))){usedIds.add(String(s.itemId));return;}
-                const hit=byKey.get(keyOf(s));
+            realSessions.forEach(x=>{
+                if(x.itemId&&idSet.has(String(x.itemId))){usedIds.add(String(x.itemId));return;}
+                const hit=byKey.get(keyOf(x));
                 if(hit){hit.forEach(i=>usedIds.add(i));return;}
-                orphans.push(s);
+                orphans.push(x);
             });
             const noteIds=new Set(userProgress.filter(u=>String(u.notes||'').trim()).map(u=>String(u.id)));
             const groups=new Map();
-            legacy.forEach(x=>{
+            sample.forEach(x=>{
                 if(!groups.has(x.discipline))groups.set(x.discipline,{discipline:x.discipline,total:0,kept:0,removable:[],duplicated:customDisc.has(x.discipline)});
                 const g=groups.get(x.discipline);g.total++;
                 if(usedIds.has(String(x.id))||noteIds.has(String(x.id)))g.kept++;else g.removable.push(x.id);
             });
             const list=[...groups.values()];
-            return {total:masterEditalData.length,customCount:custom.length,legacyCount:legacy.length,groups:list,removable:list.flatMap(g=>g.removable),orphans};
+            return {total:masterEditalData.length,customCount:custom.length,legacyCount:sample.length,groups:list,removable:list.flatMap(g=>g.removable),orphans,sampleSessionIds};
         }
         function renderTopicDiagnostics(){
             const box=document.getElementById('topic-diagnostics-result');if(!box)return;
             const d=diagnoseTopics(),e=escapeHtml;
-            let html=`<p class="text-xs text-slate-600 dark:text-slate-300">Tópicos no edital: <strong>${d.total}</strong> · do edital importado/cadastrado: <strong>${d.customCount}</strong> · do edital padrão do aplicativo: <strong>${d.legacyCount}</strong> · sessões sem tópico correspondente: <strong>${d.orphans.length}</strong>.</p>`;
+            let html=`<p class="text-xs text-slate-600 dark:text-slate-300">Tópicos no edital: <strong>${d.total}</strong> · do seu edital: <strong>${d.customCount}</strong> · conteúdo de exemplo de versões anteriores: <strong>${d.legacyCount}</strong> (+ <strong>${d.sampleSessionIds.length}</strong> sessão(ões) de exemplo) · sessões sem tópico correspondente: <strong>${d.orphans.length}</strong>.</p>`;
             if(d.groups.length){
-                html+=`<div class="overflow-x-auto mt-3"><table class="w-full text-xs"><thead><tr class="text-left text-slate-500"><th class="py-1 pr-3">Disciplina do edital padrão</th><th class="py-1 pr-3">Tópicos</th><th class="py-1 pr-3">Com estudo ou anotação</th><th class="py-1">Também existe no seu edital?</th></tr></thead><tbody>`+
+                html+=`<div class="overflow-x-auto mt-3"><table class="w-full text-xs"><thead><tr class="text-left text-slate-500"><th class="py-1 pr-3">Disciplina do conteúdo de exemplo</th><th class="py-1 pr-3">Tópicos</th><th class="py-1 pr-3">Com estudo ou anotação seus</th><th class="py-1">Também existe no seu edital?</th></tr></thead><tbody>`+
                     d.groups.map(g=>`<tr class="border-t border-slate-200 dark:border-slate-700"><td class="py-1.5 pr-3 font-semibold">${e(g.discipline)}</td><td class="py-1.5 pr-3">${g.total}</td><td class="py-1.5 pr-3">${g.kept}</td><td class="py-1.5">${g.duplicated?'Sim (duplicada)':'Não'}</td></tr>`).join('')+`</tbody></table></div>`;
             }
-            if(d.removable.length)html+=`<div class="mt-3 flex flex-wrap items-center gap-2"><button type="button" onclick="cleanupLegacyTopics()" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"><i class="fa-solid fa-broom mr-1"></i>Remover ${d.removable.length} tópico(s) do edital padrão sem uso</button><span class="text-[11px] text-slate-500">Só sai o que não tem estudo registrado nem anotação.</span></div>`;
-            if(d.legacyCount&&!d.removable.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Os tópicos do edital padrão que restaram têm estudos ou anotações. No Registro de Estudos, troque o tópico das linhas destacadas pelo tópico correto do seu edital e verifique de novo.</p>`;
-            if(d.orphans.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Há ${d.orphans.length} sessão(ões) apontando para tópicos que já não existem. No Registro de Estudos elas aparecem destacadas: escolha o tópico correto na coluna “Tópico e subtópico”.</p>`;
-            if(!d.legacyCount&&!d.orphans.length)html+=`<p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Tudo certo: o Cronograma, o Edital e o Registro usam os mesmos tópicos.</p>`;
+            if(d.removable.length||d.sampleSessionIds.length)html+=`<div class="mt-3 flex flex-wrap items-center gap-2"><button type="button" onclick="cleanupLegacyTopics()" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"><i class="fa-solid fa-broom mr-1"></i>Remover conteúdo de exemplo (${d.removable.length} tópico(s) e ${d.sampleSessionIds.length} sessão(ões))</button><span class="text-[11px] text-slate-500">Os seus estudos e anotações não são removidos.</span></div>`;
+            if(d.legacyCount&&!d.removable.length&&!d.sampleSessionIds.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Os tópicos de exemplo que restaram têm estudos ou anotações seus. No Registro de Estudos, troque o tópico das linhas destacadas pelo tópico correto do seu edital e verifique de novo.</p>`;
+            if(d.orphans.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Há ${d.orphans.length} sessão(ões) apontando para tópicos que já não existem. No Registro de Estudos elas aparecem destacadas: escolha o tópico correto na coluna “Disciplina / Tópico”.</p>`;
+            if(!d.legacyCount&&!d.orphans.length&&!d.sampleSessionIds.length)html+=`<p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Tudo certo: o Cronograma, o Edital e o Registro usam os mesmos tópicos e não há conteúdo de exemplo.</p>`;
             box.innerHTML=html;
         }
         function cleanupLegacyTopics(){
-            const d=diagnoseTopics();if(!d.removable.length)return;
-            showCustomDialog('Remover tópicos do edital padrão?',`Serão removidos ${d.removable.length} tópico(s) que vieram do edital padrão do aplicativo e não têm estudo registrado nem anotação. Os tópicos do seu edital e todos os seus registros continuam intactos. Recomenda-se gerar um backup antes.`,'fa-solid fa-triangle-exclamation',()=>{
-                const ids=new Set(d.removable.map(String));
-                addTombstones('items',[...ids]);
+            const d=diagnoseTopics();if(!d.removable.length&&!d.sampleSessionIds.length)return;
+            showCustomDialog('Remover conteúdo de exemplo?',`Serão removidos ${d.removable.length} tópico(s) e ${d.sampleSessionIds.length} sessão(ões) que vieram como exemplo nas versões anteriores do aplicativo e não são estudos seus. Tópicos com estudo registrado por você ou com anotação continuam. Recomenda-se gerar um backup antes.`,'fa-solid fa-triangle-exclamation',()=>{
+                const ids=new Set(d.removable.map(String)),sids=new Set(d.sampleSessionIds);
+                addTombstones('items',[...ids]);addTombstones('sessions',[...sids]);
                 masterEditalData=masterEditalData.filter(x=>!ids.has(String(x.id)));
                 userProgress=userProgress.filter(x=>!ids.has(String(x.id)));
+                studySessions=studySessions.filter(x=>!sids.has(String(x.id)));
+                try{localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));}catch(err){}
                 saveData();
-                try{initCronogramaFilters();initEditalFilters();initRegistrationForm();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderCustomization();}catch(err){console.warn(err);}
+                try{initCronogramaFilters();initEditalFilters();initRegistrationForm();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderCustomization();renderDashboard();}catch(err){console.warn(err);}
                 renderTopicDiagnostics();
-                showCustomDialog('Tópicos removidos',`${ids.size} tópico(s) do edital padrão foram removidos.`,'fa-solid fa-circle-check');
+                showCustomDialog('Conteúdo de exemplo removido',`${ids.size} tópico(s) e ${sids.size} sessão(ões) de exemplo foram removidos.`,'fa-solid fa-circle-check');
             });
         }
 
@@ -1280,7 +1250,9 @@
         }
         function openSidebarMobile(){document.body.classList.add('sidebar-open');}
         function closeSidebarMobile(){document.body.classList.remove('sidebar-open');}
+        function launchStudyFromSidebar(){switchTab('registro');window.scrollTo({top:0,behavior:'smooth'});}
         function initSidebar(){
+            document.body.dataset.tab=document.body.dataset.tab||'cronograma';
             setHeaderHeightVar();syncSidebarToggle();
             window.addEventListener('resize',setHeaderHeightVar);
             const header=document.querySelector('body>header');
@@ -1288,6 +1260,98 @@
             document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebarMobile();});
         }
         if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initSidebar); else initSidebar();
+
+        // ===== V10.6: cursos/trilhas cadastráveis, subtítulo com dias para a prova e conta nova =====
+        const DEFAULT_STUDY_TRACKS=['Curso regular','Curso intensivo','Estudo individual','Simulados'];
+        function getStudyTrackOptions(){
+            const cfg=contests[activeContest]||(contests[activeContest]={name:activeContest,board:'',date:''});
+            if(!Array.isArray(cfg.studyTracks)){
+                const used=getStudyTracks().filter(t=>t&&t!=='Trilha não informada');
+                cfg.studyTracks=[...new Set([...DEFAULT_STUDY_TRACKS,...used])];
+                try{localStorage.setItem('tce_contests',JSON.stringify(contests));}catch(e){}
+            }
+            return cfg.studyTracks;
+        }
+        function saveStudyTracks(list){
+            contests[activeContest].studyTracks=list;
+            contests[activeContest]._updatedAt=new Date().toISOString();
+            try{localStorage.setItem('tce_contests',JSON.stringify(contests));}catch(e){}
+            saveData();
+        }
+        function trackOptionsHtml(current){
+            const list=getStudyTrackOptions();const arr=current&&!list.includes(current)?[current,...list]:list;
+            return arr.map(t=>`<option value="${escapeHtml(t)}"${t===current?' selected':''}>${escapeHtml(t)}${list.includes(t)?'':' (fora da lista)'}</option>`).join('');
+        }
+        function populateRegTrackSelect(){
+            const sel=document.getElementById('reg-track');if(!sel)return;
+            const cur=sel.value;const list=getStudyTrackOptions();
+            sel.innerHTML=list.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+            sel.value=list.includes(cur)?cur:(list[0]||'');
+        }
+        function refreshTrackViews(){try{initRegistrationForm();}catch(e){console.warn(e);}renderStudyTracksManager();}
+        function renderStudyTracksManager(){
+            const ul=document.getElementById('study-tracks-manager');if(!ul)return;
+            const list=getStudyTrackOptions();const counts={};
+            studySessions.forEach(s=>{const t=String(s.studyTrack||'').trim();counts[t]=(counts[t]||0)+1;});
+            ul.innerHTML=list.map((t,i)=>`<li class="flex items-center gap-2"><input class="min-w-0 flex-1 rounded-lg border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-900" maxlength="60" value="${escapeHtml(t)}" data-track-old="${escapeHtml(t)}" aria-label="Nome da trilha"><span class="whitespace-nowrap text-[11px] text-slate-500">${counts[t]||0} registro${(counts[t]||0)===1?'':'s'}</span><button type="button" data-track-del="${i}" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100" aria-label="Excluir trilha" title="Excluir trilha"><i class="fa-solid fa-trash-can"></i></button></li>`).join('')||'<li class="text-xs text-slate-500">Nenhuma trilha cadastrada.</li>';
+            if(!ul.dataset.bound){
+                ul.dataset.bound='1';
+                ul.addEventListener('change',ev=>{const inp=ev.target.closest('[data-track-old]');if(inp)renameStudyTrack(inp.dataset.trackOld,inp.value);});
+                ul.addEventListener('click',ev=>{const b=ev.target.closest('[data-track-del]');if(b)deleteStudyTrack(Number(b.dataset.trackDel));});
+            }
+        }
+        function addStudyTrack(){
+            const inp=document.getElementById('new-track-name');const name=(inp.value||'').trim();if(!name)return;
+            const list=getStudyTrackOptions().slice();
+            if(list.some(t=>t.toLowerCase()===name.toLowerCase())){showCustomDialog('Nome já existe','Já existe uma trilha com esse nome.');return;}
+            list.push(name);saveStudyTracks(list);inp.value='';refreshTrackViews();
+        }
+        function renameStudyTrack(oldName,newRaw){
+            const name=(newRaw||'').trim();const list=getStudyTrackOptions().slice();const i=list.indexOf(oldName);if(i<0)return;
+            if(!name||list.some((t,j)=>j!==i&&t.toLowerCase()===name.toLowerCase())){showCustomDialog(name?'Nome já existe':'Nome vazio',name?'Já existe uma trilha com esse nome.':'Informe um nome para a trilha.');renderStudyTracksManager();return;}
+            if(name===oldName)return;
+            list[i]=name;let changed=0;
+            studySessions.forEach(s=>{if(String(s.studyTrack||'').trim()===oldName){s.studyTrack=name;changed++;}});
+            if(changed)localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+            saveStudyTracks(list);refreshTrackViews();
+        }
+        function deleteStudyTrack(i){
+            const list=getStudyTrackOptions().slice();const t=list[i];if(t===undefined)return;
+            if(list.length<=1){showCustomDialog('Mantenha ao menos uma trilha','O Registro de Estudos precisa de pelo menos uma opção.');return;}
+            const n=studySessions.filter(s=>String(s.studyTrack||'').trim()===t).length;
+            showCustomDialog('Excluir trilha?',n?`“${t}” sai da lista de opções. Os ${n} registro(s) que usam essa trilha continuam com o nome dela.`:`“${t}” será removida da lista.`,'fa-solid fa-triangle-exclamation',()=>{list.splice(i,1);saveStudyTracks(list);refreshTrackViews();});
+        }
+
+        // Subtítulo do cabeçalho: nome · banca · Prova em dd/mm/aaaa (faltam N dias)
+        function contestSubtitleText(){
+            const cfg=contests[activeContest]||{};const name=cfg.name||activeContest||'Concurso selecionado';
+            let prova=null;
+            if(cfg.date){
+                const diff=dayDiffFromToday(cfg.date);
+                const resto=diff===null?'':diff>1?` (faltam ${diff} dias)`:diff===1?' (falta 1 dia)':diff===0?' (é hoje)':' (já realizada)';
+                prova='Prova em '+new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR')+resto;
+            }
+            const meta=[cfg.board?'Banca '+cfg.board:null,prova].filter(Boolean).join(' · ');
+            return meta?`${name} · ${meta}`:name;
+        }
+        function refreshContestSubtitle(){const sub=document.getElementById('contest-subtitle');if(!sub)return;const t=contestSubtitleText();if(sub.textContent!==t)sub.textContent=t;}
+
+        // Estado "limpo": conta nova que ainda não cadastrou nada. Serve para não misturar o concurso vazio padrão
+        // com os concursos de uma conta existente ao entrar em outro aparelho.
+        function isPristineLocalState(){
+            const ids=Object.keys(contests||{});
+            if(ids.length>1||(ids.length===1&&ids[0]!==DEFAULT_CONTEST_ID)||activeContest!==DEFAULT_CONTEST_ID)return false;
+            if(masterEditalData.length||studySessions.length)return false;
+            if(userProgress.some(u=>(Number(u.hours)||0)>0||(Number(u.questions)||0)>0||u.completed||String(u.notes||'').trim()))return false;
+            const cfg=contests[DEFAULT_CONTEST_ID]||{};
+            if(cfg.board||cfg.date||(cfg.name&&cfg.name!==DEFAULT_CONTEST_NAME))return false;
+            if(Array.isArray(cfg.importantDates)&&cfg.importantDates.length)return false;
+            return true;
+        }
+        function onboardingHtml(){
+            const link=(tab,label)=>`<button type="button" onclick="switchTab('${tab}',true)" class="font-semibold text-blue-700 underline dark:text-blue-300">${label}</button>`;
+            return `<div class="rounded-2xl border border-dashed border-blue-300 bg-blue-50/60 p-5 dark:border-slate-600 dark:bg-slate-900/40 sm:p-6"><h3 class="text-base font-bold text-blue-800 dark:text-blue-200"><i class="fa-solid fa-flag-checkered mr-2"></i>Vamos começar o seu planejamento</h3><p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Esta conta ainda não tem nenhum conteúdo. Siga os passos:</p><ol class="mt-3 space-y-2 text-sm"><li><strong>1.</strong> Em ${link('personalizacao','Personalização')}, informe o nome do concurso, a banca e a data da prova.</li><li><strong>2.</strong> Em ${link('edital','Edital Verticalizado')}, importe a planilha (há um modelo para baixar) ou cadastre as disciplinas e os tópicos.</li><li><strong>3.</strong> Registre cada sessão em ${link('registro','Registro de Estudos')} e acompanhe o progresso aqui.</li></ol></div>`;
+        }
 
         // Cartões recolhíveis: Últimos estudos, Sugestões, Revisões sugeridas e Últimas revisões (iniciam fechados).
         // Resumo do cartão fechado: disciplina + o dado mais útil do primeiro item (posições entre os textos do cartão).
@@ -1469,6 +1533,7 @@
             const overall=total?Math.round(completed/total*100):0;
             const summary=document.getElementById('home-progress-summary');
             if(summary) summary.textContent=`${overall}% concluído · ${completed}/${total} tópicos`;
+            if(!total){container.innerHTML=onboardingHtml();return;}
             const pSettings=getPrioritySettings();
             const priorityOrder=Object.keys(pSettings).sort((a,b)=>(Number(pSettings[b].weight)||1)-(Number(pSettings[a].weight)||1));
             const priorityMeta={};
@@ -1628,7 +1693,7 @@
             const trackFilter=document.getElementById('hist-filter-track');
             if(trackFilter){const oldTrack=trackFilter.value||'all';trackFilter.innerHTML='<option value="all">Todas as trilhas</option>';getStudyTracks().forEach(track=>{const opt=document.createElement('option');opt.value=track;opt.textContent=track;trackFilter.appendChild(opt)});trackFilter.value=getStudyTracks().includes(oldTrack)?oldTrack:'all';}
             const dateField=document.getElementById('reg-date');if(dateField&&!dateField.value)dateField.value=localTodayISO();
-            const trackField=document.getElementById('reg-track');if(trackField&&!trackField.value)trackField.value='Curso regular';
+            populateRegTrackSelect();
             updateRegTopics();
             renderSessionsList();
         }
@@ -1671,6 +1736,7 @@
             if(isRevisionSession(session))userItem.reviews=(Number(userItem.reviews)||0)+1;
             if(type2==='Estudo Teórico' && userItem.hours>=0.5)userItem.completed=true;
             saveData();
+            const _q=document.getElementById('reg-questions');if(_q)_q.value=0;
             initRegistrationForm();initCronogramaFilters();renderSessionsList();
             renderRecentRotation();renderDashboard();renderPriorityDisciplineProgress();
             showCustomDialog('Registro salvo',`${type2==='Revisão'?'Revisão':'Sessão de estudo'} registrada em ${session.date} na trilha “${studyTrack}”.`,'fa-solid fa-circle-check');
@@ -1746,40 +1812,40 @@
             const discFilter=document.getElementById('hist-filter-disc')?.value||'all';
             const trackFilter=document.getElementById('hist-filter-track')?.value||'all';
             const _fk=[typeFilter,discFilter,trackFilter].join('|');
-            if(window._sessionsFilterKey!==_fk){window._sessionsFilterKey=_fk;window._sessionsLimit=30;}
-            const _limit=window._sessionsLimit||30;
+            if(window._sessionsFilterKey!==_fk){window._sessionsFilterKey=_fk;window._sessionsLimit=20;}
+            const _limit=window._sessionsLimit||20;
             const filtered=getSessionsNewestFirst().filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
             const badge=document.getElementById('session-count-badge');
             const totalMin=filtered.reduce((a,s)=>a+(Number(s.minutes)||0),0);
             if(badge)badge.innerText=`${filtered.length} ${filtered.length===1?'registro':'registros'} · ${fmtHoras(totalMin/60)}`;
-            if(!filtered.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado para os filtros selecionados.</p>';return;}
+            if(!filtered.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado. Os estudos lançados aparecem aqui.</p>';return;}
             const e=escapeHtml;
             const legacyIds=getLegacyIdSet();
             const disciplines=[...new Set(masterEditalData.map(i=>i.discipline))];
             const opts=(arr,cur)=>[...new Set([cur,...arr].filter(Boolean))].map(v=>`<option value="${e(v)}"${v===cur?' selected':''}>${e(v)}</option>`).join('');
+            const discBase=disciplines.map(d=>`<option value="${e(d)}">${e(d)}</option>`).join('');
+            const discOpts=cur=>{if(!cur)return discBase;const tag=`<option value="${e(cur)}">`;return discBase.includes(tag)?discBase.replace(tag,tag.replace('>',' selected>')):`<option value="${e(cur)}" selected>${e(cur)}</option>`+discBase;};
             const rows=filtered.slice(0,_limit).map(s=>{
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x))||null;
                 const flagged=!item||legacyIds.has(String(item.id));
                 const topicText=item?sessionTopicLabel(item)+(legacyIds.has(String(item.id))?' (edital padrão)':''):'⚠ '+(s.topic||'Tópico')+(s.subtopic?' → '+s.subtopic:'')+' (não está mais no edital)';
                 const minutes=Math.max(0,Number(s.minutes)||0);
-                return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Tópico e subtópico."':''}>
-                    <td style="min-width:124px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
-                    <td style="min-width:140px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select></td>
-                    <td style="min-width:168px"><select class="tbl-field" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
-                    <td style="min-width:112px"><input class="tbl-field" data-f="studyTrack" list="study-tracks-list" maxlength="100" value="${e(s.studyTrack||'')}" aria-label="Curso ou trilha"></td>
-                    <td style="min-width:176px"><select class="tbl-field font-semibold" data-f="discipline" aria-label="Disciplina">${opts(disciplines,s.discipline||'')}</select></td>
-                    <td style="min-width:250px"><select class="tbl-field" data-f="itemId" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select></td>
-                    <td style="min-width:84px"><input type="number" min="1" class="tbl-field" data-f="minutes" value="${minutes}" aria-label="Minutos"><div class="px-1.5 text-[10px] text-slate-400" data-dhm>${fmtHoras(minutes/60)}</div></td>
-                    <td style="min-width:72px"><input type="number" min="0" class="tbl-field" data-f="questions" value="${Number(s.questions)||0}" aria-label="Questões"></td>
-                    <td style="white-space:nowrap"><button type="button" data-act="copy" class="sess-act bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300">Copiar</button> <button type="button" data-act="note" class="sess-act bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300">Notas</button> <button type="button" data-act="del" class="sess-act bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300">Excluir</button></td>
+                return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Disciplina / Tópico."':''}>
+                    <td style="min-width:122px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
+                    <td style="min-width:164px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select><select class="tbl-field tbl-sub" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
+                    <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select></td>
+                    <td style="min-width:132px"><select class="tbl-field" data-f="studyTrack" aria-label="Curso ou trilha">${trackOptionsHtml(String(s.studyTrack||'Trilha não informada'))}</select></td>
+                    <td style="min-width:78px"><input type="number" min="1" class="tbl-field" data-f="minutes" value="${minutes}" aria-label="Minutos"><div class="px-1.5 text-[10px] text-slate-400" data-dhm>${fmtHoras(minutes/60)}</div></td>
+                    <td style="min-width:64px"><input type="number" min="0" class="tbl-field" data-f="questions" value="${Number(s.questions)||0}" aria-label="Questões"></td>
+                    <td style="min-width:96px;white-space:nowrap"><button type="button" data-act="copy" class="sess-ico bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300" title="Copiar para o formulário" aria-label="Copiar para o formulário"><i class="fa-regular fa-copy"></i></button> <button type="button" data-act="note" class="sess-ico bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300" title="Anotações do tópico" aria-label="Anotações do tópico"><i class="fa-regular fa-note-sticky"></i></button> <button type="button" data-act="del" class="sess-ico bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir registro" aria-label="Excluir registro"><i class="fa-regular fa-trash-can"></i></button></td>
                 </tr>`;
             }).join('');
-            container.innerHTML=`<table class="sess-table"><thead><tr><th>Data</th><th>Atividade</th><th>Conteúdo</th><th>Curso / trilha</th><th>Disciplina</th><th>Tópico e subtópico</th><th>Minutos</th><th>Questões</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+            container.innerHTML=`<table class="sess-table"><thead><tr><th>Data</th><th>Atividade / Conteúdo</th><th>Disciplina / Tópico</th><th>Trilha</th><th>Min</th><th>Quest.</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
             if(filtered.length>_limit){
                 const more=document.createElement('button');more.type='button';
-                more.className='mt-3 w-full py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800';
-                more.textContent=`Mostrar mais 30 (restam ${filtered.length-_limit})`;
-                more.addEventListener('click',()=>{window._sessionsLimit=_limit+30;renderSessionsList();});
+                more.className='m-3 w-[calc(100%-1.5rem)] py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800';
+                more.textContent=`Mostrar mais 20 (restam ${filtered.length-_limit})`;
+                more.addEventListener('click',()=>{window._sessionsLimit=_limit+20;renderSessionsList();});
                 container.appendChild(more);
             }
             if(!container.dataset.bound){
@@ -1848,7 +1914,7 @@
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
                 const set=(id2,v)=>{const el=document.getElementById(id2);if(el)el.value=v;};
                 set('reg-type1',s.type1||SESSION_TYPE1_OPTIONS[0]);set('reg-type2',s.type2||SESSION_TYPE2_OPTIONS[0]);
-                set('reg-track',s.studyTrack||'Curso regular');set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());
+                {const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));set('reg-track',tv||(ts&&ts.options[0]?ts.options[0].value:''));}set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());
                 if(item){set('reg-discipline',item.discipline);updateRegTopics();set('reg-topic',item.id);}
                 document.getElementById('study-session-form')?.scrollIntoView({behavior:'smooth',block:'center'});
                 showCustomDialog('Registro copiado','Os dados foram levados para o formulário, com a data de hoje. Ajuste o que precisar e clique em “Salvar registro de estudo”.','fa-solid fa-circle-check');
@@ -2052,16 +2118,16 @@
         let contests = {};
         try { contests = JSON.parse(localStorage.getItem('tce_contests') || '{}') || {}; } catch(e) { contests = {}; }
         if (!contests || typeof contests !== 'object' || Array.isArray(contests)) contests = {};
-        let activeContest = localStorage.getItem('tce_active_contest') || 'tce-go-2026-2027';
-        if (!Object.keys(contests).length) contests['tce-go-2026-2027']={name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
-        if (!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+        let activeContest = localStorage.getItem('tce_active_contest') || Object.keys(contests)[0] || DEFAULT_CONTEST_ID;
+        if (!Object.keys(contests).length) contests[DEFAULT_CONTEST_ID]={name:DEFAULT_CONTEST_NAME,board:'',date:''};
+        if (!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
         function contestKey(suffix){return 'tce_'+activeContest+'_'+suffix;}
 
         // Reconstrói SEMPRE o seletor a partir da lista persistida, e não apenas do concurso ativo.
         function renderContestSelector(){
           const sel=document.getElementById('contest-selector'); if(!sel) return;
           if(!contests || typeof contests!=='object' || Array.isArray(contests)) contests={};
-          if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+          if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
           // Reindexa snapshots locais para recuperar concursos cuja lista de nomes tenha sido perdida.
           for(let i=0;i<localStorage.length;i++){
             const key=localStorage.key(i);
@@ -2070,7 +2136,7 @@
             if(contests[id]) continue;
             try{const snap=JSON.parse(localStorage.getItem(key)||'null');contests[id]={name:snap?.contestName||snap?.name||id,board:'',date:''};}catch(e){}
           }
-          const ids=Object.keys(contests).sort((a,b)=>a==='tce-go-2026-2027'?-1:b==='tce-go-2026-2027'?1:String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
+          const ids=Object.keys(contests).sort((a,b)=>String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
           sel.innerHTML='';
           ids.forEach(id=>{
             const option=document.createElement('option'); option.value=id; option.textContent=contests[id]?.name||id;
@@ -2107,8 +2173,7 @@
           const snap=localStorage.getItem('tce_contest_data_'+id);
           if(snap){try{restoreSnapshotToMemory(JSON.parse(snap));}catch(e){console.warn('Snapshot de concurso inválido',e);}}
           else {
-            if(id==='tce-go-2026-2027') masterEditalData=JSON.parse(JSON.stringify(window._defaultMasterEdital||[]));
-            else masterEditalData=[]; // concursos novos começam vazios, sem misturar os editais
+            masterEditalData=[]; // concursos novos começam vazios, sem misturar os editais
             userProgress=JSON.parse(JSON.stringify(masterEditalData));studySessions=[];
           }
           localStorage.setItem('tce_contests',JSON.stringify(contests));
@@ -2214,8 +2279,9 @@
           html+='</tbody></table>';
           container.innerHTML=html;
           updateWeightShares();
-          const cfg=contests[activeContest]||{name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'};
-          document.getElementById('contest-name').value=cfg.name;document.getElementById('contest-board').value=cfg.board;document.getElementById('contest-date').value=cfg.date;
+          const cfg=contests[activeContest]||{name:DEFAULT_CONTEST_NAME,board:'',date:''};
+          document.getElementById('contest-name').value=cfg.name||'';document.getElementById('contest-board').value=cfg.board||'';document.getElementById('contest-date').value=cfg.date||'';
+          try{renderStudyTracksManager();}catch(err){console.warn(err);}
           function itemsPlaceholder(d){return masterEditalData.some(x=>x.discipline===d&&x.placeholder)?'<span class="block mt-1 text-[10px] text-amber-700">conferir/importar</span>':'';}
         }
         function updateWeightShares(){
@@ -2674,6 +2740,10 @@
             const {data:remoteRow,error:readError}=await sbClient.from(SB_TABLE).select('data').eq('user_id',uid).maybeSingle();
             if(readError) throw readError; // Nunca tenta gravar por cima se não conseguiu ler a cópia atual.
             const remotePayload=remoteRow && remoteRow.data && typeof remoteRow.data==='object'?remoteRow.data:{};
+            const remoteIds=Object.keys((remotePayload.contests&&typeof remotePayload.contests==='object')?remotePayload.contests:{}).concat(Object.keys((remotePayload.contestSnapshots&&typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{}));
+            if(isPristineLocalState()&&remoteIds.some(id=>id!==DEFAULT_CONTEST_ID)){
+                localPayload={...localPayload,contests:{},contestSnapshots:{},activeContest:(remotePayload.activeContest&&remotePayload.activeContest!==DEFAULT_CONTEST_ID)?remotePayload.activeContest:remoteIds.find(id=>id!==DEFAULT_CONTEST_ID)};
+            }
             const mergedSnapshots=mergeContestSnapshots(remotePayload,localPayload);
             const remoteContests=remotePayload.contests && typeof remotePayload.contests==='object'?remotePayload.contests:{};
             const localContests=localPayload.contests && typeof localPayload.contests==='object'?localPayload.contests:{};
@@ -2689,7 +2759,7 @@
                 if(localTime && localTime>remoteTime) mergedContests[id]={...remoteCfg,...localCfg};
             });
             Object.keys(mergedSnapshots).forEach(id=>{
-                if(!mergedContests[id]) mergedContests[id]={name:mergedSnapshots[id]?.contestName||(id==='tce-go-2026-2027'?'TCE-GO 2026/2027':id),board:'',date:''};
+                if(!mergedContests[id]) mergedContests[id]={name:mergedSnapshots[id]?.contestName||id,board:'',date:''};
             });
             const mergedPayload={...remotePayload,...localPayload,contests:mergedContests,contestSnapshots:mergedSnapshots};
             // Os campos legados do nível principal devem refletir o snapshot mesclado do concurso ativo,
@@ -2714,6 +2784,14 @@
         }
         function adoptMergedCloudPayloadLocally(payload) {
             if(!payload || typeof payload!=='object') return;
+            if(isPristineLocalState()&&payload.contests&&typeof payload.contests==='object'){
+                const otherIds=Object.keys(payload.contests).filter(id=>id!==DEFAULT_CONTEST_ID);
+                if(otherIds.length){
+                    delete contests[DEFAULT_CONTEST_ID];
+                    try{localStorage.removeItem('tce_contest_data_'+DEFAULT_CONTEST_ID);}catch(e){}
+                    activeContest=(payload.activeContest&&payload.contests[payload.activeContest]&&payload.activeContest!==DEFAULT_CONTEST_ID)?payload.activeContest:otherIds[0];
+                }
+            }
             const chosenActive=activeContest;
             if(payload.contests && typeof payload.contests==='object') contests={...contests,...payload.contests};
             if(!contests[chosenActive] && payload.activeContest && contests[payload.activeContest]) activeContest=payload.activeContest;
@@ -2991,7 +3069,7 @@
             const allSnapshots=mergeContestSnapshots({...data.data,contestSnapshots:remoteSnapshots},{activeContest,contestSnapshots:localSnapshots});
             // Mantém o concurso selecionado neste aparelho; só troca se ele realmente não existir.
             if(!contests[activeContest] && data.data.activeContest) activeContest=data.data.activeContest;
-            if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+            if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
             Object.keys(allSnapshots).forEach(id=>{if(!contests[id])contests[id]={name:allSnapshots[id]?.contestName||id,board:'',date:''};});
             localStorage.setItem('tce_active_contest',activeContest);
             localStorage.setItem('tce_contests',JSON.stringify(contests));
@@ -3066,18 +3144,10 @@
         function updateContestHeader() {
             const cfg=contests[activeContest]||{};
             const name=cfg.name||activeContest||'Concurso selecionado';
-            const meta=[cfg.board?'Banca '+cfg.board:null,cfg.date?'Prova em '+new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR'):null].filter(Boolean).join(' · ');
-            const sub=document.getElementById('contest-subtitle');if(sub)sub.textContent=meta?`${name} · ${meta}`:name;
+            refreshContestSubtitle();
             renderContestSelector();
             const date=cfg.date||'';document.getElementById('countdown-badge').dataset.examDate=date;updateCountdown();
             const caption=document.getElementById('edital-contest-caption');if(caption)caption.textContent=`Conteúdo programático de ${name}, dividido por tópico e subtópico.`;
-            const datesList=document.getElementById('contest-dates-list');
-            if(datesList && !window._defaultContestDatesHtml) window._defaultContestDatesHtml=datesList.innerHTML;
-            if(activeContest==='tce-go-2026-2027'){
-                if(datesList && window._defaultContestDatesHtml)datesList.innerHTML=window._defaultContestDatesHtml;
-            }else{
-                if(datesList) datesList.innerHTML=`<li class="flex justify-between gap-3 border-b border-slate-100 dark:border-slate-700/50 pb-1.5"><span>Data da prova:</span><strong class="font-mono text-blue-700 dark:text-blue-300">${cfg.date?new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR'):'Não informada'}</strong></li><li class="text-[11px] text-slate-500 pt-1">As demais datas devem ser conferidas no edital deste concurso.</li>`;
-            }
         }
 
         function loadSupabaseSettings() {
@@ -3104,10 +3174,12 @@
                 'Deseja realmente resetar todo o progresso?',
                 'fa-solid fa-triangle-exclamation',
                 () => {
+                    addTombstones('sessions', studySessions.map(x => x.id));
                     userProgress = JSON.parse(JSON.stringify(masterEditalData));
-                    studySessions = JSON.parse(JSON.stringify(defaultInitialSessions));
+                    studySessions = [];
                     localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
-                    initCronogramaFilters();
+                    saveData();
+                    initCronogramaFilters(); initRegistrationForm(); renderSessionsList(); renderRecentRotation(); renderPriorityDisciplineProgress(); renderDashboard();
                     showCustomDialog('Sucesso', 'Dados reiniciados com sucesso!', 'fa-solid fa-circle-check');
                 }
             );
@@ -3158,7 +3230,7 @@
                     Object.keys(normalized).forEach(id=>{if(!contests[id])contests[id]={name:normalized[id]?.contestName||id,board:'',date:''};});
                 }
                 if(parsed.activeContest) activeContest=parsed.activeContest;
-                if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+                if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
                 localStorage.setItem('tce_active_contest',activeContest);
                 localStorage.setItem('tce_contests',JSON.stringify(contests));
                 const importedActive=importedSnapshots && importedSnapshots[activeContest];
@@ -3249,17 +3321,11 @@
         }
 
         // ===== Datas importantes (checklist por concurso) =====
-        const DEFAULT_IMPORTANT_DATES_TCE=[
-            {title:'Inscrições',date:'2026-10-05',endDate:'2026-11-06'},
-            {title:'Último dia para pagar o boleto',date:'2026-11-09'},
-            {title:'Divulgação das inscrições',date:'2026-11-23'},
-            {title:'Resultado final',date:'2027-06-16'}
-        ];
         function getImportantDates(){
             if(!contests[activeContest])contests[activeContest]={name:activeContest,board:'',date:''};
             const cfg=contests[activeContest];
             if(!Array.isArray(cfg.importantDates)){
-                cfg.importantDates=activeContest==='tce-go-2026-2027'?DEFAULT_IMPORTANT_DATES_TCE.map(x=>({id:crypto.randomUUID(),done:false,...x})):[];
+                cfg.importantDates=[];
                 try{localStorage.setItem('tce_contests',JSON.stringify(contests));}catch(err){}
             }
             return cfg.importantDates;
@@ -3364,7 +3430,7 @@
         applyPriorityColors();
         const initialSuggestionMode=document.getElementById('study-suggestion-mode');if(initialSuggestionMode)initialSuggestionMode.value=getSuggestionMode();
         updateSuggestionModeHelp();
-        if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':activeContest,board:'',date:''};
+        if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
         renderContestSelector();
         initCronogramaFilters();
         initRegistrationForm();
@@ -3447,10 +3513,9 @@
   }
   function resetForFreshAccount() {
     clearAccountAppKeys();
-    activeContest='tce-go-2026-2027';
-    contests={'tce-go-2026-2027':{name:'TCE-GO 2026/2027',board:'FCC',date:'2027-01-17'}};
-    masterEditalData=JSON.parse(JSON.stringify(window._defaultMasterEdital||[])).map(x=>({...x,hours:0,questions:0,reviews:0,completed:false}));
-    userProgress=JSON.parse(JSON.stringify(masterEditalData)); studySessions=[];
+    activeContest=DEFAULT_CONTEST_ID;
+    contests={[DEFAULT_CONTEST_ID]:{name:DEFAULT_CONTEST_NAME,board:'',date:''}};
+    masterEditalData=[]; userProgress=[]; studySessions=[];
     localStorage.setItem('tce_active_contest',activeContest);
     localStorage.setItem('tce_contests',JSON.stringify(contests));
     localStorage.setItem('tce_master_edital',JSON.stringify(masterEditalData));
@@ -3468,11 +3533,11 @@
   }
   function reloadPlannerState() {
     try { contests=JSON.parse(localStorage.getItem('tce_contests')||'{}')||{}; } catch(_) { contests={}; }
-    activeContest=localStorage.getItem('tce_active_contest')||'tce-go-2026-2027';
-    if(!contests[activeContest]) contests[activeContest]={name:activeContest==='tce-go-2026-2027'?'TCE-GO 2026/2027':'Novo concurso',board:'',date:''};
+    activeContest=localStorage.getItem('tce_active_contest')||Object.keys(contests)[0]||DEFAULT_CONTEST_ID;
+    if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:'Novo concurso',board:'',date:''};
     let snapshot=null; try { snapshot=JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'null'); } catch(_) {}
     if(snapshot && Array.isArray(snapshot.masterEditalData)) masterEditalData=snapshot.masterEditalData;
-    else { try { masterEditalData=JSON.parse(localStorage.getItem('tce_master_edital'))||JSON.parse(JSON.stringify(window._defaultMasterEdital||[])); } catch(_) {} }
+    else { try { masterEditalData=JSON.parse(localStorage.getItem('tce_master_edital'))||[]; } catch(_) {} }
     if(snapshot && Array.isArray(snapshot.userProgress)) userProgress=snapshot.userProgress;
     else { try { userProgress=JSON.parse(localStorage.getItem('tce_go_pro_data'))||JSON.parse(JSON.stringify(masterEditalData)); } catch(_) { userProgress=JSON.parse(JSON.stringify(masterEditalData)); } }
     if(snapshot && Array.isArray(snapshot.studySessions)) studySessions=snapshot.studySessions;
