@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.3</title>
+    <title>Planejador de Estudos | Concursos — V10.4</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -30,7 +30,7 @@
     <script src="./supabase-config.js"></script>
     <script>
       // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME.txt.
-      window.APP_VERSION = 'V10.3';
+      window.APP_VERSION = 'V10.4';
       // V10: URL e chave PÚBLICA do Supabase vêm de supabase-config.js (ninguém digita); a chave do Gemini nunca fica no navegador.
       try {
         var cfg = window.PLANEJADOR_SUPABASE;
@@ -83,6 +83,27 @@
         .activity-panel.collapsed .activity-panel-head p{display:none}
         .activity-panel:not(.collapsed) > .panel-summary{display:none}
         .activity-panel .panel-summary{min-height:1rem}
+        .sess-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+        .sess-table thead th{position:sticky;top:0;z-index:2;background:#003a70;color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:11px 8px;text-align:left;white-space:nowrap}
+        .sess-table thead th:first-child{border-top-left-radius:12px}.sess-table thead th:last-child{border-top-right-radius:12px}
+        .sess-table tbody td{padding:5px 4px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+        .dark .sess-table tbody td{border-bottom-color:#334155}
+        .sess-table tbody tr:hover{background:rgba(59,130,246,.06)}
+        .sess-table tbody tr.sess-orphan{background:rgba(245,158,11,.12)}
+        .tbl-field{width:100%;min-width:0;background:transparent;border:1px solid transparent;border-radius:8px;padding:6px;font:inherit;color:inherit;outline:none}
+        .tbl-field:hover{border-color:#cbd5e1}
+        .tbl-field:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+        .dark .tbl-field:hover{border-color:#475569}.dark .tbl-field:focus{background:#0f172a}
+        select.tbl-field{cursor:pointer}
+        .row-saved{animation:rowSaved 1.1s ease}
+        @keyframes rowSaved{0%{background:rgba(16,185,129,.28)}100%{background:transparent}}
+        .sess-act{padding:5px 9px;border-radius:8px;font-size:11px;font-weight:600;white-space:nowrap}
+        .note-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
+        .date-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc}
+        .dark .date-row{border-color:#334155;background:rgba(15,23,42,.5)}
+        .date-row.is-done .date-title{text-decoration:line-through;opacity:.6}
+        .date-check{width:20px;height:20px;margin-top:6px;accent-color:#059669;cursor:pointer;flex:none}
+
         .activity-panel:before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:#2563eb}
         .activity-panel.suggestions-panel:before{background:#059669}
         .activity-panel-head{padding-bottom:10px;border-bottom:1px solid #eef2f6}
@@ -226,8 +247,8 @@
                 <span>Edital Verticalizado</span>
             </button>
             <button onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Dashboard & KPIs</span>
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Datas Importantes</span>
             </button>
             <button onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
                 <i class="fa-solid fa-sliders"></i><span>Personalização</span>
@@ -258,26 +279,6 @@
         <!-- ABA 1: CRONOGRAMA & PRIORIDADES -->
         <div id="content-cronograma" class="tab-content flex-1 flex flex-col space-y-4 sm:space-y-6">
             
-            <!-- Ações dos dados do concurso (sem a tabela extensa de tópicos) -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <h2 class="font-bold text-sm text-slate-700 dark:text-slate-200">Acompanhe seu estudo</h2>
-                    <p class="text-xs text-slate-500 mt-1">Use o progresso por prioridade e as sugestões abaixo para decidir o próximo estudo.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="confirmReset()" class="px-3 py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-rotate-right"></i><span>Resetar</span>
-                    </button>
-                    <button onclick="exportData()" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-download"></i><span>Backup completo</span>
-                    </button>
-                    <label class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-upload"></i><span>Restaurar backup</span>
-                        <input type="file" id="import-file" onchange="importData(event)" class="hidden" accept=".json">
-                    </label>
-                </div>
-            </div>
-
             <!-- Indicadores gerais de progresso -->
             <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
                 <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -306,7 +307,7 @@
                     <p class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">Horas de Estudo</p>
                     <div class="flex items-end justify-between mt-1.5">
                         <h3 id="stat-total-hours" class="text-lg sm:text-xl font-bold">0.0h</h3>
-                        <span class="text-[10px] text-slate-500">Acumulado</span>
+                        <span id="stat-total-hours-dhm" class="text-[10px] text-slate-500">Acumulado</span>
                     </div>
                     <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
                         <div id="stat-hours-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -336,27 +337,28 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+              <div class="space-y-4 min-w-0">
               <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
                 <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><span class="activity-count">Recentes</span></div>
                 <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-              <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div>
-                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <section class="activity-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-violet-700 dark:text-violet-300"><i class="fa-solid fa-calendar-check mr-2"></i>Revisões sugeridas</h3><p class="text-[11px] text-slate-500 mt-1">Conteúdos estudados que podem entrar no ciclo de revisão.</p></div><span id="review-due-count" class="activity-count">0 pendentes</span></div>
-                <div id="review-due-container" class="space-y-2"></div>
-                <p class="text-[10px] text-slate-400">Cadência inicial sugerida: 1, 7, 15 e 30 dias após o estudo/revisão. Você poderá ajustar essa regra em uma versão futura.</p>
               </section>
               <section class="activity-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
                 <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-purple-700 dark:text-purple-300"><i class="fa-solid fa-rotate mr-2"></i>Últimas revisões</h3><p class="text-[11px] text-slate-500 mt-1">Revisões ficam separadas da rotação de estudos.</p></div><span id="recent-review-count" class="activity-count">0 registros</span></div>
                 <div id="recent-reviews-container" class="space-y-2"></div>
               </section>
+              </div>
+              <div class="space-y-4 min-w-0">
+              <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div>
+                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
+              </section>
+              <section class="activity-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-violet-700 dark:text-violet-300"><i class="fa-solid fa-calendar-check mr-2"></i>Revisões sugeridas</h3><p class="text-[11px] text-slate-500 mt-1">Conteúdos estudados que podem entrar no ciclo de revisão.</p></div><span id="review-due-count" class="activity-count">0 pendentes</span></div>
+                <div id="review-due-container" class="space-y-2"></div>
+                <p class="text-[10px] text-slate-400">Cadência inicial sugerida: 1, 7, 15 e 30 dias após o estudo/revisão. Você poderá ajustar essa regra em uma versão futura.</p>
+              </section>
+              </div>
             </div>
 
             <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
@@ -461,7 +463,8 @@
                         </div>
                     </div>
 
-                    <div class="overflow-y-auto max-h-[480px] flex-1 pr-1 space-y-2.5" id="sessions-list">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Dica: edite direto na tabela (a alteração é salva ao sair do campo). Use <strong>Copiar</strong> para reaproveitar um registro. Linhas em destaque apontam para tópicos que não fazem parte do seu edital atual.</p>
+                    <div class="overflow-auto max-h-[70vh] flex-1 rounded-xl border border-slate-200 dark:border-slate-700" id="sessions-list">
                         <!-- Histórico inserido por JS -->
                     </div>
                 </div>
@@ -567,62 +570,22 @@
         </div>
 
         <!-- ABA 4: DASHBOARD & KPIS -->
-        <div id="content-dashboard" class="tab-content hidden flex-1 flex flex-col space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Coluna Esquerda: Desempenho por Disciplina & Sublistas Corrigidas -->
-                <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col space-y-4">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <h3 class="font-bold text-sm sm:text-base flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-                            <i class="fa-solid fa-chart-column"></i>
-                            <span>Desempenho Detalhado por Disciplina</span>
-                        </h3>
-                        <div>
-                            <select id="dash-filter-disc" onchange="renderDashboard()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-medium outline-none">
-                                <option value="all">Todas as Disciplinas</option>
-                            </select>
-                        </div>
+        <div id="content-dashboard" class="tab-content hidden flex-1 flex flex-col space-y-5">
+            <div class="mx-auto w-full max-w-4xl space-y-5">
+                <section class="app-card p-5 sm:p-6 space-y-4">
+                    <div>
+                        <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>Datas importantes</h2>
+                        <p id="dates-summary" class="mt-1 text-xs text-slate-500"></p>
                     </div>
-                    <div id="dashboard-disciplines-container" class="space-y-4 overflow-y-auto max-h-[580px] pr-2">
-                        <!-- Inserido por JS -->
-                    </div>
-                </div>
-
-                <!-- Coluna Direita: Datas importantes do concurso -->
-                <div class="space-y-6">
-                    <!-- Quadro de Datas Importantes -->
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                        <h4 class="font-bold text-sm flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
-                            <i class="fa-solid fa-calendar-days"></i>
-                            <span>Cronograma de Datas (Edital)</span>
-                        </h4>
-                        <ul id="contest-dates-list" class="space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                            <li class="flex justify-between border-b border-slate-100 dark:border-slate-700/50 pb-1.5">
-                                <span>Inscrições:</span>
-                                <strong class="font-mono">05/10 a 06/11/2026</strong>
-                            </li>
-                            <li class="flex justify-between border-b border-slate-100 dark:border-slate-700/50 pb-1.5">
-                                <span>Último dia Boleto:</span>
-                                <strong class="font-mono">09/11/2026</strong>
-                            </li>
-                            <li class="flex justify-between border-b border-slate-100 dark:border-slate-700/50 pb-1.5">
-                                <span>Divulgação Inscrições:</span>
-                                <strong class="font-mono">23/11/2026</strong>
-                            </li>
-                            <li class="flex justify-between border-b border-slate-100 dark:border-slate-700/50 pb-1.5">
-                                <span><strong>Data da Prova:</strong></span>
-                                <strong class="font-mono text-blue-600 dark:text-blue-400 font-bold">17/01/2027</strong>
-                            </li>
-                            <li class="flex justify-between">
-                                <span>Resultado Final:</span>
-                                <strong class="font-mono">16/06/2027</strong>
-                            </li>
-                        </ul>
-                    </div>
-
-
-                </div>
-
+                    <div id="dates-exam" class="rounded-xl border border-blue-100 dark:border-slate-700 bg-blue-50/70 dark:bg-slate-900/50 p-4"></div>
+                    <form id="date-add-form" onsubmit="addImportantDate(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end text-xs">
+                        <label class="sm:col-span-5 block font-semibold text-slate-500 dark:text-slate-400">Nova data<input id="date-new-title" required maxlength="120" placeholder="Ex.: Pagar a taxa de inscrição" class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
+                        <label class="sm:col-span-3 block font-semibold text-slate-500 dark:text-slate-400">Data<input id="date-new-date" type="date" required class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
+                        <label class="sm:col-span-3 block font-semibold text-slate-500 dark:text-slate-400">Até (opcional)<input id="date-new-end" type="date" class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
+                        <button type="submit" aria-label="Adicionar data" class="sm:col-span-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2.5"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                </section>
+                <section class="app-card p-5 sm:p-6"><div id="dates-checklist" class="space-y-5"></div></section>
             </div>
         </div>
 
@@ -682,69 +645,58 @@
           </div>
         </div>
         <div id="content-configuracoes" class="tab-content hidden flex-1 flex flex-col space-y-5">
-          <div class="app-card p-5 sm:p-6">
-            <div class="flex items-start gap-3 mb-4">
-              <div class="rounded-xl bg-blue-50 text-blue-700 p-3"><i class="fa-solid fa-gear text-lg"></i></div>
-              <div><h2 class="font-bold text-lg section-heading">Configurações do aplicativo</h2><p class="text-xs text-slate-500 mt-1">Chaves, autenticação e sincronização. Essas opções ficam separadas das atividades de estudo.</p></div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <section class="rounded-xl border border-slate-200 p-4 bg-slate-50/70">
-                <h3 class="font-bold text-sm mb-1 section-heading"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>IA (Gemini)</h3>
-                <p class="text-xs text-slate-600">A análise de edital usa a IA pelo servidor do aplicativo, com a sua conta. Não é preciso informar nenhuma chave neste navegador.</p>
-                <p class="text-[11px] text-slate-500 mt-3">A chave do Gemini fica guardada como segredo no servidor (Supabase) e nunca é enviada ao navegador. O uso tem limite diário por conta.</p>
-              </section>
-              <section class="rounded-xl border border-slate-200 p-4 bg-slate-50/70">
-                <h3 class="font-bold text-sm mb-1 section-heading"><i class="fa-solid fa-cloud mr-2"></i>Sincronização com Supabase</h3>
-                <p class="text-xs text-slate-500 mb-3">Use o projeto Supabase Nutri já compartilhado com seus outros aplicativos. Não é necessário criar outro projeto.</p>
-                <p class="text-xs text-slate-500 mb-3">Use o projeto existente. O teste verifica se a API responde; o login habilita a leitura/gravação dos dados do usuário.</p>
-                <div class="flex flex-wrap gap-2">
-                  <button onclick="document.getElementById('cloud-settings').scrollIntoView({behavior:'smooth',block:'center'})" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold"><i class="fa-solid fa-sliders mr-1"></i>Configurar / conectar</button>
-                  <button onclick="testSupabaseConnection()" class="px-4 py-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-50 text-blue-800 text-sm font-semibold"><i class="fa-solid fa-plug-circle-check mr-1"></i>Testar conexão</button>
+          <div class="mx-auto w-full max-w-4xl space-y-5">
+            <section class="app-card p-5 sm:p-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-cloud text-blue-600 mr-2"></i>Sincronização automática</h2>
+                  <p class="mt-1 text-xs text-slate-500">Entre com a sua conta para guardar o progresso na nuvem e usar o planejador em mais de um aparelho.</p>
                 </div>
-              </section>
-            </div>
-          </div>
-          <div class="app-card p-4 sm:p-5">
-            <section id="cloud-settings" class="rounded-xl border-2 border-blue-100 dark:border-slate-700 p-4 sm:p-5 bg-white dark:bg-slate-800">
-              <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
-                <div><h3 class="text-base font-bold section-heading"><i class="fa-solid fa-cloud text-blue-600 mr-2"></i>Conexão tradicional com Supabase</h3><p class="mt-1 text-xs text-slate-500">Use URL do projeto + chave pública + e-mail e senha. Esta é a forma convencional; não exige OAuth.</p></div>
                 <span id="cloud-status" class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600">Não conectado</span>
               </div>
-              <div class="mb-4 rounded-xl border border-blue-100 dark:border-slate-700 bg-blue-50/70 dark:bg-slate-900/50 p-3">
-                <p class="text-xs font-semibold text-blue-900 dark:text-blue-200"><i class="fa-solid fa-shield-halved mr-1"></i>Salvamento local automático + sincronização com a nuvem</p>
-                <p id="cloud-save-detail" class="text-[11px] text-slate-600 dark:text-slate-300 mt-1">As alterações são gravadas primeiro neste dispositivo e, quando conectado, enviadas à nuvem após uma breve pausa.</p>
+              <p id="cloud-save-detail" class="mt-3 text-[11px] text-slate-500">As alterações são gravadas primeiro neste dispositivo e, quando conectado, enviadas à nuvem após uma breve pausa.</p>
+              <input id="sb-url" type="hidden"><input id="sb-key" type="hidden">
+              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <label class="block font-medium">E-mail<input id="sb-email" type="email" autocomplete="username" placeholder="voce@exemplo.com" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
+                <label class="block font-medium">Senha<input id="sb-password" type="password" autocomplete="current-password" placeholder="Sua senha" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <input id="sb-url" type="hidden">
-                <input id="sb-key" type="hidden">
-                <label class="block font-medium">E-mail da conta no aplicativo<input id="sb-email" type="email" autocomplete="username" placeholder="seu e-mail" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
-                <label class="block font-medium">Senha da conta no aplicativo<input id="sb-password" type="password" autocomplete="current-password" placeholder="Senha cadastrada no Supabase Auth" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
+              <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <button onclick="testSupabaseConnection()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-slate-700 hover:bg-slate-800 text-white">Verificar conexão</button>
+                <button onclick="signInSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-blue-700 hover:bg-blue-800 text-white">Entrar e sincronizar</button>
+                <button onclick="signUpSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-emerald-600 hover:bg-emerald-700 text-white">Criar conta</button>
+                <button onclick="signOutSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800">Sair da conta</button>
               </div>
-              <div class="flex flex-wrap gap-2 mt-4">
-                <button onclick="saveSupabaseSettings()" class="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold">Guardar e-mail neste navegador</button>
-                <button onclick="testSupabaseConnection()" class="px-4 py-2.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 font-semibold"><i class="fa-solid fa-plug-circle-check mr-1"></i>Testar conexão</button>
-                <button onclick="signInSupabase()" class="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"><i class="fa-solid fa-right-to-bracket mr-1"></i>Entrar e sincronizar</button>
-                <button onclick="signUpSupabase()" class="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">Criar conta</button>
-                <button onclick="signOutSupabase()" class="px-4 py-2.5 rounded-lg border border-slate-300 font-semibold">Sair</button>
-              </div>
-              <details class="mt-4 rounded-xl border border-amber-200 dark:border-slate-700 p-3">
-                <summary class="cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-arrows-rotate mr-2 text-amber-600"></i>Sincronização manual e recuperação (avançado)</summary>
-                <p class="text-xs text-slate-500 mt-2 mb-3">Use estas opções apenas quando precisar comparar ou recuperar dados. O envio mescla concursos e não deve ser usado para substituir deliberadamente a nuvem sem conferir o conteúdo local.</p>
+              <details class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                <summary class="cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200">Mais opções de sincronização</summary>
+                <p class="mt-2 mb-3 text-xs text-slate-500">Use somente para comparar ou recuperar dados. O envio mescla os concursos e não substitui a nuvem às cegas.</p>
                 <div class="flex flex-wrap gap-2">
-                  <button onclick="syncSupabase('upload')" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold">Enviar dados atuais à nuvem</button>
-                  <button onclick="syncSupabase('download')" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Baixar dados da nuvem</button>
+                  <button onclick="syncSupabase('upload')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-amber-500 hover:bg-amber-600 text-slate-900">Enviar dados atuais à nuvem</button>
+                  <button onclick="syncSupabase('download')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 hover:bg-indigo-700 text-white">Baixar dados da nuvem</button>
+                  <button onclick="signInWithGoogleSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google mr-1"></i>Entrar com Google</button>
                 </div>
               </details>
-              <details class="mt-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-xs text-slate-700 dark:text-slate-300">
-                <summary class="cursor-pointer font-bold">Opção alternativa: entrar com Google (OAuth)</summary>
-                <p class="mt-2">O login por Google é opcional e exige configuração adicional no painel Supabase. A conexão tradicional acima continua disponível sem essa configuração.</p>
-                <button onclick="signInWithGoogleSupabase()" class="mt-3 px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold"><i class="fa-brands fa-google mr-1"></i>Entrar com Google</button>
-                <p class="mt-2">Para habilitar essa opção: Authentication → Sign In / Providers → Google; depois configure a URL de retorno. Se você usa o HTML diretamente no computador (file://), prefira a conexão tradicional com e-mail e senha.</p>
-              </details>
-              <div class="mt-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 p-3 text-xs text-slate-700 dark:text-slate-300">
-                <b>Como conectar:</b> 1) Informe a URL e a chave pública do projeto Nutri. 2) Clique em Guardar configuração. 3) Digite o e-mail e a senha da conta do aplicativo e clique em Entrar e sincronizar. 4) Quando aparecer “dados remotos encontrados”, escolha baixar para trazer os dados existentes ou enviar para substituir os dados da nuvem pelos dados locais.
+            </section>
+
+            <section class="app-card p-5 sm:p-6">
+              <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-box-archive text-emerald-600 mr-2"></i>Backup e arquivos</h2>
+              <p class="mt-1 text-xs text-slate-500">Exporte uma cópia de todos os concursos (editais, progresso, histórico e personalizações) ou restaure um backup existente. Guarde o arquivo em local seguro.</p>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button onclick="exportData()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"><i class="fa-solid fa-download mr-1"></i>Exportar backup completo (JSON)</button>
+                <label class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/30 dark:text-sky-300 cursor-pointer"><i class="fa-solid fa-upload mr-1"></i>Restaurar backup (JSON)<input type="file" id="import-file" onchange="importData(event)" class="hidden" accept=".json"></label>
               </div>
-              <p class="mt-3 text-[11px] text-slate-500">A conexão usa a chave pública definida em supabase-config.js. Chaves secretas ficam somente no servidor.</p>
+            </section>
+
+            <section class="app-card p-5 sm:p-6">
+              <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>Verificação dos tópicos</h2>
+              <p class="mt-1 text-xs text-slate-500">Confere se o Cronograma, o Edital Verticalizado e o Registro de Estudos usam os mesmos tópicos e aponta registros que ficaram sem tópico correspondente.</p>
+              <button onclick="renderTopicDiagnostics()" class="mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 hover:bg-indigo-700 text-white"><i class="fa-solid fa-magnifying-glass mr-1"></i>Verificar agora</button>
+              <div id="topic-diagnostics-result" class="mt-4"></div>
+            </section>
+
+            <section class="app-card p-5 sm:p-6 border border-red-200 dark:border-red-900/60">
+              <h2 class="font-bold text-lg text-red-700 dark:text-red-300"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de risco</h2>
+              <p class="mt-1 text-xs text-slate-500">Reinicia o progresso do concurso ativo. Gere um backup antes de continuar.</p>
+              <button onclick="confirmReset()" class="mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300"><i class="fa-solid fa-rotate-right mr-1"></i>Resetar progresso</button>
             </section>
           </div>
         </div>
@@ -866,10 +818,11 @@
         // Disciplinas citadas pelo usuário que podem não existir no edital carregado. Inserimos marcadores explícitos, sem inventar tópicos oficiais.
         const selectedAtStart = localStorage.getItem('tce_active_contest') || 'tce-go-2026-2027';
         if (selectedAtStart === 'tce-go-2026-2027') {
+            const _dead0 = getTombstones(selectedAtStart).items;
             [ 'Noções de Direito Constitucional', 'Noções de Administração Pública', 'Administração Estratégica' ].forEach((name, idx) => {
                 const placeholder = { id:'pending_discipline_'+(idx+1), discipline:name, topic:'Conteúdo programático pendente de importação', subtopic:'Importe a planilha ou analise o edital oficial para incluir os tópicos corretos.', priority:'Amarela', weight:'', studyWeight:2, hours:0, questions:0, reviews:0, completed:false, notes:'Disciplina adicionada como marcador; confirme o conteúdo no edital oficial.', placeholder:true };
-                if (!masterEditalData.some(x => x.discipline === name)) masterEditalData.push({...placeholder});
-                if (!userProgress.some(x => x.id === placeholder.id || x.discipline === name)) userProgress.push({...placeholder});
+                if (!_dead0.includes(placeholder.id) && !masterEditalData.some(x => x.discipline === name)) masterEditalData.push({...placeholder});
+                if (!_dead0.includes(placeholder.id) && !userProgress.some(x => x.id === placeholder.id || x.discipline === name)) userProgress.push({...placeholder});
                 if (!window._defaultMasterEdital.some(x => x.discipline === name)) window._defaultMasterEdital.push({...placeholder});
             });
         }
@@ -1189,6 +1142,102 @@
             updateRegTopics();
             showCustomDialog('Disciplina selecionada', 'A disciplina '+item.discipline+' foi selecionada conforme a estratégia configurada. Escolha o tópico e registre o estudo.');
         }
+        // ===== V10.4: horas em dias/horas/minutos, exclusões duráveis e utilidades =====
+        // 0.5 h -> 0d00h30 · 26.75 h -> 1d02h45
+        function fmtDHM(hours){const t=Math.max(0,Math.round((Number(hours)||0)*60));const d=Math.floor(t/1440),h=Math.floor((t%1440)/60),m=t%60;return d+'d'+String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0');}
+        function fmtHoras(hours){const n=Number(hours)||0;return n.toFixed(1)+'h ('+fmtDHM(n)+')';}
+
+        // A mesclagem entre dispositivos faz união por id. Sem registrar o que foi excluído, tópicos e sessões removidos
+        // voltariam a cada sincronização (foi assim que os tópicos do edital padrão continuaram aparecendo no Registro).
+        function getTombstones(id){
+            const t={items:[],sessions:[]};
+            try{const raw=JSON.parse(localStorage.getItem('tce_'+id+'_deleted')||'null');if(raw&&typeof raw==='object'){t.items=Array.isArray(raw.items)?raw.items.map(String):[];t.sessions=Array.isArray(raw.sessions)?raw.sessions.map(String):[];}}catch(e){}
+            return t;
+        }
+        function setTombstones(id,t){
+            try{localStorage.setItem('tce_'+id+'_deleted',JSON.stringify({items:[...new Set((t&&t.items||[]).map(String))].slice(-5000),sessions:[...new Set((t&&t.sessions||[]).map(String))].slice(-5000)}));}catch(e){}
+        }
+        function addTombstones(kind,ids,id){
+            id=id||activeContest;const t=getTombstones(id);
+            t[kind]=[...t[kind],...(ids||[]).filter(x=>x!==undefined&&x!==null&&x!=='').map(String)];
+            setTombstones(id,t);
+        }
+        function unionTombstones(a,b){
+            const x=a||{},y=b||{};
+            return {items:[...new Set([...(x.items||[]),...(y.items||[])].map(String))],sessions:[...new Set([...(x.sessions||[]),...(y.sessions||[])].map(String))]};
+        }
+
+        // Tópicos do edital padrão embutido no aplicativo (só são "legados" quando o concurso já tem edital próprio).
+        function getLegacyIdSet(){
+            const defIds=new Set((window._defaultMasterEdital||[]).map(x=>String(x.id)));
+            const isDef=x=>defIds.has(String(x.id))||/^pending_discipline_/.test(String(x.id));
+            return masterEditalData.some(x=>!isDef(x))?new Set(masterEditalData.filter(isDef).map(x=>String(x.id))):new Set();
+        }
+        function diagnoseTopics(){
+            const legacyIds=getLegacyIdSet();
+            const custom=masterEditalData.filter(x=>!legacyIds.has(String(x.id)));
+            const legacy=masterEditalData.filter(x=>legacyIds.has(String(x.id)));
+            const customDisc=new Set(custom.filter(x=>!/^pending_discipline_/.test(String(x.id))).map(x=>x.discipline));
+            const idSet=new Set(masterEditalData.map(x=>String(x.id)));
+            const keyOf=x=>[x.discipline,x.topic,x.subtopic].map(v=>String(v||'')).join('\u0001');
+            const byKey=new Map();masterEditalData.forEach(x=>{const k=keyOf(x);if(!byKey.has(k))byKey.set(k,[]);byKey.get(k).push(String(x.id));});
+            const usedIds=new Set(),orphans=[];
+            studySessions.forEach(s=>{
+                if(s.itemId&&idSet.has(String(s.itemId))){usedIds.add(String(s.itemId));return;}
+                const hit=byKey.get(keyOf(s));
+                if(hit){hit.forEach(i=>usedIds.add(i));return;}
+                orphans.push(s);
+            });
+            const noteIds=new Set(userProgress.filter(u=>String(u.notes||'').trim()).map(u=>String(u.id)));
+            const groups=new Map();
+            legacy.forEach(x=>{
+                if(!groups.has(x.discipline))groups.set(x.discipline,{discipline:x.discipline,total:0,kept:0,removable:[],duplicated:customDisc.has(x.discipline)});
+                const g=groups.get(x.discipline);g.total++;
+                if(usedIds.has(String(x.id))||noteIds.has(String(x.id)))g.kept++;else g.removable.push(x.id);
+            });
+            const list=[...groups.values()];
+            return {total:masterEditalData.length,customCount:custom.length,legacyCount:legacy.length,groups:list,removable:list.flatMap(g=>g.removable),orphans};
+        }
+        function renderTopicDiagnostics(){
+            const box=document.getElementById('topic-diagnostics-result');if(!box)return;
+            const d=diagnoseTopics(),e=escapeHtml;
+            let html=`<p class="text-xs text-slate-600 dark:text-slate-300">Tópicos no edital: <strong>${d.total}</strong> · do edital importado/cadastrado: <strong>${d.customCount}</strong> · do edital padrão do aplicativo: <strong>${d.legacyCount}</strong> · sessões sem tópico correspondente: <strong>${d.orphans.length}</strong>.</p>`;
+            if(d.groups.length){
+                html+=`<div class="overflow-x-auto mt-3"><table class="w-full text-xs"><thead><tr class="text-left text-slate-500"><th class="py-1 pr-3">Disciplina do edital padrão</th><th class="py-1 pr-3">Tópicos</th><th class="py-1 pr-3">Com estudo ou anotação</th><th class="py-1">Também existe no seu edital?</th></tr></thead><tbody>`+
+                    d.groups.map(g=>`<tr class="border-t border-slate-200 dark:border-slate-700"><td class="py-1.5 pr-3 font-semibold">${e(g.discipline)}</td><td class="py-1.5 pr-3">${g.total}</td><td class="py-1.5 pr-3">${g.kept}</td><td class="py-1.5">${g.duplicated?'Sim (duplicada)':'Não'}</td></tr>`).join('')+`</tbody></table></div>`;
+            }
+            if(d.removable.length)html+=`<div class="mt-3 flex flex-wrap items-center gap-2"><button type="button" onclick="cleanupLegacyTopics()" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"><i class="fa-solid fa-broom mr-1"></i>Remover ${d.removable.length} tópico(s) do edital padrão sem uso</button><span class="text-[11px] text-slate-500">Só sai o que não tem estudo registrado nem anotação.</span></div>`;
+            if(d.legacyCount&&!d.removable.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Os tópicos do edital padrão que restaram têm estudos ou anotações. No Registro de Estudos, troque o tópico das linhas destacadas pelo tópico correto do seu edital e verifique de novo.</p>`;
+            if(d.orphans.length)html+=`<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">Há ${d.orphans.length} sessão(ões) apontando para tópicos que já não existem. No Registro de Estudos elas aparecem destacadas: escolha o tópico correto na coluna “Tópico e subtópico”.</p>`;
+            if(!d.legacyCount&&!d.orphans.length)html+=`<p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Tudo certo: o Cronograma, o Edital e o Registro usam os mesmos tópicos.</p>`;
+            box.innerHTML=html;
+        }
+        function cleanupLegacyTopics(){
+            const d=diagnoseTopics();if(!d.removable.length)return;
+            showCustomDialog('Remover tópicos do edital padrão?',`Serão removidos ${d.removable.length} tópico(s) que vieram do edital padrão do aplicativo e não têm estudo registrado nem anotação. Os tópicos do seu edital e todos os seus registros continuam intactos. Recomenda-se gerar um backup antes.`,'fa-solid fa-triangle-exclamation',()=>{
+                const ids=new Set(d.removable.map(String));
+                addTombstones('items',[...ids]);
+                masterEditalData=masterEditalData.filter(x=>!ids.has(String(x.id)));
+                userProgress=userProgress.filter(x=>!ids.has(String(x.id)));
+                saveData();
+                try{initCronogramaFilters();initEditalFilters();initRegistrationForm();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderCustomization();}catch(err){console.warn(err);}
+                renderTopicDiagnostics();
+                showCustomDialog('Tópicos removidos',`${ids.size} tópico(s) do edital padrão foram removidos.`,'fa-solid fa-circle-check');
+            });
+        }
+
+        // Progresso do tópico a partir de uma sessão (sign=+1 soma, -1 desconta).
+        function adjustProgressForSession(session,sign){
+            const item=masterEditalData.find(x=>sessionMatchesTopic(session,x));if(!item)return null;
+            let p=userProgress.find(u=>u.id===item.id);
+            if(!p){if(sign<0)return item;p={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(p);}
+            p.hours=Math.max(0,(Number(p.hours)||0)+sign*(Number(session.minutes)||0)/60);
+            p.questions=Math.max(0,(Number(p.questions)||0)+sign*(Number(session.questions)||0));
+            if(isRevisionSession(session))p.reviews=Math.max(0,(Number(p.reviews)||0)+sign);
+            if(sign>0&&session.type2==='Estudo Teórico'&&p.hours>=0.5)p.completed=true;
+            return item;
+        }
+
         // Cartões recolhíveis: Últimos estudos, Sugestões, Revisões sugeridas e Últimas revisões (iniciam fechados).
         // Resumo do cartão fechado: disciplina + o dado mais útil do primeiro item (posições entre os textos do cartão).
         const PANEL_SUMMARY_PARTS={'recent-rotation-container':[0,2,3],'next-study-container':[0,1],'review-due-container':[0,2],'recent-reviews-container':[0,2]};
@@ -1240,8 +1289,14 @@
                 const card=document.createElement('div');
                 card.className='recent-study-card flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-3';
                 const duration=((Number(session.minutes)||0)/60).toFixed(1);
+                const noteItem=masterEditalData.find(i=>sessionMatchesTopic(session,i));
+                const noteText=noteItem?String((userProgress.find(u=>u.id===noteItem.id)||{}).notes||'').trim():'';
+                const noteId=noteItem?escapeHtml(noteItem.id):'';
+                const noteHtml=!noteItem?'':(noteText
+                    ?`<div role="button" tabindex="0" data-skip-summary onclick="openModal('${noteId}')" title="Abrir anotações" class="note-clamp mt-1.5 max-w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-left text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(noteText)}</div>`
+                    :`<button type="button" onclick="openModal('${noteId}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:underline dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Adicionar anotação</button>`);
                 const questions=Number(session.questions)||0;
-                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div></div></div><div class="text-right shrink-0 min-w-[64px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${duration} h</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
+                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
             });
             renderStudySuggestionPanel();
@@ -1346,7 +1401,7 @@
                 recentContainer.innerHTML='';
                 recent.forEach(session=>{
                     const card=document.createElement('div');card.className='rounded-xl border border-purple-100 dark:border-slate-700 bg-purple-50/50 dark:bg-slate-900/50 p-3 flex items-center justify-between gap-3';
-                    card.innerHTML=`<div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 mt-1">${escapeHtml(session.topic||'')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1">${escapeHtml(session.date||'')} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div></div><div class="text-right shrink-0"><div class="text-xs font-bold text-purple-700 dark:text-purple-300">${(Number(session.minutes||0)/60).toFixed(1)} h</div><div class="text-[10px] text-slate-500">${Number(session.questions)||0} questões</div></div>`;
+                    card.innerHTML=`<div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 mt-1">${escapeHtml(session.topic||'')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1">${escapeHtml(session.date||'')} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div></div><div class="text-right shrink-0"><div class="text-xs font-bold text-purple-700 dark:text-purple-300">${fmtHoras(Number(session.minutes||0)/60)}</div><div class="text-[10px] text-slate-500">${Number(session.questions)||0} questões</div></div>`;
                     recentContainer.appendChild(card);
                 });
             }
@@ -1386,9 +1441,9 @@
                         const u=userProgress.find(x=>x.id===t.id)||t;
                         const itemPct=u.completed?100:((Number(u.hours)||0)>0?Math.min(90,Math.round((Number(u.hours)||0)/Math.max(Number(t.hours)||1,1)*50)):0);
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
-                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${(Number(u.hours)||0).toFixed(1)} h</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
+                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${fmtHoras(Number(u.hours)||0)}</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
-                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${hours.toFixed(1)} h</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
+                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });
                 const priorityIsOpen=window._openHomePriorities.has(priority);
                 group.innerHTML=`<details class="priority-group" data-priority="${priority}" ${priorityIsOpen?'open':''} ontoggle="if(!window._openHomePriorities)window._openHomePriorities=new Set();this.open?window._openHomePriorities.add(this.dataset.priority):window._openHomePriorities.delete(this.dataset.priority)"><summary class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span><i class="fa-solid fa-chevron-right priority-chevron"></i></summary><div class="p-2.5 space-y-2.5">${inner}</div></details>`;
@@ -1454,6 +1509,7 @@
             });
 
             document.getElementById('stat-total-hours').innerText = `${totalHours.toFixed(1)}h`;
+            const _dhm=document.getElementById('stat-total-hours-dhm');if(_dhm)_dhm.textContent=fmtDHM(totalHours)+' acumulado';
             document.getElementById('stat-hours-bar').style.width = `${Math.min(100, (totalHours / 60) * 100)}%`;
 
             document.getElementById('stat-total-questions').innerText = totalQuestions;
@@ -1479,7 +1535,7 @@
                 footerDiv.innerHTML = `
                     <span>Resumo da Disciplina (<strong class="text-blue-600">${disciplineFilter}</strong>):</span>
                     <div class="flex items-center space-x-4 font-mono">
-                        <span>Horas: <strong class="text-emerald-600">${discH.toFixed(1)}h</strong></span>
+                        <span>Horas: <strong class="text-emerald-600">${fmtHoras(discH)}</strong></span>
                         <span>Questões: <strong class="text-amber-600">${discQ}</strong></span>
                         <span>Revisões: <strong class="text-purple-600">${discR}</strong></span>
                         <span>Tópicos: <strong class="text-blue-600">${discDone}/${discTopics.length}</strong></span>
@@ -1629,44 +1685,122 @@
             showCustomDialog('Sessão atualizada','Data, trilha, tipo e métricas foram atualizados. Os quadros de estudos e revisões foram recalculados.');
         }
 
+        // ===== Histórico de sessões em tabela editável (V10.4) =====
+        const SESSION_TYPE1_OPTIONS=['Conhecimentos Específicos','Conhecimentos Gerais'];
+        const SESSION_TYPE2_OPTIONS=['Estudo Teórico','Resolução de Questões','Revisão','Simulado'];
+        function sessionTopicLabel(item){return item.topic+(item.subtopic?' → '+item.subtopic:'');}
         function renderSessionsList() {
             const container=document.getElementById('sessions-list');if(!container)return;
-            container.innerHTML='';
             const typeFilter=document.getElementById('hist-filter-type')?.value||'all';
             const discFilter=document.getElementById('hist-filter-disc')?.value||'all';
             const trackFilter=document.getElementById('hist-filter-track')?.value||'all';
             const _fk=[typeFilter,discFilter,trackFilter].join('|');
             if(window._sessionsFilterKey!==_fk){window._sessionsFilterKey=_fk;window._sessionsLimit=30;}
             const _limit=window._sessionsLimit||30;
-            const filteredSessions=getSessionsNewestFirst().filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
-            const badge=document.getElementById('session-count-badge');if(badge)badge.innerText=`${filteredSessions.length} ${filteredSessions.length===1?'registro':'registros'}`;
-            if(!filteredSessions.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado para os filtros selecionados.</p>';return;}
-            filteredSessions.slice(0,_limit).forEach(s=>{
-                const div=document.createElement('div');
-                div.className='p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 flex flex-col gap-2 text-xs';
-                const revision=isRevisionSession(s);
-                div.innerHTML=`<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><span class="font-bold ${revision?'text-purple-700 dark:text-purple-300':'text-blue-700 dark:text-blue-300'}">${escapeHtml(s.type2||'Estudo')}</span><span class="text-slate-400">•</span><span class="font-semibold">${escapeHtml(s.discipline||'')}</span><span class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">${escapeHtml(s.type1||'Conhecimentos Específicos')}</span><span class="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">${escapeHtml(s.studyTrack||'Trilha não informada')}</span></div>
-                    <div class="text-slate-700 dark:text-slate-200 font-medium mt-1">${escapeHtml(s.topic||'')}${s.subtopic?': '+escapeHtml(s.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(s.date||'')}${revision?' · Revisão':''}</div></div>
-                    <div class="flex flex-wrap items-center gap-2 font-mono shrink-0"><span class="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-bold">${(Number(s.minutes||0)/60).toFixed(1)} h</span><span class="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1 rounded font-bold">${Number(s.questions||0)} ${Number(s.questions||0)===1?'questão':'questões'}</span><button type="button" class="delete-session-btn text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-slate-700" title="Excluir registro"><i class="fa-solid fa-trash"></i></button></div>
-                    </div><div class="session-edit-slot"><button type="button" class="session-edit-open mt-2 cursor-pointer select-none text-xs font-bold text-blue-700 dark:text-blue-300"><i class="fa-solid fa-pen-to-square mr-1"></i>Editar campos nesta tela</button></div>`;
-                div.querySelector('.delete-session-btn')?.addEventListener('click',()=>deleteSession(s.id));
-                div.querySelector('.session-edit-open')?.addEventListener('click',()=>{
-                    const slot=div.querySelector('.session-edit-slot');
-                    slot.innerHTML=getInlineSessionEditorMarkup(s);
-                    const det=slot.querySelector('details');
-                    const form=slot.querySelector('.inline-session-edit');
-                    if(form){form.addEventListener('submit',saveInlineSession);form.querySelector('[name="discipline"]')?.addEventListener('change',()=>populateInlineTopicSelect(form));form.querySelector('.inline-edit-cancel')?.addEventListener('click',()=>{if(det)det.open=false;});}
-                    if(det)det.open=true;
-                });
-                container.appendChild(div);
-            });
-            if(filteredSessions.length>_limit){
+            const filtered=getSessionsNewestFirst().filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
+            const badge=document.getElementById('session-count-badge');
+            const totalMin=filtered.reduce((a,s)=>a+(Number(s.minutes)||0),0);
+            if(badge)badge.innerText=`${filtered.length} ${filtered.length===1?'registro':'registros'} · ${fmtHoras(totalMin/60)}`;
+            if(!filtered.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado para os filtros selecionados.</p>';return;}
+            const e=escapeHtml;
+            const legacyIds=getLegacyIdSet();
+            const disciplines=[...new Set(masterEditalData.map(i=>i.discipline))];
+            const opts=(arr,cur)=>[...new Set([cur,...arr].filter(Boolean))].map(v=>`<option value="${e(v)}"${v===cur?' selected':''}>${e(v)}</option>`).join('');
+            const rows=filtered.slice(0,_limit).map(s=>{
+                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x))||null;
+                const flagged=!item||legacyIds.has(String(item.id));
+                const topicText=item?sessionTopicLabel(item)+(legacyIds.has(String(item.id))?' (edital padrão)':''):'⚠ '+(s.topic||'Tópico')+(s.subtopic?' → '+s.subtopic:'')+' (não está mais no edital)';
+                const minutes=Math.max(0,Number(s.minutes)||0);
+                return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Tópico e subtópico."':''}>
+                    <td style="min-width:124px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
+                    <td style="min-width:140px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select></td>
+                    <td style="min-width:168px"><select class="tbl-field" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
+                    <td style="min-width:112px"><input class="tbl-field" data-f="studyTrack" list="study-tracks-list" maxlength="100" value="${e(s.studyTrack||'')}" aria-label="Curso ou trilha"></td>
+                    <td style="min-width:176px"><select class="tbl-field font-semibold" data-f="discipline" aria-label="Disciplina">${opts(disciplines,s.discipline||'')}</select></td>
+                    <td style="min-width:250px"><select class="tbl-field" data-f="itemId" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select></td>
+                    <td style="min-width:84px"><input type="number" min="1" class="tbl-field" data-f="minutes" value="${minutes}" aria-label="Minutos"><div class="px-1.5 text-[10px] text-slate-400" data-dhm>${fmtHoras(minutes/60)}</div></td>
+                    <td style="min-width:72px"><input type="number" min="0" class="tbl-field" data-f="questions" value="${Number(s.questions)||0}" aria-label="Questões"></td>
+                    <td style="white-space:nowrap"><button type="button" data-act="copy" class="sess-act bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300">Copiar</button> <button type="button" data-act="note" class="sess-act bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300">Notas</button> <button type="button" data-act="del" class="sess-act bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300">Excluir</button></td>
+                </tr>`;
+            }).join('');
+            container.innerHTML=`<table class="sess-table"><thead><tr><th>Data</th><th>Atividade</th><th>Conteúdo</th><th>Curso / trilha</th><th>Disciplina</th><th>Tópico e subtópico</th><th>Minutos</th><th>Questões</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+            if(filtered.length>_limit){
                 const more=document.createElement('button');more.type='button';
-                more.className='w-full py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800';
-                more.textContent=`Mostrar mais 30 (restam ${filteredSessions.length-_limit})`;
+                more.className='mt-3 w-full py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800';
+                more.textContent=`Mostrar mais 30 (restam ${filtered.length-_limit})`;
                 more.addEventListener('click',()=>{window._sessionsLimit=_limit+30;renderSessionsList();});
                 container.appendChild(more);
+            }
+            if(!container.dataset.bound){
+                container.dataset.bound='1';
+                container.addEventListener('change',onSessionTableChange);
+                container.addEventListener('focusin',ev=>{const t=ev.target;if(t&&t.matches&&t.matches('select[data-f="itemId"]'))fillSessionTopicSelect(t);});
+                container.addEventListener('click',onSessionTableClick);
+            }
+        }
+        // As opções de tópico só são montadas quando o campo recebe foco (mantém a tabela leve com centenas de tópicos).
+        function fillSessionTopicSelect(sel,forceId){
+            const tr=sel.closest('tr');const disc=tr.querySelector('[data-f="discipline"]').value;
+            const cur=forceId||sel.value;
+            if(!forceId&&sel.dataset.filled===disc)return;
+            sel.dataset.filled=disc;
+            sel.innerHTML=masterEditalData.filter(x=>x.discipline===disc).map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(sessionTopicLabel(x))}</option>`).join('');
+            if([...sel.options].some(o=>o.value===cur))sel.value=cur;else sel.selectedIndex=-1;
+        }
+        function onSessionTableChange(ev){
+            const el=ev.target.closest('[data-f]');if(!el)return;
+            const tr=el.closest('tr');const s=studySessions.find(x=>x.id===tr.dataset.id);if(!s)return;
+            const f=el.dataset.f,patch={};
+            if(f==='date'){if(!el.value){el.value=dateToInputValue(s.date);return;}patch.date=dateToBR(el.value);}
+            else if(f==='type1')patch.type1=el.value;
+            else if(f==='type2'){patch.type2=el.value;patch.isReview=el.value==='Revisão'?1:0;}
+            else if(f==='studyTrack')patch.studyTrack=(el.value||'').trim()||'Trilha não informada';
+            else if(f==='minutes')patch.minutes=Math.max(1,Number(el.value)||1);
+            else if(f==='questions')patch.questions=Math.max(0,Number(el.value)||0);
+            else if(f==='discipline'){
+                const first=masterEditalData.find(x=>x.discipline===el.value);
+                if(!first){showCustomDialog('Disciplina sem tópicos','Essa disciplina não tem tópicos cadastrados no edital.');el.value=s.discipline||'';return;}
+                patch.itemId=first.id;
+            }else if(f==='itemId'){
+                if(!masterEditalData.some(x=>x.id===el.value))return;
+                patch.itemId=el.value;
+            }
+            applySessionPatch(s,patch,tr);
+        }
+        function applySessionPatch(s,patch,tr){
+            adjustProgressForSession(s,-1);
+            Object.assign(s,patch);
+            if(patch.itemId){const it=masterEditalData.find(x=>x.id===patch.itemId);if(it)Object.assign(s,{discipline:it.discipline,topic:it.topic,subtopic:it.subtopic});}
+            adjustProgressForSession(s,+1);
+            saveData();
+            if(tr){
+                const dhm=tr.querySelector('[data-dhm]');if(dhm)dhm.textContent=fmtHoras((Number(s.minutes)||0)/60);
+                if(patch.itemId){
+                    const ds=tr.querySelector('[data-f="discipline"]');if(ds)ds.value=s.discipline;
+                    const ts=tr.querySelector('[data-f="itemId"]');if(ts){ts.dataset.filled='';fillSessionTopicSelect(ts,patch.itemId);}
+                    tr.classList.remove('sess-orphan');tr.removeAttribute('title');
+                }
+                tr.classList.remove('row-saved');void tr.offsetWidth;tr.classList.add('row-saved');
+            }
+            try{renderRecentRotation();renderPriorityDisciplineProgress();}catch(err){console.warn(err);}
+        }
+        function onSessionTableClick(ev){
+            const btn=ev.target.closest('[data-act]');if(!btn)return;
+            const tr=btn.closest('tr');const id=tr.dataset.id;const s=studySessions.find(x=>x.id===id);if(!s)return;
+            if(btn.dataset.act==='del'){
+                showCustomDialog('Excluir registro?','Este registro de estudo será removido e as horas, questões e revisões dele serão descontadas do tópico.','fa-solid fa-triangle-exclamation',()=>deleteSession(id));
+            }else if(btn.dataset.act==='note'){
+                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
+                if(!item)return showCustomDialog('Tópico indisponível','Escolha primeiro um tópico válido do edital nesta linha para abrir as anotações.');
+                openModal(item.id);
+            }else if(btn.dataset.act==='copy'){
+                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
+                const set=(id2,v)=>{const el=document.getElementById(id2);if(el)el.value=v;};
+                set('reg-type1',s.type1||SESSION_TYPE1_OPTIONS[0]);set('reg-type2',s.type2||SESSION_TYPE2_OPTIONS[0]);
+                set('reg-track',s.studyTrack||'Curso regular');set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());
+                if(item){set('reg-discipline',item.discipline);updateRegTopics();set('reg-topic',item.id);}
+                document.getElementById('study-session-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+                showCustomDialog('Registro copiado','Os dados foram levados para o formulário, com a data de hoje. Ajuste o que precisar e clique em “Salvar registro de estudo”.','fa-solid fa-circle-check');
             }
         }
 
@@ -1731,7 +1865,10 @@
         }
 
         function deleteSession(id) {
+            const old=studySessions.find(s=>s.id===id);
+            if(old)adjustProgressForSession(old,-1);
             studySessions = studySessions.filter(s => s.id !== id);
+            addTombstones('sessions',[id]);
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
             saveData();
             initRegistrationForm();renderSessionsList();
@@ -1829,7 +1966,7 @@
                                     <span>•</span>
                                     <span>Peso: <strong>${t.weight}</strong></span>
                                     <span>•</span>
-                                    <span>Horas: <strong>${hours.toFixed(1)}h</strong></span>
+                                    <span>Horas: <strong>${fmtHoras(hours)}</strong></span>
                                     <span>•</span>
                                     <span>Questões: <strong>${questions}</strong></span>
                                     <span>•</span>
@@ -1893,7 +2030,7 @@
         }
         function saveCurrentContestSnapshot(id=activeContest, timestamp=new Date().toISOString()){
           try {
-            const snapshot={contestName:contests[id]?.name||id,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
+            const snapshot={contestName:contests[id]?.name||id,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(id),_snapshotUpdatedAt:timestamp};
             localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
             return snapshot;
           } catch(e) { console.warn('Não foi possível guardar o snapshot do concurso',id,e); return null; }
@@ -1904,6 +2041,11 @@
           if(Array.isArray(snapshot.userProgress)) userProgress=snapshot.userProgress;
           else if(Array.isArray(snapshot.masterEditalData)) userProgress=JSON.parse(JSON.stringify(snapshot.masterEditalData));
           if(Array.isArray(snapshot.studySessions)) studySessions=snapshot.studySessions;
+          if(snapshot.deleted){
+            const dead=unionTombstones(getTombstones(activeContest),snapshot.deleted);setTombstones(activeContest,dead);
+            const di=new Set(dead.items),ds=new Set(dead.sessions);
+            masterEditalData=masterEditalData.filter(x=>!di.has(String(x.id)));userProgress=userProgress.filter(x=>!di.has(String(x.id)));studySessions=studySessions.filter(x=>!ds.has(String(x.id)));
+          }
           return true;
         }
         function changeContest(id){
@@ -2058,6 +2200,7 @@
         function removeDisciplineFromContest(discipline){
           const count=masterEditalData.filter(x=>x.discipline===discipline).length;
           showCustomDialog('Excluir disciplina?',`Serão removidos ${count} tópico(s) de “${discipline}” do edital verticalizado e do cronograma. Os lançamentos históricos de estudo serão preservados. Esta ação não pode ser desfeita sem backup.`, 'fa-solid fa-triangle-exclamation',()=>{
+            addTombstones('items',masterEditalData.filter(x=>x.discipline===discipline).map(x=>x.id));
             masterEditalData=masterEditalData.filter(x=>x.discipline!==discipline);
             userProgress=userProgress.filter(x=>x.discipline!==discipline);
             const cfg=getDisciplineSettings();delete cfg[discipline];localStorage.setItem('tce_'+activeContest+'_discipline_settings',JSON.stringify(cfg));
@@ -2155,6 +2298,7 @@
         async function deleteSyllabusItem(index){
           const item=masterEditalData[index];if(!item)return;
           if(!(await confirmAsync('Excluir este tópico/subtópico do edital? O registro de estudo associado deixará de aparecer no progresso; o histórico das sessões anteriores será preservado.')))return;
+          addTombstones('items',[item.id]);
           masterEditalData=masterEditalData.filter(x=>x.id!==item.id);
           userProgress=userProgress.filter(x=>x.id!==item.id);
           if(_editingSyllabusItemId===item.id)clearManualSyllabusForm();
@@ -2241,6 +2385,7 @@
             if(mode==='replace'&&!(await confirmAsync('Substituir o edital atual por '+normalized.length+' itens? Esta opção reinicia o progresso e não pode ser desfeita automaticamente.')))return;
             const keyOf=x=>[x.discipline,x.topic,x.subtopic].map(normalizeSyllabusKey).join('|');
             if(mode==='replace'){
+              addTombstones('items',masterEditalData.filter(old=>!normalized.some(n=>n.id===old.id)).map(x=>x.id));
               masterEditalData=normalized.map(({_hasHours,_hasQuestions,...x})=>x);
               userProgress=masterEditalData.map(x=>({...x}));
             }else{
@@ -2324,6 +2469,7 @@
           });
           if(!rows.length)return showCustomDialog('Sem tópicos','A análise não retornou tópicos aplicáveis. Revise a análise ou use o cadastro manual/importação Excel.');
           if(!(await confirmAsync('Aplicar '+rows.length+' itens extraídos pela IA e substituir o edital atual? Confira o resultado com o documento oficial.')))return;
+          addTombstones('items',masterEditalData.filter(old=>!rows.some(n=>n.id===old.id)).map(x=>x.id));
           masterEditalData=rows;userProgress=rows.map(x=>({...x}));saveData();refreshSyllabusViews();
           showCustomDialog('Edital aplicado',rows.length+' itens (tópicos/subtópicos) foram importados. Confira e corrija qualquer interpretação da IA.');
         }
@@ -2352,17 +2498,18 @@
                         snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||JSON.stringify(snap.prioritySettings||{}));
                         snap.disciplineSettings=JSON.parse(localStorage.getItem('tce_'+id+'_discipline_settings')||JSON.stringify(snap.disciplineSettings||{}));
                         snap.suggestionMode=localStorage.getItem('tce_'+id+'_suggestion_mode')||snap.suggestionMode||'priority_progress';
+                        snap.deleted=unionTombstones(getTombstones(id),snap.deleted);
                         snapshots[id]=snap;
                     } catch(e) { console.warn('Snapshot local ignorado:',key,e); }
                 }
                 const old=(()=>{try{return JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'{}')||{};}catch(e){return {};}})();
-                snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
+                snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
             } catch(e) { console.warn('Não foi possível reunir os snapshots dos concursos',e); }
             return snapshots;
         }
 
         function buildCurrentCloudPayload(timestamp=new Date().toISOString()) {
-            const activeSnapshot={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
+            const activeSnapshot={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:timestamp};
             localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(activeSnapshot));
             return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
         }
@@ -2438,13 +2585,16 @@
             const remoteTime=Date.parse(remote._snapshotUpdatedAt||'')||0;
             const localTime=Date.parse(local._snapshotUpdatedAt||'')||0;
             const preferLocal=localTime>=remoteTime;
+            const dead=unionTombstones(remote.deleted,local.deleted);
+            const deadItems=new Set(dead.items),deadSessions=new Set(dead.sessions);
             return {
                 ...remote,
                 ...local,
                 contestName: local.contestName || remote.contestName,
-                masterEditalData: mergeRecordLists(remote.masterEditalData,local.masterEditalData,preferLocal),
-                userProgress: mergeRecordLists(remote.userProgress,local.userProgress,preferLocal),
-                studySessions: mergeRecordLists(remote.studySessions,local.studySessions,preferLocal),
+                masterEditalData: mergeRecordLists(remote.masterEditalData,local.masterEditalData,preferLocal).filter(x=>!deadItems.has(String(x.id))),
+                userProgress: mergeRecordLists(remote.userProgress,local.userProgress,preferLocal).filter(x=>!deadItems.has(String(x.id))),
+                studySessions: mergeRecordLists(remote.studySessions,local.studySessions,preferLocal).filter(x=>!deadSessions.has(String(x.id))),
+                deleted: dead,
                 prioritySettings: mergeSettingsObjects(remote.prioritySettings,local.prioritySettings,preferLocal),
                 disciplineSettings: mergeSettingsObjects(remote.disciplineSettings,local.disciplineSettings,preferLocal),
                 suggestionMode: (preferLocal && local.suggestionMode) ? local.suggestionMode : (remote.suggestionMode || local.suggestionMode || 'priority_progress'),
@@ -2508,6 +2658,7 @@
                 if(snapshot.prioritySettings) localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
                 if(snapshot.disciplineSettings) localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
                 if(snapshot.suggestionMode) localStorage.setItem('tce_'+id+'_suggestion_mode',snapshot.suggestionMode);
+                if(snapshot.deleted) setTombstones(id,unionTombstones(getTombstones(id),snapshot.deleted));
             });
         }
         function adoptMergedCloudPayloadLocally(payload) {
@@ -2813,7 +2964,7 @@
         }
 
         function buildCurrentSnapshotForStorage(timestamp=new Date().toISOString()) {
-            return {contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),_snapshotUpdatedAt:timestamp};
+            return {contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:timestamp};
         }
 
         function scheduleCloudAutoSave() {
@@ -3041,102 +3192,122 @@
                 }
                 userItem.notes = document.getElementById('modal-textarea').value;
                 saveData();
+                try{renderRecentRotation();renderPriorityDisciplineProgress();}catch(err){console.warn(err);}
             }
             closeModal();
         }
 
-        // Dashboard & KPIs
-        function initDashFilter() {
-            const select = document.getElementById('dash-filter-disc');
-            const current = select.value;
-            select.innerHTML = '<option value="all">Todas as Disciplinas</option>';
-            const disciplines = [...new Set(masterEditalData.map(i => i.discipline))];
-            disciplines.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.innerText = d;
-                if (d === current) opt.selected = true;
-                select.appendChild(opt);
-            });
-        }
-
-        function renderDashboard() {
-            initDashFilter();
-            const _prog=new Map(userProgress.map(u=>[u.id,u]));
-            const container = document.getElementById('dashboard-disciplines-container');
-            container.innerHTML = '';
-
-            const discFilter = document.getElementById('dash-filter-disc').value;
-
-            const grouped = {};
-            masterEditalData.forEach(i => {
-                if (!grouped[i.discipline]) grouped[i.discipline] = [];
-                grouped[i.discipline].push(i);
-            });
-
-            let discKeys = Object.keys(grouped);
-            if (discFilter !== 'all') {
-                discKeys = [discFilter];
+        // ===== Datas importantes (checklist por concurso) =====
+        const DEFAULT_IMPORTANT_DATES_TCE=[
+            {title:'Inscrições',date:'2026-10-05',endDate:'2026-11-06'},
+            {title:'Último dia para pagar o boleto',date:'2026-11-09'},
+            {title:'Divulgação das inscrições',date:'2026-11-23'},
+            {title:'Resultado final',date:'2027-06-16'}
+        ];
+        function getImportantDates(){
+            if(!contests[activeContest])contests[activeContest]={name:activeContest,board:'',date:''};
+            const cfg=contests[activeContest];
+            if(!Array.isArray(cfg.importantDates)){
+                cfg.importantDates=activeContest==='tce-go-2026-2027'?DEFAULT_IMPORTANT_DATES_TCE.map(x=>({id:crypto.randomUUID(),done:false,...x})):[];
+                try{localStorage.setItem('tce_contests',JSON.stringify(contests));}catch(err){}
             }
-
-            discKeys.forEach(disc => {
-                const topics = grouped[disc];
-                
-                let discHours = 0;
-                let discQuestions = 0;
-                let discReviews = 0;
-                
-                studySessions.filter(s => s.discipline === disc).forEach(s => {
-                    discHours += (s.minutes / 60);
-                    discQuestions += (s.questions || 0);
-                    if (s.isReview || s.type2 === 'Revisão') discReviews++;
-                });
-
-                let studiedListHtml = '';
-                let pendingListHtml = '';
-                let completedCount = 0;
-
-                topics.forEach(t => {
-                    const u = _prog.get(t.id);
-                    const isDone = u && u.completed;
-                    const h = u ? u.hours : 0;
-                    const q = u ? u.questions : 0;
-
-                    if (isDone || h > 0) {
-                        completedCount++;
-                        studiedListHtml += `<li class="text-emerald-600 dark:text-emerald-400 flex items-center space-x-1"><i class="fa-solid fa-check text-[10px]"></i><span>${t.subtopic} (${h.toFixed(1)}h, ${q} ${q === 1 ? 'questão' : 'questões'})</span></li>`;
-                    } else {
-                        pendingListHtml += `<li class="text-slate-400 dark:text-slate-500 flex items-center space-x-1"><i class="fa-solid fa-circle text-[6px]"></i><span>${t.subtopic}</span></li>`;
-                    }
-                });
-
-                const div = document.createElement('div');
-                div.className = 'p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 space-y-3';
-                
-                div.innerHTML = `
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">${disc}</h4>
-                        <div class="flex items-center space-x-3 text-xs font-mono font-bold">
-                            <span class="text-emerald-600">${discHours.toFixed(1)}h</span>
-                            <span class="text-amber-600">${discQuestions} ${discQuestions === 1 ? 'questão' : 'questões'}</span>
-                            <span class="text-purple-600">${discReviews} rev</span>
-                            <span class="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded text-[11px]">${completedCount}/${topics.length} tópicos</span>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                        <div>
-                            <p class="font-semibold text-slate-700 dark:text-slate-300 mb-1">Tópicos Estudados (${completedCount}/${topics.length}):</p>
-                            <ul class="space-y-1">${studiedListHtml || '<li class="text-slate-400 italic">Nenhum estudado ainda</li>'}</ul>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-700 dark:text-slate-300 mb-1">Tópicos Pendentes (${topics.length - completedCount}):</p>
-                            <ul class="space-y-1">${pendingListHtml || '<li class="text-emerald-600 italic font-semibold">Todos concluídos! 🎉</li>'}</ul>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+            return cfg.importantDates;
         }
+        function saveImportantDates(){
+            contests[activeContest]._updatedAt=new Date().toISOString();
+            try{localStorage.setItem('tce_contests',JSON.stringify(contests));}catch(err){}
+            saveData();
+        }
+        function dayDiffFromToday(iso){
+            if(!iso)return null;const p=String(iso).split('-').map(Number);if(p.length<3||p.some(isNaN))return null;
+            const t=new Date();return Math.round((Date.UTC(p[0],p[1]-1,p[2])-Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);
+        }
+        function fmtBRDateISO(iso){const p=String(iso||'').split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:'';}
+        function daysChip(diff,done){
+            if(done)return {text:'Concluída',cls:'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'};
+            if(diff===null)return {text:'Sem data',cls:'bg-slate-100 text-slate-600'};
+            if(diff<0)return {text:`há ${-diff} dia${diff===-1?'':'s'}`,cls:'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'};
+            if(diff===0)return {text:'hoje',cls:'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'};
+            if(diff===1)return {text:'amanhã',cls:'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'};
+            if(diff<=7)return {text:`em ${diff} dias`,cls:'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'};
+            return {text:`em ${diff} dias`,cls:'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300'};
+        }
+        function dateRowHtml(i){
+            const e=escapeHtml;const due=i.endDate||i.date;const chip=daysChip(dayDiffFromToday(due),i.done);
+            return `<li class="date-row${i.done?' is-done':''}" data-id="${e(i.id)}">
+                <input type="checkbox" class="date-check" ${i.done?'checked':''} aria-label="Marcar como concluída" data-df="done">
+                <div class="min-w-0 flex-1">
+                    <input class="tbl-field date-title text-sm font-semibold" data-df="title" maxlength="120" value="${e(i.title)}" aria-label="Título">
+                    <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                        <input type="date" class="tbl-field" style="width:auto" data-df="date" value="${e(i.date||'')}" aria-label="Data">
+                        <span>até</span>
+                        <input type="date" class="tbl-field" style="width:auto" data-df="endDate" value="${e(i.endDate||'')}" aria-label="Data final (opcional)">
+                        <span class="rounded-full px-2 py-0.5 font-bold ${chip.cls}">${e(chip.text)}</span>
+                    </div>
+                </div>
+                <button type="button" data-df-del="1" class="sess-act bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir data" aria-label="Excluir data"><i class="fa-solid fa-trash-can"></i></button>
+            </li>`;
+        }
+        function renderImportantDates(){
+            const box=document.getElementById('dates-checklist');if(!box)return;
+            const cfg=contests[activeContest]||{};const items=getImportantDates();
+            const due=i=>i.endDate||i.date||'9999-12-31';
+            const pending=items.filter(i=>!i.done).sort((a,b)=>String(due(a)).localeCompare(String(due(b))));
+            const overdue=pending.filter(i=>(dayDiffFromToday(due(i))??0)<0);
+            const upcoming=pending.filter(i=>(dayDiffFromToday(due(i))??0)>=0);
+            const done=items.filter(i=>i.done).sort((a,b)=>String(due(b)).localeCompare(String(due(a))));
+            const exam=document.getElementById('dates-exam');
+            if(exam){
+                const diff=dayDiffFromToday(cfg.date);
+                exam.innerHTML=cfg.date?`<div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[11px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"><i class="fa-solid fa-flag-checkered mr-1"></i>Data da prova</p><p class="text-base font-bold">${escapeHtml(new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}))}</p></div><div class="text-right"><p class="text-2xl font-extrabold text-blue-700 dark:text-blue-300">${diff===null?'—':(diff>=0?diff:0)}</p><p class="text-[11px] text-slate-500">${diff!==null&&diff>=0?(diff===1?'dia restante':'dias restantes'):'prova realizada'}</p></div></div>`:`<p class="text-xs text-slate-500"><i class="fa-solid fa-flag-checkered mr-1"></i>Defina a data da prova na aba Personalização para ver a contagem regressiva aqui.</p>`;
+            }
+            const sum=document.getElementById('dates-summary');
+            if(sum){
+                const next=upcoming[0];
+                sum.textContent=items.length?`${done.length} de ${items.length} concluída${items.length===1?'':'s'}${overdue.length?` · ${overdue.length} atrasada${overdue.length===1?'':'s'}`:''}${next?` · próxima: ${next.title} (${daysChip(dayDiffFromToday(due(next)),false).text})`:''}`:'Nenhuma data cadastrada';
+            }
+            const section=(title,icon,color,list,extra='')=>list.length?`<div class="${extra}"><h3 class="mb-2 text-xs font-bold uppercase tracking-wide ${color}"><i class="fa-solid ${icon} mr-1"></i>${title} <span class="font-semibold opacity-70">(${list.length})</span></h3><ul class="space-y-2">${list.map(dateRowHtml).join('')}</ul></div>`:'';
+            let html=section('Atrasadas','fa-triangle-exclamation','text-red-700 dark:text-red-300',overdue)+section('Próximas','fa-hourglass-half','text-blue-700 dark:text-blue-300',upcoming);
+            if(!overdue.length&&!upcoming.length)html+=`<p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-6 text-center text-xs text-slate-500">${items.length?'Tudo concluído por aqui. 🎉':'Cadastre acima as datas importantes do concurso: inscrição, boleto, provas, resultado…'}</p>`;
+            if(done.length)html+=`<details class="mt-2"><summary class="cursor-pointer text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Concluídas (${done.length})</summary><ul class="mt-2 space-y-2">${done.map(dateRowHtml).join('')}</ul></details>`;
+            box.innerHTML=html;
+            if(!box.dataset.bound){
+                box.dataset.bound='1';
+                box.addEventListener('change',ev=>{
+                    const el=ev.target.closest('[data-df]');if(!el)return;
+                    const li=el.closest('li');const item=getImportantDates().find(x=>x.id===li.dataset.id);if(!item)return;
+                    const f=el.dataset.df;
+                    if(f==='done')item.done=el.checked;
+                    else if(f==='title'){item.title=(el.value||'').trim()||'Sem título';}
+                    else if(f==='date'){if(!el.value){el.value=item.date||'';return;}item.date=el.value;if(item.endDate&&item.endDate<item.date)item.endDate='';}
+                    else if(f==='endDate'){item.endDate=el.value&&el.value>=item.date?el.value:'';}
+                    saveImportantDates();
+                    if(f!=='title')renderImportantDates();
+                });
+                box.addEventListener('click',ev=>{
+                    const btn=ev.target.closest('[data-df-del]');if(!btn)return;
+                    const li=btn.closest('li');const item=getImportantDates().find(x=>x.id===li.dataset.id);if(!item)return;
+                    showCustomDialog('Excluir data?',`“${item.title}” será removida da lista.`,'fa-solid fa-triangle-exclamation',()=>{
+                        contests[activeContest].importantDates=getImportantDates().filter(x=>x.id!==item.id);
+                        saveImportantDates();renderImportantDates();
+                    });
+                });
+            }
+        }
+        function addImportantDate(ev){
+            ev.preventDefault();
+            const title=(document.getElementById('date-new-title').value||'').trim();
+            const date=document.getElementById('date-new-date').value;
+            let end=document.getElementById('date-new-end').value;
+            if(!title||!date)return;
+            if(end&&end<date)end='';
+            getImportantDates().push({id:crypto.randomUUID(),title,date,endDate:end,done:false});
+            saveImportantDates();
+            ev.target.reset();
+            renderImportantDates();
+        }
+        // Mantido com este nome porque outras telas chamam renderDashboard() ao salvar dados.
+        function renderDashboard(){renderImportantDates();}
 
         loadSupabaseSettings();
         applyPriorityColors();

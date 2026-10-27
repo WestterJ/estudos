@@ -1,9 +1,9 @@
-PLANEJADOR DE ESTUDOS — PWA V10.3
+PLANEJADOR DE ESTUDOS — PWA V10.4
 
 CONTEÚDO DO PACOTE
-- index.html: Planejador de Estudos PWA V10.3 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
+- index.html: Planejador de Estudos PWA V10.4 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
 - manifest.webmanifest: configuração de instalação como PWA.
-- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-3-cartoes-recolhiveis.
+- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-4-registro-tabela-datas.
 - index-V7.html e index-V8.html: cópias históricas dessas versões, mantidas só como referência; não precisam ser publicadas.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
@@ -154,3 +154,13 @@ VERSÃO V10.2 — 25/10/2026 — DESEMPENHO DOS MENUS
 VERSÃO V10.3 — 25/10/2026 — CARTÕES RECOLHÍVEIS E REVISÃO DE VERSÕES
 - Últimos estudos, Sugestões para os próximos estudos, Revisões sugeridas e Últimas revisões viram cartões que abrem e fecham ao clicar no título. Iniciam fechados e, fechados, mostram um resumo do primeiro item.
 - Versão unificada: o título da aba e o selo do cabeçalho vêm de window.APP_VERSION em index.html (antes o título mostrava V6 e este arquivo indicava V8). Cache do service worker: planejador-estudos-v10-3-cartoes-recolhiveis.
+
+
+VERSÃO V10.4 — 26/10/2026 — TABELA DE REGISTROS, DATAS IMPORTANTES E CONFIGURAÇÕES
+- Registro de Estudos: o histórico agora é uma tabela editável. Clique no campo para alterar (salva ao sair do campo); ações por linha: Copiar (leva os dados ao formulário), Notas e Excluir. Linhas em destaque apontam para tópicos que não fazem parte do edital atual.
+- Tópicos: a mesclagem entre dispositivos fazia união por id, então tópicos do edital padrão (tce_1…tce_38) e sessões excluídas reapareciam. Agora as exclusões são registradas e respeitadas na sincronização. Em Configurações > Verificação dos tópicos é possível conferir e remover os tópicos do edital padrão que não têm uso.
+- Excluir uma sessão agora desconta horas, questões e revisões do tópico (como já ocorria ao editar).
+- Horas também no formato 0d00h00 (dias, horas e minutos) nas totalizações.
+- Dashboard & KPIs virou "Datas Importantes": checklist por concurso (editável, com contagem de dias e data da prova). O desempenho detalhado por disciplina foi removido.
+- Últimos estudos mostram a anotação do tópico estudado. Últimas revisões ficam abaixo de Últimos estudos e Revisões sugeridas abaixo das Sugestões.
+- Backup completo, Restaurar backup e Resetar saíram da tela inicial e foram para Configurações, que foi reorganizada (sem menções à IA).
