@@ -1,9 +1,9 @@
-PLANEJADOR DE ESTUDOS — PWA V10.4
+PLANEJADOR DE ESTUDOS — PWA V10.5
 
 CONTEÚDO DO PACOTE
-- index.html: Planejador de Estudos PWA V10.4 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
+- index.html: Planejador de Estudos PWA V10.5 (versão atual, exibida no cabeçalho do app; inclui cadastro manual de conteúdo, importação Excel/CSV/JSON, análise hierárquica por IA, painéis de estudos, revisões e mesclagem segura entre dispositivos).
 - manifest.webmanifest: configuração de instalação como PWA.
-- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-4-registro-tabela-datas.
+- service-worker.js: cache básico do app e atualização de versão; não armazena URLs de retorno OAuth. O nome do cache (CACHE_NAME) deve acompanhar a versão do app: atualmente planejador-estudos-v10-5-menu-lateral.
 - index-V7.html e index-V8.html: cópias históricas dessas versões, mantidas só como referência; não precisam ser publicadas.
 - icons/: ícones 192x192 e 512x512.
 - VERIFICAR_RLS_SUPABASE.sql: consulta de verificação, somente leitura.
@@ -164,3 +164,8 @@ VERSÃO V10.4 — 26/10/2026 — TABELA DE REGISTROS, DATAS IMPORTANTES E CONFIG
 - Dashboard & KPIs virou "Datas Importantes": checklist por concurso (editável, com contagem de dias e data da prova). O desempenho detalhado por disciplina foi removido.
 - Últimos estudos mostram a anotação do tópico estudado. Últimas revisões ficam abaixo de Últimos estudos e Revisões sugeridas abaixo das Sugestões.
 - Backup completo, Restaurar backup e Resetar saíram da tela inicial e foram para Configurações, que foi reorganizada (sem menções à IA).
+
+
+VERSÃO V10.5 — 27/10/2026 — MENU LATERAL E HORAS EM HH:MM
+- Os botões do menu superior viraram um menu lateral retrátil. No computador ele fica fixo à esquerda e pode ser recolhido para só ícones (botão "Recolher menu"; a escolha fica guardada neste navegador). No celular e em telas estreitas vira uma gaveta aberta pelo botão ☰ do cabeçalho, que fecha ao escolher uma seção, ao tocar fora ou com Esc.
+- Horas passam a aparecer como 1.5h (01:30) no lugar de 1.5h (0d01h30). Acima de 24 horas continua em horas totais (ex.: 26:45).

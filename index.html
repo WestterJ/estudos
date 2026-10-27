@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.4</title>
+    <title>Planejador de Estudos | Concursos — V10.5</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -30,7 +30,7 @@
     <script src="./supabase-config.js"></script>
     <script>
       // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME.txt.
-      window.APP_VERSION = 'V10.4';
+      window.APP_VERSION = 'V10.5';
       // V10: URL e chave PÚBLICA do Supabase vêm de supabase-config.js (ninguém digita); a chave do Gemini nunca fica no navegador.
       try {
         var cfg = window.PLANEJADOR_SUPABASE;
@@ -103,6 +103,36 @@
         .dark .date-row{border-color:#334155;background:rgba(15,23,42,.5)}
         .date-row.is-done .date-title{text-decoration:line-through;opacity:.6}
         .date-check{width:20px;height:20px;margin-top:6px;accent-color:#059669;cursor:pointer;flex:none}
+        /* ===== Menu lateral retrátil (V10.5) ===== */
+        .app-shell{display:flex;flex:1 1 auto;width:100%;min-height:0}
+        .app-sidebar{flex:none;width:248px;box-sizing:border-box;background:#fff;border-right:1px solid var(--app-border);padding:14px 10px;display:flex;flex-direction:column;gap:8px;position:sticky;top:var(--header-h,72px);align-self:flex-start;height:calc(100vh - var(--header-h,72px));overflow-x:hidden;overflow-y:auto;transition:width .2s ease}
+        .dark .app-sidebar{background:#1e293b;border-right-color:#334155}
+        .sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1 1 auto}
+        .sidebar-spacer{flex:1 1 auto}
+        .app-sidebar .tab-btn{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;font-size:13px;font-weight:600;white-space:nowrap;text-align:left;border:0;cursor:pointer;margin:0}
+        .app-sidebar .tab-btn i{width:20px;flex:none;text-align:center;font-size:15px}
+        .app-sidebar .tab-btn.active-tab{box-shadow:inset 4px 0 0 var(--app-gold),0 2px 5px #003a7026}
+        .dark .app-sidebar .tab-btn.active-tab{background:var(--app-gold)!important;color:var(--app-navy)!important;box-shadow:none}
+        .sidebar-collapse-btn{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--app-border);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+        .sidebar-collapse-btn:hover{background:#f1f5f9}.dark .sidebar-collapse-btn{border-color:#334155;color:#94a3b8}.dark .sidebar-collapse-btn:hover{background:#0f172a}
+        .sidebar-collapse-btn i{width:20px;text-align:center;transition:transform .2s ease}
+        body.sidebar-collapsed .app-sidebar{width:68px;padding-left:8px;padding-right:8px}
+        body.sidebar-collapsed .app-sidebar .nav-label{display:none}
+        body.sidebar-collapsed .app-sidebar .tab-btn,body.sidebar-collapsed .sidebar-collapse-btn{justify-content:center;padding-left:0;padding-right:0}
+        body.sidebar-collapsed .sidebar-collapse-btn i{transform:rotate(180deg)}
+        .sidebar-backdrop{display:none}
+        .mobile-menu-btn{display:none;width:40px;height:40px;flex:none;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.10);color:#fff;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+        @media (max-width:1023px){
+            .mobile-menu-btn{display:inline-flex}
+            .app-sidebar{position:fixed;left:0;top:0;bottom:0;height:100vh;height:100dvh;width:272px;z-index:70;transform:translateX(-102%);transition:transform .22s ease;box-shadow:0 12px 32px rgba(15,23,42,.3);padding-top:18px}
+            body.sidebar-open .app-sidebar{transform:none}
+            body.sidebar-collapsed .app-sidebar{width:272px;padding-left:10px;padding-right:10px}
+            body.sidebar-collapsed .app-sidebar .nav-label{display:inline}
+            body.sidebar-collapsed .app-sidebar .tab-btn{justify-content:flex-start;padding-left:12px;padding-right:12px}
+            .sidebar-collapse-btn{display:none}
+            body.sidebar-open .sidebar-backdrop{display:block;position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.5)}
+        }
+
 
         .activity-panel:before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:#2563eb}
         .activity-panel.suggestions-panel:before{background:#059669}
@@ -160,7 +190,7 @@
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
     
         /* PWA/authentication gate: the planner is shown only after Supabase Auth succeeds. */
-        body.auth-locked > header, body.auth-locked > main { display:none !important; }
+        body.auth-locked > header, body.auth-locked > main, body.auth-locked > .app-shell, body.auth-locked > .sidebar-backdrop { display:none !important; }
         #auth-gate { display:none; }
         body.auth-locked #auth-gate { display:flex; }
         #auth-gate .auth-field { width:100%; padding:.7rem .8rem; border:1px solid #cbd5e1; border-radius:.65rem; background:#fff; color:#172033; font-size:14px; outline:none; }
@@ -185,6 +215,7 @@
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body class="h-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col auth-locked">
+<script>try{if(localStorage.getItem('tce_ui_sidebar')==='collapsed')document.body.classList.add('sidebar-collapsed');}catch(e){}</script>
 <div id="auth-gate" class="fixed inset-0 z-[1000] items-center justify-center p-4 bg-slate-100/95 dark:bg-slate-950/95 overflow-y-auto" role="main" aria-labelledby="auth-title">
   <section class="auth-card w-full max-w-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden my-auto p-0">
     <div class="bg-[#003a70] text-white px-6 py-5 border-b-4 border-[#ffc20e]">
@@ -216,8 +247,9 @@
 </div>
 
 <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-[64px] py-2 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center space-x-2.5">
+        <div class="w-full px-3 sm:px-6 min-h-[64px] py-2 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <button id="mobile-menu-btn" type="button" onclick="openSidebarMobile()" aria-label="Abrir menu" aria-controls="app-sidebar" class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
                 <div class="bg-white text-blue-800 p-2.5 rounded-xl shadow-md flex items-center justify-center">
                     <i class="fa-solid fa-book-open-reader text-lg"></i>
                 </div>
@@ -233,32 +265,22 @@
                 </button>
             </div>
         </div>
-        <div class="tab-nav header-nav flex overflow-x-auto gap-2 no-scrollbar">
-            <button onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-blue-600 text-white shadow-sm flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-list-check"></i>
-                <span>Cronograma & Prioridades</span>
-            </button>
-            <button onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Registro de Estudos</span>
-            </button>
-            <button onclick="switchTab('edital',true)" id="tab-edital" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Edital Verticalizado</span>
-            </button>
-            <button onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-calendar-check"></i>
-                <span>Datas Importantes</span>
-            </button>
-            <button onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-sliders"></i><span>Personalização</span>
-            </button>
-            <button onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 whitespace-nowrap">
-                <i class="fa-solid fa-gear"></i><span>Configurações</span>
-            </button>
-        </div>
     </header>
-<main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col">
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebarMobile()"></div>
+    <div class="app-shell">
+        <aside id="app-sidebar" class="app-sidebar" aria-label="Menu principal">
+          <nav class="sidebar-nav" aria-label="Seções do planejador">
+            <button type="button" onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab bg-blue-600 text-white shadow-sm" title="Cronograma & Prioridades" aria-current="page"><i class="fa-solid fa-list-check"></i><span class="nav-label">Cronograma & Prioridades</span></button>
+            <button type="button" onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Registro de Estudos"><i class="fa-solid fa-clock-rotate-left"></i><span class="nav-label">Registro de Estudos</span></button>
+            <button type="button" onclick="switchTab('edital',true)" id="tab-edital" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Edital Verticalizado"><i class="fa-solid fa-book-open"></i><span class="nav-label">Edital Verticalizado</span></button>
+            <button type="button" onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Datas Importantes"><i class="fa-solid fa-calendar-check"></i><span class="nav-label">Datas Importantes</span></button>
+            <button type="button" onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Personalização"><i class="fa-solid fa-sliders"></i><span class="nav-label">Personalização</span></button>
+            <span class="sidebar-spacer"></span>
+            <button type="button" onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Configurações"><i class="fa-solid fa-gear"></i><span class="nav-label">Configurações</span></button>
+          </nav>
+          <button type="button" id="sidebar-toggle" class="sidebar-collapse-btn" onclick="toggleSidebar()" aria-expanded="true" aria-controls="app-sidebar" title="Recolher menu"><i class="fa-solid fa-angles-left"></i><span class="nav-label">Recolher menu</span></button>
+        </aside>
+<main class="flex-1 min-w-0 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col">
         <section class="quick-toolbar" aria-label="Concurso e ações rápidas">
           <div class="flex items-center flex-wrap gap-2">
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Concurso
@@ -701,6 +723,7 @@
           </div>
         </div>
     </main>
+    </div>
 
     <!-- Modal de edição do histórico de estudos -->
     <div id="session-edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
@@ -955,9 +978,11 @@
 
         // Alternância de Abas
         function switchTab(tabId, defer) {
+            document.body.classList.remove('sidebar-open');
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'active-tab');
+                el.removeAttribute('aria-current');
                 el.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
             });
 
@@ -967,6 +992,7 @@
             if (activeBtn) {
                 activeBtn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
                 activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'active-tab');
+                activeBtn.setAttribute('aria-current', 'page');
             }
 
             const token = window._tabToken = (window._tabToken || 0) + 1;
@@ -1143,9 +1169,9 @@
             showCustomDialog('Disciplina selecionada', 'A disciplina '+item.discipline+' foi selecionada conforme a estratégia configurada. Escolha o tópico e registre o estudo.');
         }
         // ===== V10.4: horas em dias/horas/minutos, exclusões duráveis e utilidades =====
-        // 0.5 h -> 0d00h30 · 26.75 h -> 1d02h45
-        function fmtDHM(hours){const t=Math.max(0,Math.round((Number(hours)||0)*60));const d=Math.floor(t/1440),h=Math.floor((t%1440)/60),m=t%60;return d+'d'+String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0');}
-        function fmtHoras(hours){const n=Number(hours)||0;return n.toFixed(1)+'h ('+fmtDHM(n)+')';}
+        // 0.5 h -> 00:30 · 26.75 h -> 26:45 (as horas passam de 24 sem virar "dias")
+        function fmtHM(hours){const t=Math.max(0,Math.round((Number(hours)||0)*60));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
+        function fmtHoras(hours){const n=Number(hours)||0;return n.toFixed(1)+'h ('+fmtHM(n)+')';}
 
         // A mesclagem entre dispositivos faz união por id. Sem registrar o que foi excluído, tópicos e sessões removidos
         // voltariam a cada sincronização (foi assim que os tópicos do edital padrão continuaram aparecendo no Registro).
@@ -1237,6 +1263,31 @@
             if(sign>0&&session.type2==='Estudo Teórico'&&p.hours>=0.5)p.completed=true;
             return item;
         }
+
+        // ===== Menu lateral retrátil (V10.5) =====
+        function setHeaderHeightVar(){const h=document.querySelector('body>header');if(h&&h.offsetHeight)document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');}
+        function syncSidebarToggle(){
+            const collapsed=document.body.classList.contains('sidebar-collapsed');
+            const b=document.getElementById('sidebar-toggle');if(!b)return;
+            b.setAttribute('aria-expanded',String(!collapsed));
+            const label=collapsed?'Expandir menu':'Recolher menu';b.title=label;
+            const l=b.querySelector('.nav-label');if(l)l.textContent=label;
+        }
+        function toggleSidebar(){
+            const collapsed=document.body.classList.toggle('sidebar-collapsed');
+            try{localStorage.setItem('tce_ui_sidebar',collapsed?'collapsed':'open');}catch(e){}
+            syncSidebarToggle();
+        }
+        function openSidebarMobile(){document.body.classList.add('sidebar-open');}
+        function closeSidebarMobile(){document.body.classList.remove('sidebar-open');}
+        function initSidebar(){
+            setHeaderHeightVar();syncSidebarToggle();
+            window.addEventListener('resize',setHeaderHeightVar);
+            const header=document.querySelector('body>header');
+            if(header&&window.ResizeObserver)new ResizeObserver(setHeaderHeightVar).observe(header);
+            document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebarMobile();});
+        }
+        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initSidebar); else initSidebar();
 
         // Cartões recolhíveis: Últimos estudos, Sugestões, Revisões sugeridas e Últimas revisões (iniciam fechados).
         // Resumo do cartão fechado: disciplina + o dado mais útil do primeiro item (posições entre os textos do cartão).
@@ -1509,7 +1560,7 @@
             });
 
             document.getElementById('stat-total-hours').innerText = `${totalHours.toFixed(1)}h`;
-            const _dhm=document.getElementById('stat-total-hours-dhm');if(_dhm)_dhm.textContent=fmtDHM(totalHours)+' acumulado';
+            const _dhm=document.getElementById('stat-total-hours-dhm');if(_dhm)_dhm.textContent=fmtHM(totalHours)+' acumulado';
             document.getElementById('stat-hours-bar').style.width = `${Math.min(100, (totalHours / 60) * 100)}%`;
 
             document.getElementById('stat-total-questions').innerText = totalQuestions;
@@ -3322,9 +3373,6 @@
         renderPriorityDisciplineProgress();
         renderRecentRotation();
         updateCloudStatus('Dados carregados neste navegador');
-        // Keep the navigation visually grouped in the title bar, while quick actions remain in their own strip.
-        const navBar=document.querySelector('.tab-nav');
-        if(navBar){navBar.classList.add('header-nav');document.querySelector('body>header').appendChild(navBar);}
     </script>
 <script>
 (function(){
