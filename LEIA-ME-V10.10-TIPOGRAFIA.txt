@@ -1,0 +1,14 @@
+PLANEJADOR DE ESTUDOS V10.10 — AJUSTE DE LEGIBILIDADE
+
+Alterações:
+- Aumento de fontes auxiliares, legendas e títulos cinza que estavam pequenos.
+- Padronização de textos de estatísticas, prioridades, cabeçalhos de tabela e gerenciamento de concursos.
+- Contraste reforçado em textos secundários para desktop e celular.
+- Mantida a hierarquia visual dos títulos principais e dos números de destaque.
+- Cache do service worker atualizado para forçar a carga dos novos estilos.
+
+Publicação:
+1. Extraia o ZIP preservando os caminhos dos arquivos.
+2. Copie os arquivos para o repositório, substituindo os anteriores.
+3. Preserve seu supabase-config.js já existente no repositório, pois ele não faz parte do pacote-base recebido.
+4. Publique e atualize o aplicativo. Se o PWA mantiver estilos antigos, feche e reabra ou atualize o app para renovar o cache.
