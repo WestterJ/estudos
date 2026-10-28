@@ -1,5 +1,5 @@
 // 02-sugestoes.js — Utilitários de data/sessão, trilhas de estudo e sugestão do próximo estudo.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Renderização da seção de Últimas Disciplinas Estudadas (Rotação)
         function parseBRDate(value) {
             if (!value) return new Date(0);

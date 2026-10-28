@@ -1,5 +1,5 @@
 // 07-concursos.js — Concursos (troca/criação), prioridades, disciplinas, pesos e personalização.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         let contests = {};
         try { contests = JSON.parse(localStorage.getItem('tce_contests') || '{}') || {}; } catch(e) { contests = {}; }
         if (!contests || typeof contests !== 'object' || Array.isArray(contests)) contests = {};

@@ -1,5 +1,5 @@
 // 03-utilitarios.js — Horas (HH:mm), exclusões duráveis (tombstones), diagnóstico de tópicos e menu lateral retrátil.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // ===== V10.4: horas em dias/horas/minutos, exclusões duráveis e utilidades =====
         // 0.5 h -> 00:30 · 26.75 h -> 26:45 (as horas passam de 24 sem virar "dias")
         function fmtHM(hours){const t=Math.max(0,Math.round((Number(hours)||0)*60));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}

@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.7
+# Arquitetura — Planejador de Estudos V10.8
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -36,9 +36,10 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 | 10 | `js/09-sincronizacao.js` | Supabase: login, mesclagem por ID entre aparelhos, sincronização e salvamento na nuvem. |
 | 11 | `js/10-dados-backup.js` | `saveData`, cabeçalho do concurso, configurações do Supabase, reset e backup (exportar/importar). |
 | 12 | `js/11-datas-anotacoes.js` | Modal de anotações e **Datas Importantes** (checklist por concurso). |
-| 13 | `js/12-iniciar.js` | Chamadas finais que montam a tela. **Deve ser o último arquivo de lógica** antes de `auth.js`. |
-| 14 | `js/auth.js` | Tela de login, cadastro, recuperação de senha, Google OAuth e botão de instalar o PWA (função autocontida, sem globais). |
-| 15 | `js/pwa.js` | Registro do service worker. |
+| 13 | `js/estatisticas.js` | Menu **Estatísticas**, totais gerais e semanais agrupados por prioridade e disciplina. |
+| 14 | `js/12-iniciar.js` | Chamadas finais que montam a tela. **Deve ser o último arquivo de lógica** antes de `auth.js`. |
+| 15 | `js/auth.js` | Tela de login, cadastro, recuperação de senha, Google OAuth e botão de instalar o PWA (função autocontida, sem globais). |
+| 16 | `js/pwa.js` | Registro do service worker. |
 
 ## Funções principais por arquivo
 

@@ -1,5 +1,5 @@
 // 01-base.js — Base: dados iniciais, toasts e caixas de diálogo, contagem regressiva, modo escuro, abas, configurações de prioridade.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Banco de Dados Oficial Completo extraído do Edital e da Planilha ODS (Todas as disciplinas, tópicos e subtópicos)
         // Nenhum conteúdo de concurso vem embutido: cada usuário começa vazio e cadastra ou importa o seu edital.
         const DEFAULT_CONTEST_ID = 'meu-concurso';
@@ -165,6 +165,7 @@
             const renderTab = () => {
                 if (window._tabToken !== token) return;
                 if (tabId === 'dashboard') renderDashboard();
+                if (tabId === 'estatisticas' && window.renderStudyStatistics) window.renderStudyStatistics();
                 if (tabId === 'registro') initRegistrationForm();
                 if (tabId === 'edital') initEditalFilters();
                 if (tabId === 'cronograma') initCronogramaFilters();

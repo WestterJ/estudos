@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.7</title>
+    <title>Planejador de Estudos | Concursos — V10.8</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -108,6 +108,7 @@
             <button type="button" onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab bg-blue-600 text-white shadow-sm" title="Cronograma & Prioridades" aria-current="page"><i class="fa-solid fa-list-check"></i><span class="nav-label">Cronograma & Prioridades</span></button>
             <button type="button" onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Registro de Estudos"><i class="fa-solid fa-clock-rotate-left"></i><span class="nav-label">Registro de Estudos</span></button>
             <button type="button" onclick="switchTab('edital',true)" id="tab-edital" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Edital Verticalizado"><i class="fa-solid fa-book-open"></i><span class="nav-label">Edital Verticalizado</span></button>
+            <button type="button" onclick="switchTab('estatisticas',true)" id="tab-estatisticas" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Estatísticas"><i class="fa-solid fa-chart-column"></i><span class="nav-label">Estatísticas</span></button>
             <button type="button" onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Datas Importantes"><i class="fa-solid fa-calendar-check"></i><span class="nav-label">Datas Importantes</span></button>
             <button type="button" onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Personalização"><i class="fa-solid fa-sliders"></i><span class="nav-label">Personalização</span></button>
             <span class="sidebar-spacer"></span>
@@ -185,7 +186,7 @@
             <div class="activity-panels-grid grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
               <div class="activity-panel-column study-column space-y-4 min-w-0">
               <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><div class="activity-header-badges"><span class="activity-count">Recentes</span><span id="recent-study-week-count" class="activity-count activity-week-count">0 estudos na semana</span></div></div>
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><div class="activity-header-badges"><span class="activity-count">Recentes</span></div></div>
                 <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
               </section>
               <section class="activity-panel recent-reviews-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
@@ -195,7 +196,7 @@
               </div>
               <div class="activity-panel-column suggestions-column space-y-4 min-w-0">
               <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><div class="activity-header-badges"><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span><span id="next-study-week-count" class="activity-count activity-week-count">0 estudos na semana</span></div></div>
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><div class="activity-header-badges"><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div></div>
                 <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
               </section>
               <section class="activity-panel review-due-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
@@ -209,7 +210,7 @@
             <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
               <div class="flex items-start justify-between flex-wrap gap-2">
                 <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada prioridade e disciplina para acompanhar tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
-                <div class="flex flex-wrap items-center justify-end gap-2"><span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span><span id="home-study-summary" class="text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 px-3 py-1">0 estudos no total · 0 nesta semana</span></div>
+                <div class="flex flex-wrap items-center justify-end gap-2"><span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span></div>
               </div>
               <div id="priority-progress-container" class="space-y-3"></div>
             </section>
@@ -434,6 +435,43 @@
             </div>
         </div>
 
+        <!-- NOVA ABA: ESTATÍSTICAS -->
+        <div id="content-estatisticas" class="tab-content hidden flex-1 flex flex-col space-y-5">
+          <div class="stats-page-head flex items-start justify-between flex-wrap gap-3">
+            <div>
+              <p class="text-[10px] uppercase tracking-[.12em] font-extrabold text-blue-600 dark:text-blue-300 mb-1">Acompanhamento de desempenho</p>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">Estatísticas de estudo</h2>
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-2xl">Disciplinas agrupadas por prioridade. Os subtítulos mostram os totais gerais e as colunas apresentam somente os resultados da semana atual.</p>
+            </div>
+            <div class="stats-week-label"><i class="fa-regular fa-calendar mr-2"></i><span id="statistics-week-range">Semana atual</span></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid">
+            <section class="stats-kpi stats-kpi-hours"><div class="stats-kpi-top"><span>Total de horas</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-total-hours" class="stats-kpi-value">0h 00m</div><p>Acumulado geral</p></section>
+            <section class="stats-kpi stats-kpi-studies"><div class="stats-kpi-top"><span>Total de estudos</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-total-studies" class="stats-kpi-value">0</div><p>Sessões de estudo registradas</p></section>
+            <section class="stats-kpi stats-kpi-reviews"><div class="stats-kpi-top"><span>Total de revisões</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-total-reviews" class="stats-kpi-value">0</div><p>Revisões registradas</p></section>
+            <section class="stats-kpi stats-kpi-questions"><div class="stats-kpi-top"><span>Total de questões</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-total-questions" class="stats-kpi-value">0</div><p>Questões respondidas</p></section>
+          </div>
+
+          <section class="app-card stats-table-card overflow-hidden">
+            <div class="stats-table-toolbar flex items-center justify-between gap-3 flex-wrap p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700">
+              <div><h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Detalhamento por prioridade e disciplina</h3><p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">O subtítulo de cada disciplina reúne os acumulados gerais. As colunas mostram apenas a semana atual.</p></div>
+              <label class="stats-search-wrap"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="statistics-discipline-search" type="search" value="" oninput="filterStudyStatistics(this.value)" placeholder="Buscar disciplina..." aria-label="Buscar disciplina"></label>
+            </div>
+            <p class="stats-mobile-note">Deslize a tabela horizontalmente para consultar horas, estudos, revisões e questões da semana.</p>
+            <div class="stats-table-wrapper">
+              <table class="study-stats-table" aria-label="Estatísticas gerais e semanais por disciplina">
+                <thead><tr><th class="stats-discipline-col">Disciplina <span>Totais gerais aparecem abaixo do nome</span></th><th>Horas na semana</th><th>Estudos</th><th>Revisões</th><th>Questões</th></tr></thead>
+                <tbody id="statistics-table-body"></tbody>
+                <tfoot><tr class="study-stats-total-row"><td>Total da semana</td><td id="statistics-week-total-hours">0h 00m</td><td id="statistics-week-total-studies">0</td><td id="statistics-week-total-reviews">0</td><td id="statistics-week-total-questions">0</td></tr></tfoot>
+              </table>
+            </div>
+            <div id="statistics-empty-state" class="stats-empty-state" hidden><i class="fa-solid fa-magnifying-glass mb-2"></i><p class="font-bold">Nenhuma disciplina encontrada</p><p class="mt-1">Tente outro termo de busca ou cadastre disciplinas no edital.</p></div>
+            <div class="stats-table-foot"><span>Exibindo <strong id="statistics-visible-count">0 disciplinas em 0 prioridades</strong></span><span class="hidden sm:inline">Totais gerais aparecem no subtítulo de cada disciplina.</span></div>
+          </section>
+          <div class="stats-info-note"><i class="fa-solid fa-circle-info mt-0.5"></i><p>Os acumulados gerais consolidam os valores do progresso e do histórico. Cada disciplina aparece uma vez, no grupo de sua prioridade mais alta; os números semanais vêm das sessões datadas, considerando segunda-feira a domingo.</p></div>
+        </div>
+
         <div id="content-personalizacao" class="tab-content hidden flex-1 flex flex-col space-y-5">
           <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
             <h2 class="font-bold text-lg mb-1">Personalização do concurso</h2>
@@ -613,6 +651,7 @@
     <script src="./js/09-sincronizacao.js"></script>
     <script src="./js/10-dados-backup.js"></script>
     <script src="./js/11-datas-anotacoes.js"></script>
+    <script src="./js/estatisticas.js"></script>
     <script src="./js/12-iniciar.js"></script>
     <script src="./js/auth.js"></script>
     <script src="./js/pwa.js"></script>

@@ -1,5 +1,5 @@
 // 09-sincronizacao.js — Supabase: login, mesclagem de dados, sincronização e salvamento na nuvem.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Supabase: mantém o funcionamento local e sincroniza os dados do usuário autenticado.
         let sbClient = null;
         let sbUser = null;

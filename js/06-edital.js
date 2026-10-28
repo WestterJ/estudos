@@ -1,5 +1,5 @@
 // 06-edital.js — Aba Edital Verticalizado: filtros e renderização.
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Edital Verticalizado com filtros por Disciplina e Tópico
         function initEditalFilters() {
             const discSelect = document.getElementById('edital-filter-disc');

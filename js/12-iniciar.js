@@ -1,5 +1,5 @@
 // 12-iniciar.js — Inicialização: chamadas finais que montam a tela (deve ser o último arquivo de lógica).
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         loadSupabaseSettings();
         applyPriorityColors();
         const initialSuggestionMode=document.getElementById('study-suggestion-mode');if(initialSuggestionMode)initialSuggestionMode.value=getSuggestionMode();

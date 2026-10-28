@@ -1,0 +1,22 @@
+PLANEJADOR DE ESTUDOS V10.8 — IMPLEMENTAÇÃO DO MENU ESTATÍSTICAS
+
+Este pacote contém o código completo que estava disponível nos pacotes-fonte fornecidos, integrado à nova tela Estatísticas.
+
+Principais alterações:
+- Novo menu e tela Estatísticas, com totais gerais e tabela semanal por disciplina agrupada por prioridade.
+- Busca de disciplina e totalizadores semanais dinâmicos conforme os resultados filtrados.
+- Remoção da informação agregada de estudos dos cabeçalhos de prioridade e dos cartões “Últimos estudos” e “Sugestões para os próximos estudos”.
+- Preservadas as alterações anteriores relativas ao layout responsivo e à resolução de conflitos de anotações.
+- Versão atualizada para V10.8 e cache PWA renovado.
+
+Publicação:
+Extraia os arquivos mantendo a estrutura de pastas e envie-os ao repositório GitHub, substituindo os arquivos existentes.
+
+Nota sobre arquivos de infraestrutura:
+Os pacotes-fonte fornecidos não continham supabase-config.js, manifest.webmanifest nem a pasta icons, embora o HTML/service worker os referenciem. Por segurança, este pacote não cria versões fictícias desses itens. Preserve no repositório os arquivos existentes de configuração do Supabase, manifesto e ícones.
+
+Estatísticas:
+- Os acumulados gerais conciliam os totais do progresso por tópico com o histórico, evitando contar os mesmos registros duas vezes e preservando dados históricos.
+- A semana começa na segunda-feira e termina no domingo, usando a data local do navegador.
+- Uma disciplina aparece uma única vez, agrupada pela prioridade mais alta entre seus tópicos; seus totais incluem todos os registros da disciplina.
+- Os totais de estudos e revisões são contagens distintas; horas e questões incluem as sessões de revisão. Os indicadores da semana são calculados a partir das sessões datadas.

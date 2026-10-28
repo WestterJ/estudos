@@ -1,5 +1,5 @@
 // 10-dados-backup.js — saveData, cabeçalho do concurso, configurações do Supabase, reset e backup (exportar/importar).
-// Planejador de Estudos V10.7 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         function updateContestHeader() {
             const cfg=contests[activeContest]||{};
             const name=cfg.name||activeContest||'Concurso selecionado';
