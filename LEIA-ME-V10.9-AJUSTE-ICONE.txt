@@ -1,0 +1,7 @@
+Ajuste visual V10.9
+
+- O ícone do cabeçalho e da tela de autenticação agora usa o mesmo azul escuro do cabeçalho (#003a70), mantendo o símbolo branco.
+- Removido o emoji do título da aba do navegador para evitar duplicidade visual com o ícone do cabeçalho/favicon.
+- As demais funcionalidades foram preservadas.
+
+Publique os arquivos mantendo seus caminhos originais no repositório. Se o PWA continuar exibindo o estilo antigo, atualize a página limpando o cache ou feche e reabra o aplicativo instalado.
