@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.8
+# Arquitetura — Planejador de Estudos V10.9
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -55,7 +55,7 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 
 **`06-edital.js`** (3 funções): `initEditalFilters`, `updateEditalTopicsFilter`, `renderEditalVerticalizado`
 
-**`07-concursos.js`** (16 funções): `contestKey`, `renderContestSelector`, `saveCurrentContestSnapshot`, `restoreSnapshotToMemory`, `changeContest`, `saveContestSettings`, `addContest`, `renderPrioritySettings`, `savePrioritySettings`, `recalculateDisciplineWeightsByPriority`, `renderCustomization`, `updateWeightShares`, `disciplinePriorityChanged`, `addDisciplineToContest` …
+**`07-concursos.js`** (22 funções): `getDeletedContestMap`, `mergeDeletedContestMaps`, `setDeletedContestMap`, `isContestDeleted`, `purgeContestLocalStorage`, `contestKey`, `renderContestSelector`, `renderContestManager`, `deleteContest`, `saveCurrentContestSnapshot`, `restoreSnapshotToMemory`, `changeContest`, `saveContestSettings`, `addContest`, `renderPrioritySettings`, `savePrioritySettings`, `recalculateDisciplineWeightsByPriority`, `renderCustomization`, `updateWeightShares`, `disciplinePriorityChanged`, `addDisciplineToContest` …
 
 **`08-importacao-ia.js`** (15 funções): `extractPdfText`, `normalizeSyllabusKey`, `getSyllabusPriority`, `parseSpreadsheetNumber`, `clearManualSyllabusForm`, `editSyllabusItem`, `saveManualSyllabusItem`, `deleteSyllabusItem`, `refreshSyllabusViews`, `renderSyllabusManager`, `downloadSyllabusTemplate`, `importManualSyllabusFile`, `chamarIAServidor`, `analyzeEditalAI` …
 
@@ -86,3 +86,10 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 2. Mude `CACHE_NAME` em `service-worker.js` (senão os aparelhos continuam com o cache antigo).
 3. Se criar um arquivo novo, inclua-o em `index.html` (na ordem certa) **e** em `APP_SHELL` no `service-worker.js`.
 4. Em correções pontuais, basta enviar só os arquivos alterados.
+
+
+## V10.9 — gerenciamento de concursos e identidade visual
+- A exclusão de concursos fica em Personalização → Gerenciar concursos.
+- A exclusão registra marcas globais (`tce_deleted_contests`) que são sincronizadas com o Supabase para impedir que dados antigos de outro dispositivo recuperem concursos removidos.
+- O aplicativo mantém pelo menos um concurso; ao excluir o ativo, seleciona outro automaticamente.
+- Ícone do app azul com símbolo branco, favicon e ícones PWA atualizados.

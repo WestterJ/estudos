@@ -1,5 +1,5 @@
 // 09-sincronizacao.js — Supabase: login, mesclagem de dados, sincronização e salvamento na nuvem.
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Supabase: mantém o funcionamento local e sincroniza os dados do usuário autenticado.
         let sbClient = null;
         let sbUser = null;
@@ -13,12 +13,14 @@
 
         function collectContestSnapshots() {
             const snapshots={};
+            const deletedMap=getDeletedContestMap();
             try {
                 for(let i=0;i<localStorage.length;i++){
                     const key=localStorage.key(i);
                     if(!key || !key.startsWith('tce_contest_data_')) continue;
                     try {
                         const id=key.slice('tce_contest_data_'.length);
+                        if(deletedMap[id]) continue;
                         const snap=JSON.parse(localStorage.getItem(key));
                         if(!snap || typeof snap!=='object') continue;
                         snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||JSON.stringify(snap.prioritySettings||{}));
@@ -29,7 +31,7 @@
                     } catch(e) { console.warn('Snapshot local ignorado:',key,e); }
                 }
                 const old=(()=>{try{return JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'{}')||{};}catch(e){return {};}})();
-                snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
+                if(!deletedMap[activeContest]) snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
             } catch(e) { console.warn('Não foi possível reunir os snapshots dos concursos',e); }
             return snapshots;
         }
@@ -37,7 +39,7 @@
         function buildCurrentCloudPayload(timestamp=new Date().toISOString()) {
             const activeSnapshot={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:timestamp};
             localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(activeSnapshot));
-            return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
+            return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},deletedContests:getDeletedContestMap(),prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
         }
 
         // Mescla registros por ID. Para anotações do mesmo tópico, preserva apenas o último texto salvo.
@@ -127,16 +129,18 @@
             };
         }
         function mergeContestSnapshots(remotePayload, localPayload) {
+            const deletedMap=mergeDeletedContestMaps(remotePayload?.deletedContests||{},localPayload?.deletedContests||getDeletedContestMap());
             const remoteSnapshots=(remotePayload && remotePayload.contestSnapshots && typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{};
             const localSnapshots=(localPayload && localPayload.contestSnapshots && typeof localPayload.contestSnapshots==='object')?localPayload.contestSnapshots:{};
-            const merged={...remoteSnapshots};
+            const merged={};
+            Object.entries(remoteSnapshots).forEach(([id,snap])=>{if(!deletedMap[id])merged[id]=snap;});
             // Compatibilidade com versões antigas que só guardavam o concurso ativo no nível principal.
             const remoteActive=remotePayload && remotePayload.activeContest;
-            if(remoteActive && !merged[remoteActive] && (Array.isArray(remotePayload.masterEditalData)||Array.isArray(remotePayload.userProgress))) {
+            if(remoteActive && !deletedMap[remoteActive] && !merged[remoteActive] && (Array.isArray(remotePayload.masterEditalData)||Array.isArray(remotePayload.userProgress))) {
                 merged[remoteActive]={contestName:remotePayload.contests?.[remoteActive]?.name||remoteActive,masterEditalData:remotePayload.masterEditalData||[],userProgress:remotePayload.userProgress||remotePayload.masterEditalData||[],studySessions:remotePayload.studySessions||[],prioritySettings:remotePayload.prioritySettings||{},disciplineSettings:remotePayload.disciplineSettings||{},suggestionMode:remotePayload.suggestionMode||'priority_progress'};
             }
             Object.entries(localSnapshots).forEach(([id,localSnap])=>{
-                if(!localSnap || typeof localSnap!=='object') return;
+                if(deletedMap[id]||!localSnap || typeof localSnap!=='object') return;
                 const remoteSnap=merged[id];
                 merged[id]=remoteSnap ? mergeContestSnapshot(remoteSnap,localSnap) : localSnap;
             });
@@ -148,16 +152,21 @@
             const {data:remoteRow,error:readError}=await sbClient.from(SB_TABLE).select('data').eq('user_id',uid).maybeSingle();
             if(readError) throw readError; // Nunca tenta gravar por cima se não conseguiu ler a cópia atual.
             const remotePayload=remoteRow && remoteRow.data && typeof remoteRow.data==='object'?remoteRow.data:{};
-            const remoteIds=Object.keys((remotePayload.contests&&typeof remotePayload.contests==='object')?remotePayload.contests:{}).concat(Object.keys((remotePayload.contestSnapshots&&typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{}));
+            const deletedContestMap=mergeDeletedContestMaps(remotePayload.deletedContests||{},localPayload.deletedContests||getDeletedContestMap());
+            localPayload={...localPayload,deletedContests:deletedContestMap};
+            const remoteContestIds=Object.keys((remotePayload.contests&&typeof remotePayload.contests==='object')?remotePayload.contests:{}).concat(Object.keys((remotePayload.contestSnapshots&&typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{}));
+            const remoteIds=remoteContestIds.filter(id=>!deletedContestMap[id]);
             if(isPristineLocalState()&&remoteIds.some(id=>id!==DEFAULT_CONTEST_ID)){
-                localPayload={...localPayload,contests:{},contestSnapshots:{},activeContest:(remotePayload.activeContest&&remotePayload.activeContest!==DEFAULT_CONTEST_ID)?remotePayload.activeContest:remoteIds.find(id=>id!==DEFAULT_CONTEST_ID)};
+                localPayload={...localPayload,contests:{},contestSnapshots:{},activeContest:(remotePayload.activeContest&&remotePayload.activeContest!==DEFAULT_CONTEST_ID&&!deletedContestMap[remotePayload.activeContest])?remotePayload.activeContest:remoteIds.find(id=>id!==DEFAULT_CONTEST_ID)};
             }
             const mergedSnapshots=mergeContestSnapshots(remotePayload,localPayload);
             const remoteContests=remotePayload.contests && typeof remotePayload.contests==='object'?remotePayload.contests:{};
             const localContests=localPayload.contests && typeof localPayload.contests==='object'?localPayload.contests:{};
-            const mergedContests={...remoteContests};
+            const mergedContests={};
+            Object.entries(remoteContests).forEach(([id,cfg])=>{if(!deletedContestMap[id])mergedContests[id]=cfg;});
             Object.entries(localContests).forEach(([id,localCfg])=>{
-                const remoteCfg=remoteContests[id];
+                if(deletedContestMap[id])return;
+                const remoteCfg=mergedContests[id];
                 if(!remoteCfg) { mergedContests[id]=localCfg; return; }
                 if(id===localPayload.activeContest) { mergedContests[id]={...remoteCfg,...localCfg}; return; }
                 const localTime=Date.parse(localCfg?._updatedAt||'')||0;
@@ -167,12 +176,18 @@
                 if(localTime && localTime>remoteTime) mergedContests[id]={...remoteCfg,...localCfg};
             });
             Object.keys(mergedSnapshots).forEach(id=>{
+                if(deletedContestMap[id]){delete mergedSnapshots[id];return;}
                 if(!mergedContests[id]) mergedContests[id]={name:mergedSnapshots[id]?.contestName||id,board:'',date:''};
             });
-            const mergedPayload={...remotePayload,...localPayload,contests:mergedContests,contestSnapshots:mergedSnapshots};
+            let resolvedActive=localPayload.activeContest;
+            if(!resolvedActive||deletedContestMap[resolvedActive]||!mergedContests[resolvedActive]){
+                resolvedActive=Object.keys(mergedContests).sort((a,b)=>String(mergedContests[a]?.name||a).localeCompare(String(mergedContests[b]?.name||b),'pt-BR'))[0];
+                if(!resolvedActive){resolvedActive='concurso-restaurado-'+Date.now();mergedContests[resolvedActive]={name:'Concurso restaurado',board:'',date:''};mergedSnapshots[resolvedActive]={contestName:'Concurso restaurado',masterEditalData:[],userProgress:[],studySessions:[],prioritySettings:{},disciplineSettings:{},suggestionMode:'priority_progress',_snapshotUpdatedAt:new Date().toISOString()};}
+            }
+            const mergedPayload={...remotePayload,...localPayload,activeContest:resolvedActive,deletedContests:deletedContestMap,contests:mergedContests,contestSnapshots:mergedSnapshots};
             // Os campos legados do nível principal devem refletir o snapshot mesclado do concurso ativo,
             // e não uma cópia antiga de um dos dispositivos.
-            const activeMerged=mergedSnapshots[localPayload.activeContest];
+            const activeMerged=mergedSnapshots[resolvedActive];
             if(activeMerged) Object.assign(mergedPayload,{userProgress:activeMerged.userProgress||[],studySessions:activeMerged.studySessions||[],masterEditalData:activeMerged.masterEditalData||[],prioritySettings:activeMerged.prioritySettings||{},disciplineSettings:activeMerged.disciplineSettings||{},suggestionMode:activeMerged.suggestionMode||'priority_progress'});
             const savedAt=new Date().toISOString();
             const {error:writeError}=await sbClient.from(SB_TABLE).upsert({user_id:uid,data:mergedPayload,updated_at:savedAt},{onConflict:'user_id'});
@@ -181,8 +196,9 @@
         }
 
         function persistSnapshotMapToLocal(snapshotMap) {
+            const deletedMap=getDeletedContestMap();
             Object.entries(snapshotMap||{}).forEach(([id,snapshot])=>{
-                if(!snapshot || typeof snapshot!=='object') return;
+                if(deletedMap[id]||!snapshot || typeof snapshot!=='object') return;
                 localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
                 if(snapshot.prioritySettings) localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
                 if(snapshot.disciplineSettings) localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
@@ -192,20 +208,24 @@
         }
         function adoptMergedCloudPayloadLocally(payload) {
             if(!payload || typeof payload!=='object') return;
+            const deletedMap=setDeletedContestMap(mergeDeletedContestMaps(getDeletedContestMap(),payload.deletedContests||{}));
             if(isPristineLocalState()&&payload.contests&&typeof payload.contests==='object'){
-                const otherIds=Object.keys(payload.contests).filter(id=>id!==DEFAULT_CONTEST_ID);
+                const otherIds=Object.keys(payload.contests).filter(id=>id!==DEFAULT_CONTEST_ID&&!deletedMap[id]);
                 if(otherIds.length){
                     delete contests[DEFAULT_CONTEST_ID];
                     try{localStorage.removeItem('tce_contest_data_'+DEFAULT_CONTEST_ID);}catch(e){}
-                    activeContest=(payload.activeContest&&payload.contests[payload.activeContest]&&payload.activeContest!==DEFAULT_CONTEST_ID)?payload.activeContest:otherIds[0];
+                    activeContest=(payload.activeContest&&payload.contests[payload.activeContest]&&payload.activeContest!==DEFAULT_CONTEST_ID&&!deletedMap[payload.activeContest])?payload.activeContest:otherIds[0];
                 }
             }
-            const chosenActive=activeContest;
             if(payload.contests && typeof payload.contests==='object') contests={...contests,...payload.contests};
-            if(!contests[chosenActive] && payload.activeContest && contests[payload.activeContest]) activeContest=payload.activeContest;
+            Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
+            Object.keys(deletedMap).forEach(id=>purgeContestLocalStorage(id));
+            if(!contests[activeContest])activeContest=(payload.activeContest&&contests[payload.activeContest])?payload.activeContest:Object.keys(contests)[0];
+            if(!activeContest){activeContest='concurso-restaurado-'+Date.now();contests[activeContest]={name:'Concurso restaurado',board:'',date:''};}
             localStorage.setItem('tce_contests',JSON.stringify(contests));
             localStorage.setItem('tce_active_contest',activeContest);
-            const snapshots=payload.contestSnapshots && typeof payload.contestSnapshots==='object'?payload.contestSnapshots:{};
+            const rawSnapshots=payload.contestSnapshots && typeof payload.contestSnapshots==='object'?payload.contestSnapshots:{};
+            const snapshots={};Object.entries(rawSnapshots).forEach(([id,snap])=>{if(!deletedMap[id])snapshots[id]=snap;});
             persistSnapshotMapToLocal(snapshots);
             const activeSnapshot=snapshots[activeContest];
             if(activeSnapshot) {
@@ -466,29 +486,35 @@
             // O download combina os mapas de concursos: o remoto vence para IDs presentes nos dois lados;
             // os concursos existentes só localmente são preservados em vez de desaparecerem.
             let localContests={};try{localContests=JSON.parse(localStorage.getItem('tce_contests')||'{}')||{};}catch(e){}
+            const remoteDeleted=data.data.deletedContests&&typeof data.data.deletedContests==='object'?data.data.deletedContests:{};
+            setDeletedContestMap(mergeDeletedContestMaps(getDeletedContestMap(),remoteDeleted));
+            const deletedMap=getDeletedContestMap();
             const remoteContests=data.data.contests&&typeof data.data.contests==='object'?data.data.contests:{};
-            contests={...localContests,...remoteContests};
+            contests={...localContests,...remoteContests};Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
             const localSnapshots=collectContestSnapshots();
             let remoteSnapshots=data.data.contestSnapshots&&typeof data.data.contestSnapshots==='object'?data.data.contestSnapshots:{};
+            Object.keys(remoteSnapshots).forEach(id=>{if(deletedMap[id])delete remoteSnapshots[id];});
             if(data.data.activeContest && !remoteSnapshots[data.data.activeContest] && (Array.isArray(data.data.masterEditalData)||Array.isArray(data.data.userProgress))) {
                 remoteSnapshots={...remoteSnapshots,[data.data.activeContest]:{contestName:data.data.contests?.[data.data.activeContest]?.name||data.data.activeContest,masterEditalData:data.data.masterEditalData||[],userProgress:data.data.userProgress||data.data.masterEditalData||[],studySessions:data.data.studySessions||[],prioritySettings:data.data.prioritySettings||{},disciplineSettings:data.data.disciplineSettings||{},suggestionMode:data.data.suggestionMode||'priority_progress'}};
             }
             // Download também mescla registros de cada concurso: não substitui o snapshot local inteiro.
-            const allSnapshots=mergeContestSnapshots({...data.data,contestSnapshots:remoteSnapshots},{activeContest,contestSnapshots:localSnapshots});
-            // Mantém o concurso selecionado neste aparelho; só troca se ele realmente não existir.
-            if(!contests[activeContest] && data.data.activeContest) activeContest=data.data.activeContest;
-            if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
+            const allSnapshots=mergeContestSnapshots({...data.data,deletedContests:deletedMap,contestSnapshots:remoteSnapshots},{activeContest,deletedContests:deletedMap,contestSnapshots:localSnapshots});
+            // Mantém o concurso selecionado neste aparelho, salvo se ele tiver sido excluído.
+            if((!contests[activeContest]||deletedMap[activeContest])&&data.data.activeContest&&contests[data.data.activeContest]&&!deletedMap[data.data.activeContest]) activeContest=data.data.activeContest;
+            if(!contests[activeContest]||deletedMap[activeContest]) activeContest=Object.keys(contests)[0]||'concurso-restaurado-'+Date.now();
+            if(!contests[activeContest])contests[activeContest]={name:activeContest.includes('restaurado')?'Concurso restaurado':(activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest),board:'',date:''};
             Object.keys(allSnapshots).forEach(id=>{if(!contests[id])contests[id]={name:allSnapshots[id]?.contestName||id,board:'',date:''};});
             localStorage.setItem('tce_active_contest',activeContest);
             localStorage.setItem('tce_contests',JSON.stringify(contests));
+            localStorage.setItem('tce_deleted_contests',JSON.stringify(deletedMap));
             persistSnapshotMapToLocal(allSnapshots);
             const activeSnapshot=allSnapshots[activeContest];
             if(activeSnapshot) restoreSnapshotToMemory(activeSnapshot);
-            else {
+            else if(data.data.activeContest===activeContest&&!deletedMap[activeContest]) {
                 if(Array.isArray(data.data.masterEditalData))masterEditalData=data.data.masterEditalData;
                 if(Array.isArray(data.data.userProgress))userProgress=data.data.userProgress;
                 if(Array.isArray(data.data.studySessions))studySessions=data.data.studySessions;
-            }
+            } else { masterEditalData=[];userProgress=[];studySessions=[]; }
             localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify({...buildCurrentSnapshotForStorage(),_snapshotUpdatedAt:activeSnapshot?._snapshotUpdatedAt||new Date().toISOString()}));
             localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
             localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));

@@ -1,5 +1,5 @@
 // 04-inicio.js — Trilhas cadastráveis, subtítulo do concurso, painéis recolhíveis da Home, progresso por prioridade, cronograma e KPIs.
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // ===== V10.6: cursos/trilhas cadastráveis, subtítulo com dias para a prova e conta nova =====
         const DEFAULT_STUDY_TRACKS=['Curso regular','Curso intensivo','Estudo individual','Simulados'];
         function getStudyTrackOptions(){

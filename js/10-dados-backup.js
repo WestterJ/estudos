@@ -1,5 +1,5 @@
 // 10-dados-backup.js — saveData, cabeçalho do concurso, configurações do Supabase, reset e backup (exportar/importar).
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         function updateContestHeader() {
             const cfg=contests[activeContest]||{};
             const name=cfg.name||activeContest||'Concurso selecionado';
@@ -54,6 +54,7 @@
                     exportedAt:new Date().toISOString(),
                     activeContest,
                     contests:{...contests},
+                    deletedContests:getDeletedContestMap(),
                     contestSnapshots:collectContestSnapshots(),
                     // Mantidos para compatibilidade com leitores antigos, referem-se ao concurso ativo.
                     userProgress,
@@ -77,19 +78,23 @@
             const importedSnapshots=parsed.contestSnapshots && typeof parsed.contestSnapshots==='object' && !Array.isArray(parsed.contestSnapshots) ? parsed.contestSnapshots : null;
             const hasContestBackup=!!importedSnapshots || (parsed.contests && typeof parsed.contests==='object');
             if(hasContestBackup) {
+                const importedDeleted=parsed.deletedContests&&typeof parsed.deletedContests==='object'&&!Array.isArray(parsed.deletedContests)?parsed.deletedContests:{};
+                const deletedMap=setDeletedContestMap(mergeDeletedContestMaps(getDeletedContestMap(),importedDeleted));
                 const incomingContests=parsed.contests && typeof parsed.contests==='object' && !Array.isArray(parsed.contests)?parsed.contests:{};
                 contests={...contests,...incomingContests};
+                Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
                 if(importedSnapshots) {
                     const normalized={};
                     Object.entries(importedSnapshots).forEach(([id,snap])=>{
-                        if(!id || !snap || typeof snap!=='object') return;
+                        if(!id || deletedMap[id] || !snap || typeof snap!=='object') return;
                         normalized[id]={...snap,_snapshotUpdatedAt:now};
                     });
                     persistSnapshotMapToLocal(normalized);
-                    Object.keys(normalized).forEach(id=>{if(!contests[id])contests[id]={name:normalized[id]?.contestName||id,board:'',date:''};});
+                    Object.keys(normalized).forEach(id=>{if(!deletedMap[id]&&!contests[id])contests[id]={name:normalized[id]?.contestName||id,board:'',date:''};});
                 }
-                if(parsed.activeContest) activeContest=parsed.activeContest;
-                if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
+                if(parsed.activeContest&&!deletedMap[parsed.activeContest]&&contests[parsed.activeContest]) activeContest=parsed.activeContest;
+                if(!contests[activeContest]||deletedMap[activeContest])activeContest=Object.keys(contests)[0]||'concurso-restaurado-'+Date.now();
+                if(!contests[activeContest])contests[activeContest]={name:activeContest.includes('restaurado')?'Concurso restaurado':(activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest),board:'',date:''};
                 localStorage.setItem('tce_active_contest',activeContest);
                 localStorage.setItem('tce_contests',JSON.stringify(contests));
                 const importedActive=importedSnapshots && importedSnapshots[activeContest];

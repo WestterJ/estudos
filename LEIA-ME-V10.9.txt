@@ -1,0 +1,34 @@
+PLANEJADOR DE ESTUDOS V10.9 — ESTATÍSTICAS, GERENCIAMENTO DE CONCURSOS E IDENTIDADE VISUAL
+
+Este pacote contém o código completo que estava disponível nos pacotes-fonte fornecidos, integrado à nova tela Estatísticas.
+
+Principais alterações:
+- Novo menu e tela Estatísticas, com totais gerais e tabela semanal por disciplina agrupada por prioridade.
+- Busca de disciplina e totalizadores semanais dinâmicos conforme os resultados filtrados.
+- Remoção da informação agregada de estudos dos cabeçalhos de prioridade e dos cartões “Últimos estudos” e “Sugestões para os próximos estudos”.
+- Preservadas as alterações anteriores relativas ao layout responsivo e à resolução de conflitos de anotações.
+- Versão atualizada para V10.9 e cache PWA renovado.
+- Gerenciamento de concursos em Personalização → Gerenciar concursos, com confirmação, bloqueio para exclusão do último concurso e tombstone sincronizado para evitar restauração acidental pela nuvem.
+- Marca visual com fundo azul e ícone branco, favicon, título do navegador com símbolo e ícones PWA em PNG/SVG.
+- Manifesto PWA incluído neste pacote.
+
+Publicação:
+Extraia os arquivos mantendo a estrutura de pastas e envie-os ao repositório GitHub, substituindo os arquivos existentes.
+
+Nota sobre arquivos de infraestrutura:
+O pacote inclui manifest.webmanifest e ícones gerados para o Planejador. O arquivo supabase-config.js não estava presente no pacote-fonte recebido e contém a configuração do seu projeto; preserve o arquivo que já existe no seu repositório GitHub. Não substitua nem publique chaves privadas.
+
+Estatísticas:
+- Os acumulados gerais conciliam os totais do progresso por tópico com o histórico, evitando contar os mesmos registros duas vezes e preservando dados históricos.
+- A semana começa na segunda-feira e termina no domingo, usando a data local do navegador.
+- Uma disciplina aparece uma única vez, agrupada pela prioridade mais alta entre seus tópicos; seus totais incluem todos os registros da disciplina.
+- Os totais de estudos e revisões são contagens distintas; horas e questões incluem as sessões de revisão. Os indicadores da semana são calculados a partir das sessões datadas.
+
+
+Versão do código: V10.9.
+
+Onde excluir concursos:
+1. Abra o menu Personalização.
+2. Role até Gerenciar concursos.
+3. Clique em Excluir na linha do concurso e confirme.
+O concurso ativo será trocado automaticamente por outro. O aplicativo não permite excluir o último concurso cadastrado.

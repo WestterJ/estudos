@@ -1,5 +1,5 @@
 // 11-datas-anotacoes.js — Modal de anotações e Datas Importantes (checklist por concurso).
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Modal de Anotações
         let activeModalId = null;
         function openModal(id) {

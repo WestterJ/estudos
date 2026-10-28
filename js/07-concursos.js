@@ -1,27 +1,71 @@
 // 07-concursos.js — Concursos (troca/criação), prioridades, disciplinas, pesos e personalização.
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+        // Exclusões de concursos são registradas como tombstones para que uma cópia antiga de outro dispositivo não os recupere na próxima sincronização.
+        let deletedContestMap = {};
+        try { deletedContestMap = JSON.parse(localStorage.getItem('tce_deleted_contests') || '{}') || {}; } catch(e) { deletedContestMap = {}; }
+        if (!deletedContestMap || typeof deletedContestMap !== 'object' || Array.isArray(deletedContestMap)) deletedContestMap = {};
+        function getDeletedContestMap(){
+          let stored={};try{stored=JSON.parse(localStorage.getItem('tce_deleted_contests')||'{}')||{};}catch(e){}
+          if(!stored||typeof stored!=='object'||Array.isArray(stored))stored={};
+          deletedContestMap={...deletedContestMap,...stored};return {...deletedContestMap};
+        }
+        function mergeDeletedContestMaps(remoteMap,localMap){
+          const merged={};
+          [remoteMap,localMap].forEach(map=>{if(!map||typeof map!=='object'||Array.isArray(map))return;Object.entries(map).forEach(([id,value])=>{
+            if(!id)return;const stamp=typeof value==='string'?value:(value&&typeof value==='object'?(value.deletedAt||value.timestamp||''): '');
+            const old=merged[id];const oldStamp=typeof old==='string'?old:'';
+            if(!old||((Date.parse(stamp)||0)>(Date.parse(oldStamp)||0)))merged[id]=stamp||oldStamp||new Date(0).toISOString();
+          });});return merged;
+        }
+        function setDeletedContestMap(map){deletedContestMap=mergeDeletedContestMaps(deletedContestMap,map);try{localStorage.setItem('tce_deleted_contests',JSON.stringify(deletedContestMap));}catch(e){}return {...deletedContestMap};}
+        function isContestDeleted(id){return Boolean(getDeletedContestMap()[String(id||'')]);}
+        function purgeContestLocalStorage(id){
+          const exact='tce_contest_data_'+id, prefix='tce_'+id+'_', remove=[];
+          for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key===exact||(key&&key.startsWith(prefix)))remove.push(key);}
+          remove.forEach(key=>{try{localStorage.removeItem(key);}catch(e){}});
+        }
         let contests = {};
         try { contests = JSON.parse(localStorage.getItem('tce_contests') || '{}') || {}; } catch(e) { contests = {}; }
         if (!contests || typeof contests !== 'object' || Array.isArray(contests)) contests = {};
-        let activeContest = localStorage.getItem('tce_active_contest') || Object.keys(contests)[0] || DEFAULT_CONTEST_ID;
-        if (!Object.keys(contests).length) contests[DEFAULT_CONTEST_ID]={name:DEFAULT_CONTEST_NAME,board:'',date:''};
-        if (!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
+        Object.keys(contests).forEach(id=>{if(isContestDeleted(id))delete contests[id];});
+        // Recupera nomes de snapshots locais antes de decidir se o concurso salvo foi realmente excluído.
+        const snapshotKeys=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith('tce_contest_data_'))snapshotKeys.push(key);}
+        snapshotKeys.forEach(key=>{
+          const id=key.slice('tce_contest_data_'.length);if(contests[id]||isContestDeleted(id))return;
+          try{const snap=JSON.parse(localStorage.getItem(key)||'null');contests[id]={name:snap?.contestName||snap?.name||id,board:'',date:''};}catch(e){}
+        });
+        const savedActiveContest=localStorage.getItem('tce_active_contest');
+        let activeContest = savedActiveContest || Object.keys(contests)[0] || DEFAULT_CONTEST_ID;
+        const activeContestWasRemoved=Boolean(savedActiveContest&&isContestDeleted(savedActiveContest));
+        if (!contests[activeContest]) activeContest=Object.keys(contests)[0] || (isContestDeleted(DEFAULT_CONTEST_ID)?'concurso-'+Date.now():DEFAULT_CONTEST_ID);
+        if (!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:'Novo concurso',board:'',date:''};
+        localStorage.setItem('tce_active_contest',activeContest);
+        if(activeContestWasRemoved){
+          let restored=null;try{restored=JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'null');}catch(e){}
+          if(restored)restoreSnapshotToMemory(restored);else{masterEditalData=[];userProgress=[];studySessions=[];}
+          if(restored?.prioritySettings)localStorage.setItem('tce_'+activeContest+'_priority_settings',JSON.stringify(restored.prioritySettings));
+          if(restored?.disciplineSettings)localStorage.setItem('tce_'+activeContest+'_discipline_settings',JSON.stringify(restored.disciplineSettings));
+          if(restored?.suggestionMode)localStorage.setItem('tce_'+activeContest+'_suggestion_mode',restored.suggestionMode);
+          localStorage.setItem('tce_master_edital',JSON.stringify(masterEditalData));localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+        }
         function contestKey(suffix){return 'tce_'+activeContest+'_'+suffix;}
 
         // Reconstrói SEMPRE o seletor a partir da lista persistida, e não apenas do concurso ativo.
         function renderContestSelector(){
           const sel=document.getElementById('contest-selector'); if(!sel) return;
           if(!contests || typeof contests!=='object' || Array.isArray(contests)) contests={};
-          if(!contests[activeContest]) contests[activeContest]={name:activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest,board:'',date:''};
-          // Reindexa snapshots locais para recuperar concursos cuja lista de nomes tenha sido perdida.
+          Object.keys(contests).forEach(id=>{if(isContestDeleted(id))delete contests[id];});
+          // Reindexa snapshots locais que ainda existam, exceto aqueles marcados como excluídos.
           for(let i=0;i<localStorage.length;i++){
             const key=localStorage.key(i);
             if(!key || !key.startsWith('tce_contest_data_')) continue;
             const id=key.slice('tce_contest_data_'.length);
-            if(contests[id]) continue;
+            if(contests[id]||isContestDeleted(id)) continue;
             try{const snap=JSON.parse(localStorage.getItem(key)||'null');contests[id]={name:snap?.contestName||snap?.name||id,board:'',date:''};}catch(e){}
           }
-          const ids=Object.keys(contests).sort((a,b)=>String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
+          let ids=Object.keys(contests).sort((a,b)=>String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
+          if(!ids.length){let id=isContestDeleted(DEFAULT_CONTEST_ID)?'concurso-'+Date.now():DEFAULT_CONTEST_ID;contests[id]={name:id===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:'Novo concurso',board:'',date:''};ids=[id];}
+          if(!contests[activeContest]){activeContest=ids[0];localStorage.setItem('tce_active_contest',activeContest);}
           sel.innerHTML='';
           ids.forEach(id=>{
             const option=document.createElement('option'); option.value=id; option.textContent=contests[id]?.name||id;
@@ -29,6 +73,42 @@
           });
           sel.value=activeContest;
           try { localStorage.setItem('tce_contests',JSON.stringify(contests)); } catch(e) {}
+          renderContestManager();
+        }
+        function renderContestManager(){
+          const container=document.getElementById('contest-manager-list');if(!container)return;
+          const ids=Object.keys(contests||{}).filter(id=>!isContestDeleted(id)).sort((a,b)=>String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'));
+          if(!ids.length){container.innerHTML='<p class="text-sm text-slate-500">Nenhum concurso cadastrado.</p>';return;}
+          container.innerHTML=ids.map(id=>{
+            const cfg=contests[id]||{},isActive=id===activeContest,disabled=ids.length<=1;
+            return `<div class="contest-manager-row"><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><strong class="contest-manager-name">${escapeHtml(cfg.name||id)}</strong>${isActive?'<span class="contest-active-badge">Ativo</span>':''}</div><div class="contest-manager-meta">${escapeHtml([cfg.board||'',cfg.date?new Date(cfg.date+'T00:00:00').toLocaleDateString('pt-BR'): ''].filter(Boolean).join(' · ')||'Sem banca ou data de prova cadastrada')}</div></div><button type="button" class="contest-delete-btn" data-contest-id="${escapeHtml(id)}" onclick="deleteContest(this.dataset.contestId)" ${disabled?'disabled title="Não é possível excluir o único concurso cadastrado"':'title="Excluir concurso e seus dados"'}><i class="fa-solid fa-trash-can mr-1" aria-hidden="true"></i>Excluir</button></div>`;
+          }).join('');
+        }
+        function deleteContest(id){
+          if(!id||!contests[id]||isContestDeleted(id))return;
+          const ids=Object.keys(contests).filter(key=>!isContestDeleted(key));
+          if(ids.length<=1){showCustomDialog('Não é possível excluir','Mantenha pelo menos um concurso cadastrado.');return;}
+          const name=contests[id]?.name||id;
+          showCustomDialog('Excluir concurso?',`O concurso “${name}” e os dados associados a ele serão excluídos deste aplicativo: edital, progresso, histórico e personalizações. A exclusão ficará registrada neste dispositivo e será sincronizada com a nuvem na próxima sincronização. Não poderá ser desfeita. Recomendamos exportar um backup antes de continuar.`, 'fa-solid fa-triangle-exclamation',()=>{
+            const wasActive=id===activeContest;
+            if(wasActive)saveCurrentContestSnapshot(id);
+            const tombstones=getDeletedContestMap();tombstones[id]=new Date().toISOString();setDeletedContestMap(tombstones);
+            delete contests[id];purgeContestLocalStorage(id);
+            if(wasActive){
+              const nextId=Object.keys(contests).filter(key=>!isContestDeleted(key)).sort((a,b)=>String(contests[a]?.name||a).localeCompare(String(contests[b]?.name||b),'pt-BR'))[0];
+              activeContest=nextId;localStorage.setItem('tce_active_contest',activeContest);
+              let snapshot=null;try{snapshot=JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'null');}catch(e){}
+              if(snapshot)restoreSnapshotToMemory(snapshot);else{masterEditalData=[];userProgress=[];studySessions=[];}
+            }
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            const cfg=contests[activeContest]||{};
+            const nameInput=document.getElementById('contest-name');if(nameInput)nameInput.value=cfg.name||activeContest;
+            const boardInput=document.getElementById('contest-board');if(boardInput)boardInput.value=cfg.board||'';
+            const dateInput=document.getElementById('contest-date');if(dateInput)dateInput.value=cfg.date||'';
+            renderContestSelector();initCronogramaFilters();initEditalFilters();initRegistrationForm();renderSessionsList();updateContestHeader();applyPriorityColors();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();
+            saveData();
+            showCustomDialog('Concurso excluído',`“${name}” foi removido. ${wasActive?'Outro concurso foi selecionado automaticamente. ':''}A exclusão será propagada durante a próxima sincronização.`);
+          });
         }
         function saveCurrentContestSnapshot(id=activeContest, timestamp=new Date().toISOString()){
           try {
@@ -51,7 +131,7 @@
           return true;
         }
         function changeContest(id){
-          if(!id || id===activeContest) { renderContestSelector(); return; }
+          if(!id || isContestDeleted(id) || !contests[id] || id===activeContest) { renderContestSelector(); return; }
           const oldId=activeContest;
           saveCurrentContestSnapshot(oldId);
           activeContest=id;localStorage.setItem('tce_active_contest',id);
@@ -128,6 +208,7 @@
         }
 
         function renderCustomization(){
+          renderContestManager();
           renderPrioritySettings();
           const modeSelect=document.getElementById('study-suggestion-mode');if(modeSelect)modeSelect.value=getSuggestionMode();
           updateSuggestionModeHelp();

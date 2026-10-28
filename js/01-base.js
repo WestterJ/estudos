@@ -1,5 +1,5 @@
 // 01-base.js — Base: dados iniciais, toasts e caixas de diálogo, contagem regressiva, modo escuro, abas, configurações de prioridade.
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Banco de Dados Oficial Completo extraído do Edital e da Planilha ODS (Todas as disciplinas, tópicos e subtópicos)
         // Nenhum conteúdo de concurso vem embutido: cada usuário começa vazio e cadastra ou importa o seu edital.
         const DEFAULT_CONTEST_ID = 'meu-concurso';
@@ -15,7 +15,7 @@
         try { masterEditalData = JSON.parse(localStorage.getItem('tce_master_edital')) || masterEditalData; } catch(e) {}
         let studySessions = JSON.parse(localStorage.getItem('tce_go_pro_sessions')) || defaultInitialSessions;
 
-        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = 'Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
+        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = '📘 Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
         preencherVersao(); document.addEventListener('DOMContentLoaded', preencherVersao);
 
         // V10.1: avisos informativos viram toasts (não bloqueiam a tela); só confirmações e textos longos usam caixa.

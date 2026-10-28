@@ -1,5 +1,5 @@
 // 05-registro.js — Aba Registro: formulário de estudo, tabela editável de sessões, edição e exclusão.
-// Planejador de Estudos V10.8 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
         // Formulário de Registro de Estudos & Histórico com Filtros
         function initRegistrationForm() {
             const discSelect = document.getElementById('reg-discipline');
