@@ -40,27 +40,26 @@
             return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
         }
 
-        // Mescla os registros por ID em vez de escolher cegamente um snapshot inteiro.
-        // Em conflitos de progresso, conserva o maior valor numérico, não apaga conclusões,
-        // e combina anotações diferentes para que nenhum texto seja perdido silenciosamente.
-        function mergeNoteValues(remoteValue, localValue) {
-            const values=[];
-            [remoteValue,localValue].forEach(value=>{
-                if(value===null || value===undefined) return;
-                // Uma anotação já mesclada pode conter vários fragmentos; separe-os para
-                // evitar repetir a mesma observação a cada sincronização entre dispositivos.
-                String(value).split(/\s*\|\s*/g).forEach(part=>{
-                    const text=part.trim();
-                    if(text && !values.includes(text)) values.push(text);
-                });
-            });
-            return values.join(' | ');
+        // Mescla registros por ID. Para anotações do mesmo tópico, preserva apenas o último texto salvo.
+        // O carimbo notesUpdatedAt permite decidir mesmo quando dois dispositivos editaram offline.
+        function mergeNoteValues(remoteValue, localValue, remoteRecord, localRecord, preferLocal) {
+            if(remoteValue===undefined||remoteValue===null)return localValue;
+            if(localValue===undefined||localValue===null)return remoteValue;
+            const remoteTime=Date.parse(remoteRecord?.notesUpdatedAt||'')||0;
+            const localTime=Date.parse(localRecord?.notesUpdatedAt||'')||0;
+            if(remoteTime!==localTime&&(remoteTime||localTime))return localTime>remoteTime?localValue:remoteValue;
+            return preferLocal?localValue:remoteValue;
         }
-        function mergeRecordValue(field, remoteValue, localValue, preferLocal) {
+        function mergeRecordValue(field, remoteValue, localValue, preferLocal, remoteRecord, localRecord) {
+            if(field==='notes') return mergeNoteValues(remoteValue,localValue,remoteRecord||{},localRecord||{},preferLocal);
+            if(field==='notesUpdatedAt') {
+                const remoteTime=Date.parse(remoteValue||'')||0;
+                const localTime=Date.parse(localValue||'')||0;
+                if(remoteTime!==localTime&&(remoteTime||localTime))return localTime>remoteTime?localValue:remoteValue;
+            }
             if(remoteValue===undefined || remoteValue===null || remoteValue==='') return localValue===undefined?remoteValue:localValue;
             if(localValue===undefined || localValue===null || localValue==='') return remoteValue;
             if(JSON.stringify(remoteValue)===JSON.stringify(localValue)) return remoteValue;
-            if(field==='notes') return mergeNoteValues(remoteValue,localValue);
             if(field==='completed') return Boolean(remoteValue || localValue);
             if(field==='isReview') return Math.max(Number(remoteValue)||0,Number(localValue)||0) ? 1 : 0;
             if(['hours','questions','reviews','minutes'].includes(field)) {
@@ -85,7 +84,7 @@
                 if(source==='local') {
                     const result={...existing,...item};
                     const fields=new Set([...Object.keys(existing),...Object.keys(item)]);
-                    fields.forEach(field=>{result[field]=mergeRecordValue(field,existing[field],item[field],preferLocal);});
+                    fields.forEach(field=>{result[field]=mergeRecordValue(field,existing[field],item[field],preferLocal,existing,item);});
                     merged[idx]=result;
                 }
             };

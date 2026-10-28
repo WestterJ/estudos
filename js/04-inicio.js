@@ -126,10 +126,56 @@
         }
         if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCollapsiblePanels); else initCollapsiblePanels();
 
+        // Contagem de sessões de estudo e revisão, com início da semana na segunda-feira local.
+        // As contagens por prioridade/disciplina usam o tópico vinculado ao registro da sessão.
+        function getStudyActivityStats() {
+            const weekStart=new Date();
+            weekStart.setHours(0,0,0,0);
+            weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
+            const weekEnd=new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate()+7);
+            const emptyCount=()=>({total:0,week:0});
+            const stats={totalStudies:0,weekStudies:0,totalReviews:0,weekReviews:0,byPriority:{},byPriorityDiscipline:{},byDiscipline:{}};
+            const add=(map,key,isWeek)=>{
+                if(!key)return;
+                if(!map[key])map[key]=emptyCount();
+                map[key].total++;
+                if(isWeek)map[key].week++;
+            };
+            const topicsById=new Map(masterEditalData.map(item=>[String(item.id),item]));
+            studySessions.forEach(session=>{
+                const date=parseBRDate(session.date);
+                const timestamp=date.getTime();
+                const isWeek=Number.isFinite(timestamp)&&timestamp>0&&date>=weekStart&&date<weekEnd;
+                if(isRevisionSession(session)){
+                    stats.totalReviews++;
+                    if(isWeek)stats.weekReviews++;
+                    return;
+                }
+                stats.totalStudies++;
+                if(isWeek)stats.weekStudies++;
+                let item=session.itemId?topicsById.get(String(session.itemId)):null;
+                if(!item)item=masterEditalData.find(topic=>sessionMatchesTopic(session,topic));
+                const discipline=String(item?.discipline||session.discipline||'').trim();
+                if(discipline)add(stats.byDiscipline,discipline,isWeek);
+                if(item){
+                    const priority=String(item.priority||'Amarela');
+                    add(stats.byPriority,priority,isWeek);
+                    add(stats.byPriorityDiscipline,priority+'\u0000'+discipline,isWeek);
+                }
+            });
+            return stats;
+        }
+
         function renderRecentRotation() {
             const container=document.getElementById('recent-rotation-container');
             if(!container) return;
             container.innerHTML='';
+            const activityStats=getStudyActivityStats();
+            const recentWeekCount=document.getElementById('recent-study-week-count');
+            const suggestionWeekCount=document.getElementById('next-study-week-count');
+            if(recentWeekCount)recentWeekCount.textContent=`${activityStats.weekStudies} ${activityStats.weekStudies===1?'estudo':'estudos'} na semana`;
+            if(suggestionWeekCount)suggestionWeekCount.textContent=`${activityStats.weekStudies} ${activityStats.weekStudies===1?'estudo':'estudos'} na semana`;
             const sorted=getSessionsNewestFirst().filter(session=>!isRevisionSession(session));
             const recentMap=new Map();
             sorted.forEach(session=>{
@@ -236,6 +282,11 @@
             if(!dueContainer||!recentContainer)return;
             const dueAll=getRevisionQueue();
             const due=dueAll.slice(0,8);
+            const activityStats=getStudyActivityStats();
+            const reviewWeekCount=document.getElementById('recent-review-week-count');
+            const dueWeekCount=document.getElementById('review-due-week-count');
+            if(reviewWeekCount)reviewWeekCount.textContent=`${activityStats.weekReviews} ${activityStats.weekReviews===1?'revisão':'revisões'} na semana`;
+            if(dueWeekCount)dueWeekCount.textContent=`${activityStats.weekReviews} ${activityStats.weekReviews===1?'revisão':'revisões'} na semana`;
             const count=document.getElementById('review-due-count');if(count)count.textContent=`${dueAll.length} ${dueAll.length===1?'pendente':'pendentes'}`;
             if(!dueAll.length){dueContainer.innerHTML='<div class="rounded-xl border border-dashed border-violet-200 dark:border-slate-600 p-4 text-center"><i class="fa-solid fa-check-circle text-2xl text-violet-400"></i><p class="text-xs font-semibold text-violet-800 dark:text-violet-300 mt-2">Nenhuma revisão vencida pela regra atual</p><p class="text-[11px] text-slate-500 mt-1">Registre os estudos e o quadro sugerirá revisões futuras.</p></div>';}
             else {
@@ -249,7 +300,7 @@
                 if(dueAll.length>due.length){const more=document.createElement('p');more.className='text-[10px] text-slate-500 px-1';more.textContent=`Mostrando 8 de ${dueAll.length} revisões pendentes; as demais seguem na fila.`;dueContainer.appendChild(more);}
             }
             const recent=getSessionsNewestFirst().filter(isRevisionSession).slice(0,5);
-            const recentCount=document.getElementById('recent-review-count');if(recentCount)recentCount.textContent=`${recent.length} ${recent.length===1?'registro':'registros'}`;
+            const recentCount=document.getElementById('recent-review-count');if(recentCount)recentCount.textContent=`${activityStats.totalReviews} ${activityStats.totalReviews===1?'registro':'registros'}`;
             if(!recent.length)recentContainer.innerHTML='<div class="rounded-xl border border-dashed border-purple-200 dark:border-slate-600 p-4 text-center"><i class="fa-solid fa-rotate text-2xl text-purple-300"></i><p class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-2">Nenhuma revisão registrada</p><p class="text-[11px] text-slate-500 mt-1">No Registro de Estudos, escolha “Revisão” em Tipo 2.</p></div>';
             else {
                 recentContainer.innerHTML='';
@@ -272,6 +323,9 @@
             const overall=total?Math.round(completed/total*100):0;
             const summary=document.getElementById('home-progress-summary');
             if(summary) summary.textContent=`${overall}% concluído · ${completed}/${total} tópicos`;
+            const activityStats=getStudyActivityStats();
+            const studySummary=document.getElementById('home-study-summary');
+            if(studySummary)studySummary.textContent=`${activityStats.totalStudies} ${activityStats.totalStudies===1?'estudo':'estudos'} no total · ${activityStats.weekStudies} nesta semana`;
             if(!total){container.innerHTML=onboardingHtml();return;}
             const pSettings=getPrioritySettings();
             const priorityOrder=Object.keys(pSettings).sort((a,b)=>(Number(pSettings[b].weight)||1)-(Number(pSettings[a].weight)||1));
@@ -292,16 +346,18 @@
                     const hours=values.reduce((sum,u)=>sum+(Number(u.hours)||0),0);
                     const questions=values.reduce((sum,u)=>sum+(Number(u.questions)||0),0);
                     const reviews=values.reduce((sum,u)=>sum+(Number(u.reviews)||0),0);
+                    const disciplineStudies=activityStats.byPriorityDiscipline[priority+'\u0000'+discipline]||{total:0,week:0};
                     const topicRows=topics.map(t=>{
                         const u=userProgress.find(x=>x.id===t.id)||t;
                         const itemPct=u.completed?100:((Number(u.hours)||0)>0?Math.min(90,Math.round((Number(u.hours)||0)/Math.max(Number(t.hours)||1,1)*50)):0);
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
                         return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${fmtHoras(Number(u.hours)||0)}</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
-                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
+                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-blue-700 dark:text-blue-300 font-bold">${disciplineStudies.total} ${disciplineStudies.total===1?'estudo':'estudos'} · ${disciplineStudies.week} na semana</span><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });
                 const priorityIsOpen=window._openHomePriorities.has(priority);
-                group.innerHTML=`<details class="priority-group" data-priority="${priority}" ${priorityIsOpen?'open':''} ontoggle="if(!window._openHomePriorities)window._openHomePriorities=new Set();this.open?window._openHomePriorities.add(this.dataset.priority):window._openHomePriorities.delete(this.dataset.priority)"><summary class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span><i class="fa-solid fa-chevron-right priority-chevron"></i></summary><div class="p-2.5 space-y-2.5">${inner}</div></details>`;
+                const priorityStudies=activityStats.byPriority[priority]||{total:0,week:0};
+                group.innerHTML=`<details class="priority-group" data-priority="${priority}" ${priorityIsOpen?'open':''} ontoggle="if(!window._openHomePriorities)window._openHomePriorities=new Set();this.open?window._openHomePriorities.add(this.dataset.priority):window._openHomePriorities.delete(this.dataset.priority)"><summary class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span class="priority-group-stats"><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span><small>${priorityStudies.total} ${priorityStudies.total===1?'estudo':'estudos'} · ${priorityStudies.week} nesta semana</small></span><i class="fa-solid fa-chevron-right priority-chevron"></i></summary><div class="p-2.5 space-y-2.5">${inner}</div></details>`;
                 container.appendChild(group);
             });
         }

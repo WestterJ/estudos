@@ -27,6 +27,7 @@
                     userProgress.push(userItem);
                 }
                 userItem.notes = document.getElementById('modal-textarea').value;
+                userItem.notesUpdatedAt = new Date().toISOString();
                 saveData();
                 try{renderRecentRotation();renderPriorityDisciplineProgress();}catch(err){console.warn(err);}
             }

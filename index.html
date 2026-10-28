@@ -182,24 +182,24 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-              <div class="space-y-4 min-w-0">
+            <div class="activity-panels-grid grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+              <div class="activity-panel-column study-column space-y-4 min-w-0">
               <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><span class="activity-count">Recentes</span></div>
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><div class="activity-header-badges"><span class="activity-count">Recentes</span><span id="recent-study-week-count" class="activity-count activity-week-count">0 estudos na semana</span></div></div>
                 <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
               </section>
-              <section class="activity-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-purple-700 dark:text-purple-300"><i class="fa-solid fa-rotate mr-2"></i>Últimas revisões</h3><p class="text-[11px] text-slate-500 mt-1">Revisões ficam separadas da rotação de estudos.</p></div><span id="recent-review-count" class="activity-count">0 registros</span></div>
+              <section class="activity-panel recent-reviews-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-purple-700 dark:text-purple-300"><i class="fa-solid fa-rotate mr-2"></i>Últimas revisões</h3><p class="text-[11px] text-slate-500 mt-1">Revisões ficam separadas da rotação de estudos.</p></div><div class="activity-header-badges"><span id="recent-review-count" class="activity-count">0 registros</span><span id="recent-review-week-count" class="activity-count activity-week-count">0 revisões na semana</span></div></div>
                 <div id="recent-reviews-container" class="space-y-2"></div>
               </section>
               </div>
-              <div class="space-y-4 min-w-0">
+              <div class="activity-panel-column suggestions-column space-y-4 min-w-0">
               <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div>
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><div class="activity-header-badges"><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span><span id="next-study-week-count" class="activity-count activity-week-count">0 estudos na semana</span></div></div>
                 <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
               </section>
-              <section class="activity-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-violet-700 dark:text-violet-300"><i class="fa-solid fa-calendar-check mr-2"></i>Revisões sugeridas</h3><p class="text-[11px] text-slate-500 mt-1">Conteúdos estudados que podem entrar no ciclo de revisão.</p></div><span id="review-due-count" class="activity-count">0 pendentes</span></div>
+              <section class="activity-panel review-due-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-violet-700 dark:text-violet-300"><i class="fa-solid fa-calendar-check mr-2"></i>Revisões sugeridas</h3><p class="text-[11px] text-slate-500 mt-1">Conteúdos estudados que podem entrar no ciclo de revisão.</p></div><div class="activity-header-badges"><span id="review-due-count" class="activity-count">0 pendentes</span><span id="review-due-week-count" class="activity-count activity-week-count">0 revisões na semana</span></div></div>
                 <div id="review-due-container" class="space-y-2"></div>
                 <p class="text-[10px] text-slate-400">Cadência inicial sugerida: 1, 7, 15 e 30 dias após o estudo/revisão. Você poderá ajustar essa regra em uma versão futura.</p>
               </section>
@@ -209,7 +209,7 @@
             <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
               <div class="flex items-start justify-between flex-wrap gap-2">
                 <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada prioridade e disciplina para acompanhar tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
-                <span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span>
+                <div class="flex flex-wrap items-center justify-end gap-2"><span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span><span id="home-study-summary" class="text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 px-3 py-1">0 estudos no total · 0 nesta semana</span></div>
               </div>
               <div id="priority-progress-container" class="space-y-3"></div>
             </section>
