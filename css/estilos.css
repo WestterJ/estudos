@@ -306,3 +306,43 @@
 .contest-delete-btn:focus-visible{outline:2px solid #e11d48;outline-offset:2px}
 .contest-delete-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.5)}
 @media(max-width:480px){.contest-manager-row{align-items:flex-start;padding:10px;gap:8px}.contest-delete-btn{padding:7px 8px}.brand-app-icon{width:35px;height:35px;border-radius:10px}}
+
+/* ===== V10.10: tipografia mais legível e uniforme em desktop e celular ===== */
+/* Evita textos auxiliares e títulos cinza excessivamente pequenos. */
+.cloud-indicator{font-size:12px}
+.sidebar-label{font-size:11px;color:#526176}
+.sidebar-select{font-size:13px}
+.sidebar-foot-btn{font-size:13px}
+.tbl-field.tbl-sub{font-size:12px}
+.sess-table{font-size:13px}
+.sess-table thead th{font-size:11px}
+.sess-act{font-size:12px}
+.activity-count{font-size:11px}
+.priority-group-stats small{font-size:12px}
+.stats-week-label{font-size:12px}
+.stats-kpi-top{font-size:12px}
+.stats-kpi p{font-size:12px;color:#64748b;line-height:1.45}
+.stats-search-wrap input{font-size:13px}
+.study-stats-table thead th{font-size:11px;color:#536278}
+.study-stats-table thead th span{font-size:11px;color:#65748a}
+.study-stats-table tbody td{font-size:12px}
+.study-stats-priority-title{font-size:12px}
+.study-stats-priority-meta{font-size:12px;color:#5f6f84}
+.study-stats-subject-name{font-size:13px;line-height:1.45}
+.study-stats-subject-total{font-size:11px;color:#5f6f84;line-height:1.6}
+.study-stats-subject-total>span:not(.study-stats-general-label) i{font-size:11px}
+.study-stats-general-label{font-size:11px;color:#5f6f84}
+.study-stats-total-row td{font-size:12px}
+.stats-mobile-note{font-size:12px;color:#5f6f84;line-height:1.5}
+.stats-table-foot{font-size:12px;color:#5f6f84}
+.stats-empty-state{font-size:13px;color:#5f6f84}
+.stats-info-note{font-size:12px;color:#425d7a;line-height:1.6}
+.contest-manager-meta{font-size:12px;color:#526176}
+.contest-active-badge{font-size:11px}
+.contest-delete-btn{font-size:12px}
+@media(max-width:760px){
+  .stats-week-label{font-size:12px}
+  .study-stats-subject-total{font-size:11px;gap:5px 8px}
+  .study-stats-table thead th{font-size:11px}
+  .stats-kpi-top{font-size:12px}
+}
