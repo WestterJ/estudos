@@ -1,0 +1,6 @@
+V10.13 — Correção do resumo recolhido das sugestões.
+
+Os cartões internos de “Sugestões para os próximos estudos” voltaram ao formato anterior da V10.11, sem negrito adicional.
+Quando o painel estiver recolhido, apenas o nome da disciplina, a prioridade e o percentual concluído ficam em negrito; a nota da última aula permanece em bloco separado.
+
+Preserve o supabase-config.js já existente no repositório, pois ele não está incluído neste pacote.
