@@ -85,6 +85,8 @@
                 const lastSession = sorted.find(session => session.discipline === discipline);
                 const lastDate = lastSession?.date || '';
                 const lastTrack = lastSession?.studyTrack || (lastSession ? 'Trilha não informada' : '');
+                const lastTopic = lastSession ? (masterEditalData.find(topic => sessionMatchesTopic(lastSession, topic)) || topics.find(topic => topic.topic === lastSession.topic && topic.subtopic === (lastSession.subtopic || '')) || null) : null;
+                const lastNote = lastTopic ? String((userProgress.find(progress => progress.id === lastTopic.id) || {}).notes || '').trim() : '';
                 const lastTimestamp = lastSession ? parseBRDate(lastSession.date).getTime() : 0;
                 const hours = vals.reduce((sum,value) => sum + (Number(value.hours)||0), 0);
                 const questions = vals.reduce((sum,value) => sum + (Number(value.questions)||0), 0);
@@ -92,7 +94,7 @@
                     discipline, topics, done,
                     pct: topics.length ? Math.round(done/topics.length*100) : 0,
                     priority, rank: priorityRank[priority] ?? 99,
-                    pending: pendingTopics.length, hours, questions, lastDate, lastTrack, lastTimestamp
+                    pending: pendingTopics.length, hours, questions, lastDate, lastTrack, lastNote, lastTimestamp
                 };
             }).filter(item => item.pending > 0);
 

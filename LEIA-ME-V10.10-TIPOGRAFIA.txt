@@ -1,4 +1,4 @@
-PLANEJADOR DE ESTUDOS V10.10 — AJUSTE DE LEGIBILIDADE
+PLANEJADOR DE ESTUDOS V10.11 — AJUSTE DE LEGIBILIDADE
 
 Alterações:
 - Aumento de fontes auxiliares, legendas e títulos cinza que estavam pequenos.

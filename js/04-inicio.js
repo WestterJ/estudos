@@ -100,6 +100,7 @@
             const msg=first.querySelector('p'); if(msg) return msg.textContent.trim();
             const texts=[...first.querySelectorAll('div')].filter(d=>!d.firstElementChild&&!d.closest('button')).map(d=>d.textContent.trim()).filter(t=>t&&!/^\d+$/.test(t));
             const picks=(PANEL_SUMMARY_PARTS[container.id]||[0,1]).map(i=>texts[i]).filter(Boolean);
+            if(container.id==='next-study-container'){const note=first.querySelector('.suggestion-last-note');if(note&&note.textContent.trim())picks.push(note.textContent.trim());}
             return picks.join(' · ');
         }
         function initCollapsiblePanels(){
@@ -145,6 +146,11 @@
             return stats;
         }
 
+        function weekdayAbbr(value) {
+            const date=parseBRDate(value);
+            if(!Number.isFinite(date.getTime()) || date.getTime()===0) return '';
+            return ['dom','seg','ter','qua','qui','sex','sáb'][date.getDay()];
+        }
         function renderRecentRotation() {
             const container=document.getElementById('recent-rotation-container');
             if(!container) return;
@@ -169,7 +175,7 @@
                     ?`<div role="button" tabindex="0" data-skip-summary onclick="openModal('${noteId}')" title="Abrir anotações" class="note-clamp mt-1.5 max-w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-left text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(noteText)}</div>`
                     :`<button type="button" onclick="openModal('${noteId}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:underline dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Adicionar anotação</button>`);
                 const questions=Number(session.questions)||0;
-                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
+                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="recent-study-topic text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5" title="${escapeHtml((session.topic||'Estudo registrado')+(session.subtopic?' · '+session.subtopic:''))}">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')}${weekdayAbbr(session.date)?' ('+weekdayAbbr(session.date)+')':''} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
             });
             renderStudySuggestionPanel();
@@ -198,8 +204,9 @@
                 const card = document.createElement('div');
                 card.className = 'next-study-card flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
                 const colorStyle = 'color:' + (getPrioritySettings()[item.priority]?.color || '#64748b');
-                const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
-                card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.pending} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div></div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
+                const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (weekdayAbbr(item.lastDate)?' ('+weekdayAbbr(item.lastDate)+')':'') + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
+                const lastNoteHtml = item.lastNote ? `<div class="suggestion-last-note mt-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" title="Anotação da última aula"><i class="fa-regular fa-note-sticky mr-1"></i><strong>Nota da última aula:</strong> ${escapeHtml(item.lastNote)}</div>` : '';
+                card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.pending} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div>${lastNoteHtml}</div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
                 const button = card.querySelector('button');
                 if (button) button.addEventListener('click', () => openDisciplineInCronograma(item.discipline));
                 container.appendChild(card);

@@ -1,0 +1,12 @@
+PLANEJADOR DE ESTUDOS V10.11 — AJUSTES DE INTERFACE
+
+Alterações:
+- Corrigida a versão apresentada para V10.11.
+- Favicon com fundo azul escuro e livro branco, consistente com a identidade visual.
+- Cartões Sugestões para os próximos estudos exibem a anotação da última aula quando disponível.
+- O resumo do cartão de sugestões recolhido inclui a nota da última aula.
+- Últimos estudos mostram o dia da semana abreviado após a data (ex.: 28/10/2026 (qua)).
+- Texto longo de tópico/subtópico nos cartões Últimos estudos fica disponível ao passar o mouse (title/tooltip).
+- Tipografia uniformizada e ampliada em Cronograma, Prioridades e Edital Verticalizado, seguindo a escala aprovada em Estatísticas.
+
+Publicação: substitua os arquivos mantendo seus caminhos no repositório. Preserve o supabase-config.js já existente, pois ele não faz parte deste pacote.

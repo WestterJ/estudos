@@ -1,4 +1,4 @@
-PLANEJADOR DE ESTUDOS V10.9 — ESTATÍSTICAS, GERENCIAMENTO DE CONCURSOS E IDENTIDADE VISUAL
+PLANEJADOR DE ESTUDOS V10.11 — ESTATÍSTICAS, GERENCIAMENTO DE CONCURSOS E IDENTIDADE VISUAL
 
 Este pacote contém o código completo que estava disponível nos pacotes-fonte fornecidos, integrado à nova tela Estatísticas.
 
@@ -7,7 +7,7 @@ Principais alterações:
 - Busca de disciplina e totalizadores semanais dinâmicos conforme os resultados filtrados.
 - Remoção da informação agregada de estudos dos cabeçalhos de prioridade e dos cartões “Últimos estudos” e “Sugestões para os próximos estudos”.
 - Preservadas as alterações anteriores relativas ao layout responsivo e à resolução de conflitos de anotações.
-- Versão atualizada para V10.9 e cache PWA renovado.
+- Versão atualizada para V10.11 e cache PWA renovado.
 - Gerenciamento de concursos em Personalização → Gerenciar concursos, com confirmação, bloqueio para exclusão do último concurso e tombstone sincronizado para evitar restauração acidental pela nuvem.
 - Marca visual com fundo azul e ícone branco, favicon, título do navegador com símbolo e ícones PWA em PNG/SVG.
 - Manifesto PWA incluído neste pacote.
@@ -25,7 +25,7 @@ Estatísticas:
 - Os totais de estudos e revisões são contagens distintas; horas e questões incluem as sessões de revisão. Os indicadores da semana são calculados a partir das sessões datadas.
 
 
-Versão do código: V10.9.
+Versão do código: V10.11.
 
 Onde excluir concursos:
 1. Abra o menu Personalização.
