@@ -12,6 +12,74 @@
         return { start, end };
     }
 
+    // Semana selecionada na tela. Por padrão, começa na semana atual (segunda-feira).
+    let selectedWeekStart = statsWeekBounds(new Date()).start;
+
+    function statsDateKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function statsDateFromKey(value) {
+        const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return null;
+        const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        return Number.isFinite(date.getTime()) ? date : null;
+    }
+
+    function statsParseSessionDate(session) {
+        const value = session && session.date;
+        return typeof parseBRDate === 'function' ? parseBRDate(value) : new Date(value);
+    }
+
+    function statsWeekRangeLabel(weekStart) {
+        const bounds = statsWeekBounds(weekStart);
+        const lastDay = new Date(bounds.end.getTime() - 86400000);
+        const startLabel = bounds.start.getFullYear() === lastDay.getFullYear()
+            ? statsFormatDate(bounds.start)
+            : bounds.start.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        return `${startLabel} – ${lastDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    }
+
+    function initializeStatisticsWeekPicker() {
+        const picker = document.getElementById('statistics-week-picker');
+        if (!picker) return;
+        const sessions = Array.isArray(studySessions) ? studySessions : [];
+        const validDates = sessions.map(statsParseSessionDate).filter(date => date && Number.isFinite(date.getTime()) && date.getTime() > 0);
+        const currentStart = statsWeekBounds(new Date()).start;
+        let firstStart = currentStart;
+        if (validDates.length) {
+            const earliest = validDates.reduce((min, date) => date < min ? date : min, validDates[0]);
+            firstStart = statsWeekBounds(earliest).start;
+            if (firstStart > currentStart) firstStart = currentStart;
+        }
+
+        const weeks = [];
+        for (let cursor = new Date(firstStart); cursor <= currentStart; cursor.setDate(cursor.getDate() + 7)) {
+            weeks.push(new Date(cursor));
+        }
+        // Mantém disponível uma semana selecionada fora do intervalo calculado, por segurança.
+        if (!weeks.some(week => statsDateKey(week) === statsDateKey(selectedWeekStart))) weeks.push(new Date(selectedWeekStart));
+        weeks.sort((a, b) => b - a);
+        picker.innerHTML = weeks.map(week => {
+            const key = statsDateKey(week);
+            const current = key === statsDateKey(currentStart);
+            const label = `${statsWeekRangeLabel(week)}${current ? ' (semana atual)' : ''}`;
+            return `<option value="${key}">${escapeHtml(label)}</option>`;
+        }).join('');
+        picker.value = statsDateKey(selectedWeekStart);
+        if (!picker.value) {
+            selectedWeekStart = new Date(currentStart);
+            picker.value = statsDateKey(selectedWeekStart);
+        }
+    }
+
+    function changeStatisticsWeek(value) {
+        const date = statsDateFromKey(value);
+        if (!date) return;
+        selectedWeekStart = statsWeekBounds(date).start;
+        renderStudyStatistics();
+    }
+
     function statsFormatMinutes(minutes, compact = false) {
         const total = Math.max(0, Math.round(Number(minutes) || 0));
         const hours = Math.floor(total / 60);
@@ -57,7 +125,7 @@
         }
     }
 
-    function buildStatisticsModel() {
+    function buildStatisticsModel(weekStart = selectedWeekStart) {
         const pSettings = typeof getPrioritySettings === 'function' ? getPrioritySettings() : {
             Vermelha: { label: 'Alta', color: '#dc2626', weight: 3 },
             Amarela: { label: 'Média', color: '#d97706', weight: 2 },
@@ -68,7 +136,7 @@
         const topics = Array.isArray(masterEditalData) ? masterEditalData : [];
         const sessions = Array.isArray(studySessions) ? studySessions : [];
         const progressEntries = Array.isArray(userProgress) ? userProgress : [];
-        const week = statsWeekBounds();
+        const week = statsWeekBounds(weekStart);
         const byDiscipline = new Map();
         const topicById = new Map(topics.map(topic => [String(topic.id), topic]));
         const progressById = new Map(progressEntries.filter(item => item && item.id != null).map(item => [String(item.id), item]));
@@ -135,7 +203,7 @@
             }
             const discipline = String(topic?.discipline || session.discipline || 'Sem disciplina').trim() || 'Sem disciplina';
             const target = getOrCreateDiscipline(discipline, topic?.priority ? String(topic.priority) : null);
-            const sessionDate = typeof parseBRDate === 'function' ? parseBRDate(session.date) : new Date(session.date);
+            const sessionDate = statsParseSessionDate(session);
             const isWeek = Number.isFinite(sessionDate.getTime()) && sessionDate.getTime() > 0 && sessionDate >= week.start && sessionDate < week.end;
             statsAddSession(target, session, isWeek);
         });
@@ -206,7 +274,8 @@
     function renderStudyStatistics() {
         const root = document.getElementById('content-estatisticas');
         if (!root) return;
-        const model = buildStatisticsModel();
+        initializeStatisticsWeekPicker();
+        const model = buildStatisticsModel(selectedWeekStart);
         const { general, groups, week } = model;
 
         const setText = (id, value) => {
@@ -222,11 +291,6 @@
         setText('statistics-week-studies', String(general.weekStudies));
         setText('statistics-week-reviews', String(general.weekReviews));
         setText('statistics-week-questions', String(general.weekQuestions));
-        const weekLastDay = new Date(week.end.getTime() - 86400000);
-        const startLabel = week.start.getFullYear() === weekLastDay.getFullYear()
-            ? statsFormatDate(week.start)
-            : week.start.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        setText('statistics-week-range', `Semana atual: ${startLabel} – ${weekLastDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`);
 
         const body = document.getElementById('statistics-table-body');
         if (!body) return;
@@ -290,4 +354,5 @@
     // Exposição intencional de duas funções para a navegação e o campo de busca do HTML.
     window.renderStudyStatistics = renderStudyStatistics;
     window.filterStudyStatistics = filterStudyStatistics;
+    window.changeStatisticsWeek = changeStatisticsWeek;
 })();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.19</title>
+    <title>Planejador de Estudos | Concursos — V10.20</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -440,9 +440,9 @@
             <div>
               <p class="text-[10px] uppercase tracking-[.12em] font-extrabold text-blue-600 dark:text-blue-300 mb-1">Acompanhamento de desempenho</p>
               <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">Estatísticas de estudo</h2>
-              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-2xl">Disciplinas agrupadas por prioridade. Os subtítulos mostram os totais gerais e as colunas apresentam somente os resultados da semana atual.</p>
+              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-2xl">Disciplinas agrupadas por prioridade. Os subtítulos mostram os totais gerais e as colunas acompanham a semana selecionada.</p>
             </div>
-            <div class="stats-week-label"><i class="fa-regular fa-calendar mr-2"></i><span id="statistics-week-range">Semana atual</span></div>
+            <div class="stats-week-label"><i class="fa-regular fa-calendar" aria-hidden="true"></i><label for="statistics-week-picker" class="stats-week-picker-label">Semana:</label><select id="statistics-week-picker" class="stats-week-picker" aria-label="Selecionar semana das estatísticas" onchange="changeStatisticsWeek(this.value)"><option value="">Carregando semanas…</option></select></div>
           </div>
 
           <section class="stats-kpi-section" aria-labelledby="statistics-general-heading">
@@ -456,18 +456,18 @@
           </section>
 
           <section class="stats-kpi-section" aria-labelledby="statistics-week-heading">
-            <div class="stats-kpi-section-head"><h3 id="statistics-week-heading" class="stats-kpi-section-title">Desempenho desta semana</h3><p>De segunda-feira a domingo</p></div>
+            <div class="stats-kpi-section-head"><h3 id="statistics-week-heading" class="stats-kpi-section-title">Desempenho da semana selecionada</h3><p>De segunda-feira a domingo</p></div>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid stats-weekly-kpi-grid">
-              <section class="stats-kpi stats-kpi-hours stats-kpi-week"><div class="stats-kpi-top"><span>Horas na semana</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-week-hours" class="stats-kpi-value">0h 00m</div><p>Tempo registrado nesta semana</p></section>
-              <section class="stats-kpi stats-kpi-studies stats-kpi-week"><div class="stats-kpi-top"><span>Estudos na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-week-studies" class="stats-kpi-value">0</div><p>Sessões de estudo na semana</p></section>
-              <section class="stats-kpi stats-kpi-reviews stats-kpi-week"><div class="stats-kpi-top"><span>Revisões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-week-reviews" class="stats-kpi-value">0</div><p>Revisões registradas na semana</p></section>
-              <section class="stats-kpi stats-kpi-questions stats-kpi-week"><div class="stats-kpi-top"><span>Questões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-week-questions" class="stats-kpi-value">0</div><p>Questões respondidas na semana</p></section>
+              <section class="stats-kpi stats-kpi-hours stats-kpi-week"><div class="stats-kpi-top"><span>Horas na semana</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-week-hours" class="stats-kpi-value">0h 00m</div><p>Tempo registrado na semana selecionada</p></section>
+              <section class="stats-kpi stats-kpi-studies stats-kpi-week"><div class="stats-kpi-top"><span>Estudos na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-week-studies" class="stats-kpi-value">0</div><p>Sessões de estudo na semana selecionada</p></section>
+              <section class="stats-kpi stats-kpi-reviews stats-kpi-week"><div class="stats-kpi-top"><span>Revisões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-week-reviews" class="stats-kpi-value">0</div><p>Revisões registradas na semana selecionada</p></section>
+              <section class="stats-kpi stats-kpi-questions stats-kpi-week"><div class="stats-kpi-top"><span>Questões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-week-questions" class="stats-kpi-value">0</div><p>Questões respondidas na semana selecionada</p></section>
             </div>
           </section>
 
           <section class="app-card stats-table-card overflow-hidden">
             <div class="stats-table-toolbar flex items-center justify-between gap-3 flex-wrap p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700">
-              <div><h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Detalhamento por prioridade e disciplina</h3><p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">O subtítulo de cada disciplina reúne os acumulados gerais. As colunas mostram apenas a semana atual.</p></div>
+              <div><h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Detalhamento por prioridade e disciplina</h3><p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">O subtítulo de cada disciplina reúne os acumulados gerais. As colunas mostram apenas a semana selecionada.</p></div>
               <label class="stats-search-wrap"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="statistics-discipline-search" type="search" value="" oninput="filterStudyStatistics(this.value)" placeholder="Buscar disciplina..." aria-label="Buscar disciplina"></label>
             </div>
             <p class="stats-mobile-note">Deslize a tabela horizontalmente para consultar horas, estudos, revisões e questões da semana.</p>
@@ -481,7 +481,7 @@
             <div id="statistics-empty-state" class="stats-empty-state" hidden><i class="fa-solid fa-magnifying-glass mb-2"></i><p class="font-bold">Nenhuma disciplina encontrada</p><p class="mt-1">Tente outro termo de busca ou cadastre disciplinas no edital.</p></div>
             <div class="stats-table-foot"><span>Exibindo <strong id="statistics-visible-count">0 disciplinas em 0 prioridades</strong></span><span class="hidden sm:inline">Totais gerais aparecem no subtítulo de cada disciplina.</span></div>
           </section>
-          <div class="stats-info-note"><i class="fa-solid fa-circle-info mt-0.5"></i><p>Os acumulados gerais consolidam os valores do progresso e do histórico. Cada disciplina aparece uma vez, no grupo de sua prioridade mais alta; os números semanais vêm das sessões datadas, considerando segunda-feira a domingo.</p></div>
+          <div class="stats-info-note"><i class="fa-solid fa-circle-info mt-0.5"></i><p>Os acumulados gerais consolidam os valores do progresso e do histórico. Cada disciplina aparece uma vez, no grupo de sua prioridade mais alta; os números da semana selecionada vêm das sessões datadas, considerando segunda-feira a domingo.</p></div>
         </div>
 
         <div id="content-personalizacao" class="tab-content hidden flex-1 flex flex-col space-y-5">

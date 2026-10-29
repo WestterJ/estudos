@@ -1,0 +1,13 @@
+PLANEJADOR DE ESTUDOS V10.20 — CARTÕES DE ESTATÍSTICAS SEMANAIS
+
+Alterações desta versão:
+- A tela Estatísticas agora tem uma seção de acumulado geral e uma seção de desempenho da semana.
+- A nova seção semanal apresenta quatro cartões: horas, estudos, revisões e questões na semana selecionada.
+- Os cartões semanais são calculados a partir das sessões registradas de segunda-feira a domingo.
+- Mantido o detalhamento por prioridade e disciplina, com colunas semanais e subtotais filtráveis na tabela.
+- Atualizado o cache do PWA para carregar os novos cartões.
+
+Ao publicar, preserve o supabase-config.js já existente no repositório caso ele não esteja incluído neste pacote.
+
+
+V10.20: adiciona seletor de semana na tela Estatísticas. A escolha atualiza os quatro cartões semanais e as colunas semanais por disciplina; o acumulado geral permanece inalterado.

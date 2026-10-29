@@ -93,3 +93,7 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 - A exclusão registra marcas globais (`tce_deleted_contests`) que são sincronizadas com o Supabase para impedir que dados antigos de outro dispositivo recuperem concursos removidos.
 - O aplicativo mantém pelo menos um concurso; ao excluir o ativo, seleciona outro automaticamente.
 - Ícone do app azul com símbolo branco, favicon e ícones PWA atualizados.
+
+
+## V10.20 — Seletor de semana em Estatísticas
+A tela Estatísticas permite selecionar uma semana a partir do seletor no cabeçalho. Os KPIs semanais, as colunas por disciplina e os totalizadores da tabela usam a semana selecionada; os acumulados gerais não mudam. As semanas disponíveis vão da semana do registro mais antigo até a semana atual.
