@@ -1,0 +1,21 @@
+PLANEJADOR DE ESTUDOS V10.12 — AJUSTES DE INTERFACE
+
+Alterações:
+- Corrigida a versão apresentada para V10.12.
+- Favicon com fundo azul escuro e livro branco, consistente com a identidade visual.
+- Cartões Sugestões para os próximos estudos exibem a anotação da última aula quando disponível.
+- O resumo do cartão de sugestões recolhido inclui a nota da última aula.
+- Últimos estudos mostram o dia da semana abreviado após a data (ex.: 28/10/2026 (qua)).
+- Texto longo de tópico/subtópico nos cartões Últimos estudos fica disponível ao passar o mouse (title/tooltip).
+- Tipografia uniformizada e ampliada em Cronograma, Prioridades e Edital Verticalizado, seguindo a escala aprovada em Estatísticas.
+
+Publicação: substitua os arquivos mantendo seus caminhos no repositório. Preserve o supabase-config.js já existente, pois ele não faz parte deste pacote.
+
+
+Correção complementar da nota (V10.12):
+- A sugestão usa somente a anotação do tópico ligado à sessão mais recente da disciplina, sem agregar notas de outras aulas.
+- O rótulo 'Nota da última aula' fica em uma linha própria e o conteúdo da anotação aparece abaixo, com quebras de linha preservadas.
+- Cache do PWA atualizado para carregar os arquivos corrigidos.
+
+
+V10.12: destaque em negrito para nome da disciplina, prioridade e percentual concluído; resumo recolhido apresenta a nota em bloco separado.
