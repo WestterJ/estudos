@@ -271,6 +271,154 @@
         </tr>`;
     }
 
+
+    const STATS_CHART_COLORS = ['#2f80ed', '#23b26d', '#ff9f43', '#8b5cf6', '#e85d75', '#0891b2', '#d3a51e'];
+
+    function statsShortWeekLabel(weekStart) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        return { start: statsFormatDate(weekStart), end: statsFormatDate(weekEnd), title: statsWeekRangeLabel(weekStart) };
+    }
+
+    function statsBuildWeeklySeries(weekStart, count = 9) {
+        const sessions = Array.isArray(studySessions) ? studySessions : [];
+        const end = statsWeekBounds(weekStart).start;
+        const first = new Date(end);
+        first.setDate(first.getDate() - 7 * (count - 1));
+        const weeks = [];
+        for (let i = 0; i < count; i++) {
+            const start = new Date(first);
+            start.setDate(start.getDate() + i * 7);
+            const next = new Date(start);
+            next.setDate(next.getDate() + 7);
+            const label = statsShortWeekLabel(start);
+            weeks.push({ start, next, dateKey: statsDateKey(start), label: label.start, endLabel: label.end, title: label.title, studies: 0, reviews: 0, questions: 0, minutes: 0 });
+        }
+        const byKey = new Map(weeks.map(week => [week.dateKey, week]));
+        sessions.forEach(session => {
+            const date = statsParseSessionDate(session);
+            if (!date || !Number.isFinite(date.getTime()) || date.getTime() <= 0) return;
+            const weekKey = statsDateKey(statsWeekBounds(date).start);
+            const week = byKey.get(weekKey);
+            if (!week) return;
+            const isReview = typeof isRevisionSession === 'function'
+                ? isRevisionSession(session)
+                : (session.type2 === 'Revisão' || Number(session.isReview) === 1);
+            if (isReview) week.reviews++;
+            else week.studies++;
+            week.minutes += Math.max(0, Number(session.minutes) || 0);
+            week.questions += Math.max(0, Number(session.questions) || 0);
+        });
+        return weeks;
+    }
+
+    function statsChartEmpty(message = 'Sem registros para exibir neste período.') {
+        return `<div class="stats-chart-empty"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>${escapeHtml(message)}</span></div>`;
+    }
+
+    function statsBarChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Valores') {
+        if (!items.length || !items.some(item => (Number(item[valueKey]) || 0) > 0)) return statsChartEmpty();
+        const max = Math.max(1, ...items.map(item => Number(item[valueKey]) || 0));
+        const columns = items.map(item => {
+            const value = Math.max(0, Number(item[valueKey]) || 0);
+            const height = value ? Math.max(3, value / max * 100) : 0;
+            const name = item.title || item.label || '';
+            return `<div class="stats-bar-column" title="${escapeHtml(name)}: ${escapeHtml(valueFormatter(value))}" aria-label="${escapeHtml(name)}: ${escapeHtml(valueFormatter(value))}">
+                <span class="stats-bar-value" style="--bar-height:${height}%">${escapeHtml(valueFormatter(value))}</span>
+                <div class="stats-bar-track"><span class="stats-bar-fill" style="--bar-height:${height}%;--bar-color:${color}"></span></div>
+                <span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span>
+            </div>`;
+        }).join('');
+        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-bar-plot" style="--stats-bar-count:${items.length}">${columns}</div></div>`;
+    }
+
+    function statsLineChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Evolução semanal') {
+        if (!items.length || !items.some(item => (Number(item[valueKey]) || 0) > 0)) return statsChartEmpty();
+        const width = 640, height = 230, left = 42, right = 16, top = 26, bottom = 48;
+        const plotWidth = width - left - right, plotHeight = height - top - bottom;
+        const values = items.map(item => Math.max(0, Number(item[valueKey]) || 0));
+        const maxValue = Math.max(1, ...values);
+        const tickStep = maxValue <= 4 ? 1 : Math.ceil(maxValue / 4);
+        const axisMax = Math.max(tickStep, Math.ceil(maxValue / tickStep) * tickStep);
+        const x = index => left + (items.length === 1 ? plotWidth / 2 : index * plotWidth / (items.length - 1));
+        const y = value => top + plotHeight - (value / axisMax) * plotHeight;
+        let grid = '';
+        for (let tick = 0; tick <= axisMax; tick += tickStep) {
+            const yy = y(tick);
+            grid += `<line x1="${left}" y1="${yy}" x2="${width-right}" y2="${yy}" class="stats-svg-grid"/><text x="${left-9}" y="${yy+4}" text-anchor="end" class="stats-svg-axis-label">${escapeHtml(valueFormatter(tick))}</text>`;
+        }
+        const points = values.map((value, index) => `${x(index)},${y(value)}`).join(' ');
+        const areaPoints = `${x(0)},${top+plotHeight} ${points} ${x(items.length-1)},${top+plotHeight}`;
+        const dots = items.map((item, index) => {
+            const value = values[index];
+            return `<g><title>${escapeHtml(item.title || item.label)}: ${escapeHtml(valueFormatter(value))}</title><circle cx="${x(index)}" cy="${y(value)}" r="4.1" fill="${color}" stroke="#fff" stroke-width="1.5"/><text x="${x(index)}" y="${Math.max(14,y(value)-9)}" text-anchor="middle" class="stats-svg-value-label">${escapeHtml(valueFormatter(value))}</text><text x="${x(index)}" y="${height-25}" text-anchor="middle" class="stats-svg-axis-label">${escapeHtml(item.label || '')}</text></g>`;
+        }).join('');
+        return `<div class="stats-line-chart-wrap"><svg class="stats-line-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)}" preserveAspectRatio="xMidYMid meet">${grid}<polygon points="${areaPoints}" fill="${color}" opacity=".10"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg></div>`;
+    }
+
+    function statsGroupedBarChartHtml(items, keys, label = 'Comparação semanal') {
+        if (!items.length || !items.some(item => keys.some(key => (Number(item[key.key]) || 0) > 0))) return statsChartEmpty();
+        const max = Math.max(1, ...items.flatMap(item => keys.map(key => Number(item[key.key]) || 0)));
+        const groups = items.map(item => {
+            const bars = keys.map(key => {
+                const value = Math.max(0, Number(item[key.key]) || 0);
+                const height = value ? Math.max(3, value / max * 100) : 0;
+                return `<span class="stats-grouped-bar" title="${escapeHtml(key.label)}: ${value}" style="height:${height}%;background:${key.color}"></span>`;
+            }).join('');
+            const values = keys.map(key => `<small style="color:${key.color}">${Number(item[key.key]) || 0}</small>`).join('');
+            return `<div class="stats-grouped-column" title="${escapeHtml(item.title || item.label)}"><div class="stats-grouped-values">${values}</div><div class="stats-grouped-track">${bars}</div><span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span></div>`;
+        }).join('');
+        return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length}">${groups}</div></div>`;
+    }
+
+    function statsDonutChartHtml(items) {
+        const sorted = items.filter(item => item.weekMinutes > 0).sort((a, b) => b.weekMinutes - a.weekMinutes);
+        const total = sorted.reduce((sum, item) => sum + item.weekMinutes, 0);
+        if (!total) return statsChartEmpty('Nenhuma hora registrada na semana selecionada.');
+        const top = sorted.slice(0, 5);
+        if (sorted.length > 5) top.push({ discipline: 'Outras disciplinas', weekMinutes: sorted.slice(5).reduce((sum, item) => sum + item.weekMinutes, 0) });
+        let current = 0;
+        const segments = top.map((item, index) => {
+            const start = current;
+            current += item.weekMinutes / total * 100;
+            return `${STATS_CHART_COLORS[index % STATS_CHART_COLORS.length]} ${start.toFixed(2)}% ${current.toFixed(2)}%`;
+        });
+        const legend = top.map((item, index) => {
+            const pct = Math.round(item.weekMinutes / total * 100);
+            return `<div class="stats-donut-legend-item"><i style="background:${STATS_CHART_COLORS[index % STATS_CHART_COLORS.length]}"></i><div><strong>${escapeHtml(item.discipline)}</strong><span>${statsFormatMinutes(item.weekMinutes, true)} (${pct}%)</span></div></div>`;
+        }).join('');
+        return `<div class="stats-donut-layout"><div class="stats-donut" role="img" aria-label="Distribuição de ${escapeHtml(statsFormatMinutes(total,true))} por disciplina" style="background:conic-gradient(${segments.join(',')})"><div class="stats-donut-center"><strong>${statsFormatMinutes(total,true)}</strong><span>total</span></div></div><div class="stats-donut-legend">${legend}</div></div>`;
+    }
+
+    function renderStatisticsCharts(weekStart, groups) {
+        const root = document.getElementById('statistics-charts');
+        if (!root) return;
+        const weeks = statsBuildWeeklySeries(weekStart, 9);
+        const selectedLabel = statsWeekRangeLabel(weekStart);
+        const selectedWeekLabel = document.getElementById('statistics-charts-selected-week');
+        if (selectedWeekLabel) selectedWeekLabel.textContent = selectedLabel;
+        const priorityItems = groups.map(group => ({
+            label: group.label.replace(/^Prioridade\s*/i, ''),
+            title: group.label,
+            studies: group.items.reduce((sum, item) => sum + item.weekStudies, 0),
+            color: group.color
+        })).filter(item => item.studies > 0);
+        const selectedWeek = statsWeekBounds(weekStart);
+        const subjectMinutes = groups.flatMap(group => group.items.map(item => ({ ...item, priorityLabel: group.label, priorityColor: group.color }))).filter(item => item.weekMinutes > 0);
+        const chartContent = {
+            'statistics-chart-studies-weekly': statsBarChartHtml(weeks, 'studies', '#4f91f4', value => String(value), 'Quantidade de sessões de estudo por semana'),
+            'statistics-chart-hours-weekly': statsLineChartHtml(weeks, 'minutes', '#159669', value => statsFormatMinutes(value, true), 'Horas de estudo por semana'),
+            'statistics-chart-hours-discipline': statsDonutChartHtml(subjectMinutes),
+            'statistics-chart-studies-priority': statsBarChartHtml(priorityItems, 'studies', '#ef5b61', value => String(value), 'Estudos por prioridade na semana selecionada'),
+            'statistics-chart-comparison': statsGroupedBarChartHtml(weeks, [{ key: 'studies', label: 'Estudos', color: '#3b82f6' }, { key: 'reviews', label: 'Revisões', color: '#8b5cf6' }], 'Comparação semanal de estudos e revisões'),
+            'statistics-chart-questions-weekly': statsBarChartHtml(weeks, 'questions', '#f9a64a', value => String(value), 'Questões respondidas por semana')
+        };
+        Object.entries(chartContent).forEach(([id, html]) => {
+            const target = document.getElementById(id);
+            if (target) target.innerHTML = html;
+        });
+    }
+
     function renderStudyStatistics() {
         const root = document.getElementById('content-estatisticas');
         if (!root) return;
@@ -291,6 +439,7 @@
         setText('statistics-week-studies', String(general.weekStudies));
         setText('statistics-week-reviews', String(general.weekReviews));
         setText('statistics-week-questions', String(general.weekQuestions));
+        renderStatisticsCharts(week.start, groups);
 
         const body = document.getElementById('statistics-table-body');
         if (!body) return;

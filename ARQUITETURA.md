@@ -97,3 +97,8 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 
 ## V10.20 — Seletor de semana em Estatísticas
 A tela Estatísticas permite selecionar uma semana a partir do seletor no cabeçalho. Os KPIs semanais, as colunas por disciplina e os totalizadores da tabela usam a semana selecionada; os acumulados gerais não mudam. As semanas disponíveis vão da semana do registro mais antigo até a semana atual.
+
+
+## V10.21 — Gráficos de Estatísticas
+
+Adiciona seis visualizações construídas localmente (sem bibliotecas externas): evolução de sessões de estudo por semana, horas de estudo por semana, distribuição de horas por disciplina na semana selecionada, estudos por prioridade, comparação semanal entre estudos e revisões e questões respondidas por semana. Os gráficos são calculados a partir de `studySessions`; os gráficos da semana selecionada respondem ao seletor de semana já existente. A renderização é responsiva e mantém suporte offline.

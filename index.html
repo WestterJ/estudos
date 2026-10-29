@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.20</title>
+    <title>Planejador de Estudos | Concursos — V10.21</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -462,6 +462,18 @@
               <section class="stats-kpi stats-kpi-studies stats-kpi-week"><div class="stats-kpi-top"><span>Estudos na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-week-studies" class="stats-kpi-value">0</div><p>Sessões de estudo na semana selecionada</p></section>
               <section class="stats-kpi stats-kpi-reviews stats-kpi-week"><div class="stats-kpi-top"><span>Revisões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-week-reviews" class="stats-kpi-value">0</div><p>Revisões registradas na semana selecionada</p></section>
               <section class="stats-kpi stats-kpi-questions stats-kpi-week"><div class="stats-kpi-top"><span>Questões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-week-questions" class="stats-kpi-value">0</div><p>Questões respondidas na semana selecionada</p></section>
+            </div>
+          </section>
+
+          <section class="stats-charts-section" aria-labelledby="statistics-charts-heading">
+            <div class="stats-charts-section-head"><div><h3 id="statistics-charts-heading" class="stats-kpi-section-title">Evolução e distribuição dos estudos</h3><p>Histórico semanal e composição dos resultados da semana selecionada: <strong id="statistics-charts-selected-week">—</strong>.</p></div><span class="stats-chart-period-note">Gráficos baseados nos registros de sessões</span></div>
+            <div id="statistics-charts" class="stats-charts-grid">
+              <section class="stats-chart-card"><header><h4>Evolução de estudos por semana</h4><p>Quantidade de sessões registradas</p></header><div id="statistics-chart-studies-weekly" class="stats-chart-content"></div></section>
+              <section class="stats-chart-card"><header><h4>Horas de estudo por semana</h4><p>Tempo de estudo registrado em cada semana</p></header><div id="statistics-chart-hours-weekly" class="stats-chart-content"></div></section>
+              <section class="stats-chart-card"><header><h4>Distribuição das horas na semana</h4><p>Tempo por disciplina na semana selecionada</p></header><div id="statistics-chart-hours-discipline" class="stats-chart-content"></div></section>
+              <section class="stats-chart-card"><header><h4>Estudos por prioridade</h4><p>Distribuição das sessões da semana selecionada</p></header><div id="statistics-chart-studies-priority" class="stats-chart-content"></div></section>
+              <section class="stats-chart-card"><header><h4>Comparativo semanal</h4><p>Quantidade de estudos e revisões nas semanas recentes</p></header><div id="statistics-chart-comparison" class="stats-chart-content"></div></section>
+              <section class="stats-chart-card"><header><h4>Questões respondidas por semana</h4><p>Quantidade registrada em cada semana</p></header><div id="statistics-chart-questions-weekly" class="stats-chart-content"></div></section>
             </div>
           </section>
 
