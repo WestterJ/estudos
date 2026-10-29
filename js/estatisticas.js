@@ -217,6 +217,11 @@
         setText('statistics-total-studies', String(general.totalStudies));
         setText('statistics-total-reviews', String(general.totalReviews));
         setText('statistics-total-questions', String(general.totalQuestions));
+        // Cartões de desempenho semanal: valores baseados apenas nas sessões datadas da semana atual.
+        setText('statistics-week-hours', statsFormatMinutes(general.weekMinutes, true));
+        setText('statistics-week-studies', String(general.weekStudies));
+        setText('statistics-week-reviews', String(general.weekReviews));
+        setText('statistics-week-questions', String(general.weekQuestions));
         const weekLastDay = new Date(week.end.getTime() - 86400000);
         const startLabel = week.start.getFullYear() === weekLastDay.getFullYear()
             ? statsFormatDate(week.start)

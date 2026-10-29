@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador de Estudos | Concursos — V10.18</title>
+    <title>Planejador de Estudos | Concursos — V10.19</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -445,12 +445,25 @@
             <div class="stats-week-label"><i class="fa-regular fa-calendar mr-2"></i><span id="statistics-week-range">Semana atual</span></div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid">
-            <section class="stats-kpi stats-kpi-hours"><div class="stats-kpi-top"><span>Total de horas</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-total-hours" class="stats-kpi-value">0h 00m</div><p>Acumulado geral</p></section>
-            <section class="stats-kpi stats-kpi-studies"><div class="stats-kpi-top"><span>Total de estudos</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-total-studies" class="stats-kpi-value">0</div><p>Sessões de estudo registradas</p></section>
-            <section class="stats-kpi stats-kpi-reviews"><div class="stats-kpi-top"><span>Total de revisões</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-total-reviews" class="stats-kpi-value">0</div><p>Revisões registradas</p></section>
-            <section class="stats-kpi stats-kpi-questions"><div class="stats-kpi-top"><span>Total de questões</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-total-questions" class="stats-kpi-value">0</div><p>Questões respondidas</p></section>
-          </div>
+          <section class="stats-kpi-section" aria-labelledby="statistics-general-heading">
+            <h3 id="statistics-general-heading" class="stats-kpi-section-title">Acumulado geral</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid">
+              <section class="stats-kpi stats-kpi-hours"><div class="stats-kpi-top"><span>Total de horas</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-total-hours" class="stats-kpi-value">0h 00m</div><p>Acumulado geral</p></section>
+              <section class="stats-kpi stats-kpi-studies"><div class="stats-kpi-top"><span>Total de estudos</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-total-studies" class="stats-kpi-value">0</div><p>Sessões de estudo registradas</p></section>
+              <section class="stats-kpi stats-kpi-reviews"><div class="stats-kpi-top"><span>Total de revisões</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-total-reviews" class="stats-kpi-value">0</div><p>Revisões registradas</p></section>
+              <section class="stats-kpi stats-kpi-questions"><div class="stats-kpi-top"><span>Total de questões</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-total-questions" class="stats-kpi-value">0</div><p>Questões respondidas</p></section>
+            </div>
+          </section>
+
+          <section class="stats-kpi-section" aria-labelledby="statistics-week-heading">
+            <div class="stats-kpi-section-head"><h3 id="statistics-week-heading" class="stats-kpi-section-title">Desempenho desta semana</h3><p>De segunda-feira a domingo</p></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid stats-weekly-kpi-grid">
+              <section class="stats-kpi stats-kpi-hours stats-kpi-week"><div class="stats-kpi-top"><span>Horas na semana</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-week-hours" class="stats-kpi-value">0h 00m</div><p>Tempo registrado nesta semana</p></section>
+              <section class="stats-kpi stats-kpi-studies stats-kpi-week"><div class="stats-kpi-top"><span>Estudos na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-week-studies" class="stats-kpi-value">0</div><p>Sessões de estudo na semana</p></section>
+              <section class="stats-kpi stats-kpi-reviews stats-kpi-week"><div class="stats-kpi-top"><span>Revisões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-week-reviews" class="stats-kpi-value">0</div><p>Revisões registradas na semana</p></section>
+              <section class="stats-kpi stats-kpi-questions stats-kpi-week"><div class="stats-kpi-top"><span>Questões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-week-questions" class="stats-kpi-value">0</div><p>Questões respondidas na semana</p></section>
+            </div>
+          </section>
 
           <section class="app-card stats-table-card overflow-hidden">
             <div class="stats-table-toolbar flex items-center justify-between gap-3 flex-wrap p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700">

@@ -198,6 +198,18 @@
 
 
 /* ===== Estatísticas e relatórios do Planejador ===== */
+.stats-kpi-section{min-width:0}
+.stats-kpi-section-title{margin:0;color:#344861;font-size:13px;font-weight:850;letter-spacing:-.01em}
+.dark .stats-kpi-section-title{color:#e2e8f0}
+.stats-kpi-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.stats-kpi-section-head p{margin:0;color:#718096;font-size:11px}
+.dark .stats-kpi-section-head p{color:#94a3b8}
+.stats-kpi-section > .stats-kpi-section-title{margin-bottom:10px}
+.stats-weekly-kpi-grid .stats-kpi{border-top:3px solid #dbeafe}
+.stats-weekly-kpi-grid .stats-kpi-hours{border-top-color:#a7f3d0}
+.stats-weekly-kpi-grid .stats-kpi-studies{border-top-color:#bfdbfe}
+.stats-weekly-kpi-grid .stats-kpi-reviews{border-top-color:#ddd6fe}
+.stats-weekly-kpi-grid .stats-kpi-questions{border-top-color:#fde68a}
 .stats-page-head{min-width:0}
 .stats-week-label{display:flex;align-items:center;gap:2px;max-width:100%;border:1px solid var(--app-border);background:#fff;border-radius:11px;padding:10px 12px;color:#475569;font-size:11px;font-weight:650;white-space:nowrap}
 .dark .stats-week-label{background:#1e293b;border-color:#334155;color:#cbd5e1}
@@ -276,6 +288,8 @@
 .dark .stats-info-note{background:#13243a;border-color:#294566;color:#a8c6e8}
 @media(max-width:760px){
  .stats-week-label{white-space:normal;align-self:stretch;font-size:10px}
+ .stats-kpi-section-head{align-items:flex-start;flex-direction:column;gap:3px}
+ .stats-kpi-section-head p{font-size:11px}
  .stats-kpi{padding:12px;border-radius:13px}
  .stats-kpi-value{font-size:22px}
  .stats-table-toolbar{align-items:stretch!important}
