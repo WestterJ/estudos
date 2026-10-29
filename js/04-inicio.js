@@ -100,11 +100,6 @@
             const msg=first.querySelector('p'); if(msg) return msg.textContent.trim();
             const texts=[...first.querySelectorAll('div')].filter(d=>!d.firstElementChild&&!d.closest('button')).map(d=>d.textContent.trim()).filter(t=>t&&!/^\d+$/.test(t));
             const picks=(PANEL_SUMMARY_PARTS[container.id]||[0,1]).map(i=>texts[i]).filter(Boolean);
-            if(container.id==='next-study-container'){const note=first.querySelector('.suggestion-last-note-text');if(note&&note.textContent.trim())picks.push('Nota: '+note.textContent.trim());}
-            if(container.id==='recent-rotation-container'){
-                const note=first.querySelector('.note-clamp');
-                if(note&&note.textContent.trim())picks.push('Nota: '+note.textContent.trim());
-            }
             return picks.join(' · ');
         }
         function initCollapsiblePanels(){
@@ -130,14 +125,18 @@
                     if(container.id==='next-study-container'){
                         const first=container.querySelector('.next-study-card');
                         if(first){
-                            // Use a estrutura dos filhos, sem seletores CSS escapados que podem
-                            // lançar erro e impedir a inicialização dos outros painéis recolhíveis.
+                            // Resumo recolhido: disciplina e prioridade em uma linha, nota separada abaixo.
                             const details=first.children[0]?.children[1];
                             const discipline=details?.children[0]?.textContent?.trim()||'';
                             const priority=details?.children[1]?.textContent?.trim()||'';
                             const note=first.querySelector('.suggestion-last-note-text')?.textContent?.trim()||'';
-                            summary.innerHTML=`${discipline?`<strong class="panel-summary-highlight">${escapeHtml(discipline)}</strong>`:''}${discipline&&priority?' · ':''}${priority?`<strong class="panel-summary-highlight">${escapeHtml(priority)}</strong>`:''}${note?`<div class="panel-summary-note mt-1.5 border-t border-slate-200 pt-1.5 dark:border-slate-700"><span class="font-semibold">Nota:</span> ${escapeHtml(note)}</div>`:''}`;
+                            summary.innerHTML=`${discipline?`<strong class="panel-summary-highlight">${escapeHtml(discipline)}</strong>`:''}${discipline&&priority?' · ':''}${priority?`<strong class="panel-summary-highlight">${escapeHtml(priority)}</strong>`:''}${note?`<div class="panel-summary-note mt-1.5 border-t border-slate-200 pt-1.5 dark:border-slate-700"><span class="font-semibold">Nota:</span> <span class="whitespace-pre-line">${escapeHtml(note)}</span></div>`:''}`;
                         } else summary.textContent=getPanelSummaryText(container);
+                    } else if(container.id==='recent-rotation-container'){
+                        const first=container.querySelector('.recent-study-card');
+                        const main=getPanelSummaryText(container);
+                        const note=first?.querySelector('.note-clamp')?.textContent?.trim()||'';
+                        summary.innerHTML=`${main?`<div class="panel-summary-main">${escapeHtml(main)}</div>`:''}${note?`<div class="panel-summary-note mt-1.5 border-t border-slate-200 pt-1.5 dark:border-slate-700"><span class="font-semibold">Nota:</span> <span class="whitespace-pre-line">${escapeHtml(note)}</span></div>`:''}`;
                     } else summary.textContent=getPanelSummaryText(container);
                 };
                 new MutationObserver(refresh).observe(container,{childList:true,subtree:true,characterData:true});

@@ -61,7 +61,7 @@
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
-            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,minutes,questions,isReview:type2==='Revisão'?1:0};
+            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,minutes,questions,isReview:type2==='Revisão'?1:0};
             studySessions.unshift(session);
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
             let userItem=userProgress.find(u=>u.id===itemId);
@@ -132,7 +132,7 @@
             newProgress.questions=(Number(newProgress.questions)||0)+questions;
             if(isRevisionSession(session))newProgress.reviews=(Number(newProgress.reviews)||0)+1;
             if(type2==='Estudo Teórico'&&newProgress.hours>=0.5)newProgress.completed=true;
-            studySessions.sort((a,b)=>parseBRDate(b.date)-parseBRDate(a.date));
+            studySessions = getSessionsNewestFirst();
             saveData();initRegistrationForm();renderSessionsList();renderRecentRotation();renderDashboard();renderPriorityDisciplineProgress();
             showCustomDialog('Sessão atualizada','Data, trilha, tipo e métricas foram atualizados. Os quadros de estudos e revisões foram recalculados.');
         }
@@ -311,7 +311,7 @@
             newProgress.questions=(Number(newProgress.questions)||0)+questions;
             if(isReview || session.type2==='Revisão')newProgress.reviews=(Number(newProgress.reviews)||0)+1;
             if(session.type2==='Estudo Teórico' && newProgress.hours>=0.5)newProgress.completed=true;
-            studySessions.sort((a,b)=>parseBRDate(b.date)-parseBRDate(a.date));
+            studySessions = getSessionsNewestFirst();
             saveData();renderSessionsList();initCronogramaFilters();renderDashboard();renderEditalVerticalizado();
             closeSessionEdit();showCustomDialog('Sessão atualizada','As informações do histórico e os totais do tópico foram atualizados.');
         }

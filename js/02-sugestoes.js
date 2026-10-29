@@ -3,12 +3,53 @@
         // Renderização da seção de Últimas Disciplinas Estudadas (Rotação)
         function parseBRDate(value) {
             if (!value) return new Date(0);
-            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(value + 'T12:00:00');
-            const m = String(value).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-            return m ? new Date(`${m[3]}-${m[2]}-${m[1]}T12:00:00`) : new Date(value);
+            const raw=String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw + 'T12:00:00');
+            const br=raw.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?)?$/);
+            if(br) return new Date(Number(br[3]),Number(br[2])-1,Number(br[1]),br[4]===undefined?12:Number(br[4]),br[5]===undefined?0:Number(br[5]),br[6]===undefined?0:Number(br[6]),br[7]===undefined?0:Number(String(br[7]).padEnd(3,'0')));
+            const isoLocal=raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/);
+            if(isoLocal) return new Date(Number(isoLocal[1]),Number(isoLocal[2])-1,Number(isoLocal[3]),Number(isoLocal[4]),Number(isoLocal[5]),isoLocal[6]===undefined?0:Number(isoLocal[6]),isoLocal[7]===undefined?0:Number(String(isoLocal[7]).padEnd(3,'0')));
+            return new Date(raw);
+        }
+        // As sessões antigas guardavam somente a data. Para novas sessões, createdAt preserva
+        // a hora de registro; quando uma data já contém hora, ela tem precedência.
+        function getSessionSortInfo(session) {
+            const rawDate=String(session?.date||'').trim();
+            const parsed=parseBRDate(rawDate);
+            if(!Number.isFinite(parsed.getTime())||parsed.getTime()===0) return {day:0,clock:null};
+            const day=new Date(parsed.getFullYear(),parsed.getMonth(),parsed.getDate()).getTime();
+            const hasDateTime=/^(?:\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})[ T]\d{2}:\d{2}/.test(rawDate);
+            let clock=null;
+            if(hasDateTime) {
+                clock=((parsed.getHours()*60+parsed.getMinutes())*60+parsed.getSeconds())*1000+parsed.getMilliseconds();
+            } else {
+                const timeMatch=String(session?.time||session?.hour||'').match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+                if(timeMatch) clock=((Number(timeMatch[1])*60+Number(timeMatch[2]))*60+Number(timeMatch[3]||0))*1000;
+                else {
+                    const recorded=session?.createdAt||session?.created_at||session?.recordedAt||session?.timestamp;
+                    if(recorded) {
+                        const d=new Date(recorded);
+                        if(Number.isFinite(d.getTime())) clock=((d.getHours()*60+d.getMinutes())*60+d.getSeconds())*1000+d.getMilliseconds();
+                    }
+                }
+            }
+            return {day,clock};
         }
         function getSessionsNewestFirst() {
-            return studySessions.map(x=>({x,t:parseBRDate(x.date).getTime()||0})).sort((a,b)=>b.t-a.t).map(o=>o.x);
+            const rows=studySessions.map((x,index)=>({x,index,info:getSessionSortInfo(x)}));
+            // Ordena primeiro pela data. Só usa a hora como critério secundário quando todos os
+            // registros daquele dia têm hora conhecida; em dados antigos sem hora preserva a ordem original.
+            rows.sort((a,b)=>b.info.day-a.info.day||a.index-b.index);
+            const ordered=[];
+            for(let start=0;start<rows.length;) {
+                let end=start+1;
+                while(end<rows.length&&rows[end].info.day===rows[start].info.day) end++;
+                const group=rows.slice(start,end);
+                if(group.length>1&&group.every(row=>row.info.clock!==null)) group.sort((a,b)=>b.info.clock-a.info.clock||a.index-b.index);
+                ordered.push(...group);
+                start=end;
+            }
+            return ordered.map(row=>row.x);
         }
         function localTodayISO() {
             const d=new Date();

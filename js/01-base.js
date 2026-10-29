@@ -15,7 +15,7 @@
         try { masterEditalData = JSON.parse(localStorage.getItem('tce_master_edital')) || masterEditalData; } catch(e) {}
         let studySessions = JSON.parse(localStorage.getItem('tce_go_pro_sessions')) || defaultInitialSessions;
 
-        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = '📘 Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
+        function preencherVersao() { document.querySelectorAll('[data-app-version]').forEach(function (e) { e.textContent = window.APP_VERSION || ''; }); if (window.APP_VERSION) document.title = 'Planejador de Estudos | Concursos — ' + window.APP_VERSION; }
         preencherVersao(); document.addEventListener('DOMContentLoaded', preencherVersao);
 
         // V10.1: avisos informativos viram toasts (não bloqueiam a tela); só confirmações e textos longos usam caixa.

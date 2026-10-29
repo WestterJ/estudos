@@ -1,0 +1,10 @@
+PLANEJADOR DE ESTUDOS V10.18 — NOTAS RECOLHIDAS, TÍTULO SEM EMOJI E ORDENAÇÃO POR DATA/HORA
+
+Alterações:
+- Removido o emoji colorido do título da aba do navegador e definido favicon vazio para evitar que o navegador volte a exibir esse caractere. Os ícones do PWA e da tela inicial foram preservados.
+- No cartão Últimos estudos, quando recolhido, a nota aparece em uma linha separada abaixo do resumo principal, no mesmo padrão visual de Sugestões para os próximos estudos.
+- Novas sessões salvam createdAt para ordenar registros do mesmo dia pela hora de registro. Datas que já contêm horário também são interpretadas.
+- Para registros antigos sem horário, é preservada a ordem existente, pois não há um horário histórico confiável armazenado.
+- Cache do PWA atualizado.
+
+Ao publicar, preserve o supabase-config.js já existente no repositório caso ele não esteja incluído neste pacote.
