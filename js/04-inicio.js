@@ -120,8 +120,21 @@
                 const toggle=()=>{const closed=panel.classList.toggle('collapsed'); head.setAttribute('aria-expanded',String(!closed));};
                 head.addEventListener('click',toggle);
                 head.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
-                const refresh=()=>{summary.textContent=getPanelSummaryText(container);};
-                new MutationObserver(refresh).observe(container,{childList:true});
+                const refresh=()=>{
+                    // No cartão de sugestões, o resumo com o painel fechado destaca apenas
+                    // disciplina, prioridade e percentual. A nota fica em uma linha separada.
+                    if(container.id==='next-study-container'){
+                        const first=container.querySelector('.next-study-card');
+                        if(first){
+                            const details=first.querySelector(':scope > div > div');
+                            const discipline=details?.querySelector('.text-xs.font-bold')?.textContent?.trim()||'';
+                            const priority=details?.querySelector('.text-\[10px\].font-bold')?.textContent?.trim()||'';
+                            const note=first.querySelector('.suggestion-last-note-text')?.textContent?.trim()||'';
+                            summary.innerHTML=`${discipline?`<strong class="panel-summary-highlight">${escapeHtml(discipline)}</strong>`:''}${discipline&&priority?' · ':''}${priority?`<strong class="panel-summary-highlight">${escapeHtml(priority)}</strong>`:''}${note?`<div class="panel-summary-note mt-1.5 border-t border-slate-200 pt-1.5 dark:border-slate-700"><span class="font-semibold">Nota:</span> ${escapeHtml(note)}</div>`:''}`;
+                        } else summary.textContent=getPanelSummaryText(container);
+                    } else summary.textContent=getPanelSummaryText(container);
+                };
+                new MutationObserver(refresh).observe(container,{childList:true,subtree:true,characterData:true});
                 refresh();
             });
         }
@@ -206,8 +219,8 @@
                 const colorStyle = 'color:' + (getPrioritySettings()[item.priority]?.color || '#64748b');
                 const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (weekdayAbbr(item.lastDate)?' ('+weekdayAbbr(item.lastDate)+')':'') + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
                 // Exibe somente a anotação vinculada ao tópico da sessão mais recente; o texto fica em linha separada.
-                const lastNoteHtml = item.lastNote ? `<div class="suggestion-last-note mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" title="Anotação do tópico da última aula"><div class="font-semibold mb-1"><i class="fa-regular fa-note-sticky mr-1"></i>Nota da última aula</div><div class="suggestion-last-note-text whitespace-pre-line">${escapeHtml(item.lastNote)}</div></div>` : '';
-                card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-500 mt-1">${item.pending} tópicos pendentes · ${item.hours.toFixed(1)} h · ${item.questions} questões</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div>${lastNoteHtml}</div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
+                const lastNoteHtml = item.lastNote ? `<div class="suggestion-last-note mt-1.5 max-w-full rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" title="Anotação do tópico da última aula"><div class="suggestion-last-note-text whitespace-pre-line">${escapeHtml(item.lastNote)}</div></div>` : '';
+                card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div>${lastNoteHtml}</div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
                 const button = card.querySelector('button');
                 if (button) button.addEventListener('click', () => openDisciplineInCronograma(item.discipline));
                 container.appendChild(card);

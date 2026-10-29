@@ -1,0 +1,5 @@
+Planejador de Estudos V10.14 — Correção do resumo recolhido
+
+Alteração: no cartão “Sugestões para os próximos estudos”, quando recolhido, o nome da disciplina, a prioridade e o percentual concluído são destacados em negrito. A nota da última aula permanece separada em uma linha abaixo. O conteúdo do cartão aberto não foi alterado.
+
+Copie os arquivos mantendo os caminhos originais. Preserve o supabase-config.js já existente no repositório, caso não esteja incluído no pacote.

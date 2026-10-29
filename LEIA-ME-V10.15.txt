@@ -1,0 +1,8 @@
+Planejador de Estudos V10.15 — Ajuste visual dos cartões de sugestões
+
+- Cartões abertos: removidos os indicadores de tópicos pendentes, horas e questões.
+- Anotação amarela sem o cabeçalho “Nota da última aula”, no mesmo estilo compacto das anotações dos cartões Últimos estudos.
+- Resumo recolhido: destaque de disciplina, prioridade e percentual preservado; nota exibida em nova linha com o rótulo “Nota:”.
+- Cache do PWA atualizado.
+
+Ao publicar, preserve o arquivo supabase-config.js existente no repositório, caso esteja configurado separadamente.
