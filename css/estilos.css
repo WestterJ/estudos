@@ -362,7 +362,7 @@
 .priority-group-head {font-size:14px!important;line-height:1.45}
 .priority-group-stats,.priority-group-stats small {font-size:12px!important;line-height:1.5}
 .recent-study-topic {max-width:100%;}
-.suggestion-last-note {font-size:12px!important;line-height:1.55!important;overflow-wrap:anywhere}
+.suggestion-last-note {display:block;width:100%;font-size:12px!important;line-height:1.55!important;overflow-wrap:anywhere}.suggestion-last-note-text {display:block;margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:760px){
   .home-discipline-group>summary .font-bold,.edital-group>summary .font-bold {font-size:13px!important}
   .home-topic-row [class~="text-[11px]"],.edital-topic-list [class~="text-[11px]"] {font-size:12px!important}

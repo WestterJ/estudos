@@ -10,3 +10,9 @@ Alterações:
 - Tipografia uniformizada e ampliada em Cronograma, Prioridades e Edital Verticalizado, seguindo a escala aprovada em Estatísticas.
 
 Publicação: substitua os arquivos mantendo seus caminhos no repositório. Preserve o supabase-config.js já existente, pois ele não faz parte deste pacote.
+
+
+Correção complementar da nota (V10.11):
+- A sugestão usa somente a anotação do tópico ligado à sessão mais recente da disciplina, sem agregar notas de outras aulas.
+- O rótulo 'Nota da última aula' fica em uma linha própria e o conteúdo da anotação aparece abaixo, com quebras de linha preservadas.
+- Cache do PWA atualizado para carregar os arquivos corrigidos.

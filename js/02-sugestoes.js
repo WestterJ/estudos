@@ -86,7 +86,11 @@
                 const lastDate = lastSession?.date || '';
                 const lastTrack = lastSession?.studyTrack || (lastSession ? 'Trilha não informada' : '');
                 const lastTopic = lastSession ? (masterEditalData.find(topic => sessionMatchesTopic(lastSession, topic)) || topics.find(topic => topic.topic === lastSession.topic && topic.subtopic === (lastSession.subtopic || '')) || null) : null;
-                const lastNote = lastTopic ? String((userProgress.find(progress => progress.id === lastTopic.id) || {}).notes || '').trim() : '';
+                // A nota vem exclusivamente do tópico associado à sessão mais recente da disciplina.
+                // Não agregamos anotações de outras aulas/disciplina.
+                const lastNote = lastTopic
+                    ? String((userProgress.find(progress => String(progress.id) === String(lastTopic.id)) || {}).notes || '').trim()
+                    : '';
                 const lastTimestamp = lastSession ? parseBRDate(lastSession.date).getTime() : 0;
                 const hours = vals.reduce((sum,value) => sum + (Number(value.hours)||0), 0);
                 const questions = vals.reduce((sum,value) => sum + (Number(value.questions)||0), 0);
