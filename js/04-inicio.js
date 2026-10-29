@@ -100,7 +100,11 @@
             const msg=first.querySelector('p'); if(msg) return msg.textContent.trim();
             const texts=[...first.querySelectorAll('div')].filter(d=>!d.firstElementChild&&!d.closest('button')).map(d=>d.textContent.trim()).filter(t=>t&&!/^\d+$/.test(t));
             const picks=(PANEL_SUMMARY_PARTS[container.id]||[0,1]).map(i=>texts[i]).filter(Boolean);
-            if(container.id==='next-study-container'){const note=first.querySelector('.suggestion-last-note');if(note&&note.textContent.trim())picks.push(note.textContent.trim());}
+            if(container.id==='next-study-container'){const note=first.querySelector('.suggestion-last-note-text');if(note&&note.textContent.trim())picks.push('Nota: '+note.textContent.trim());}
+            if(container.id==='recent-rotation-container'){
+                const note=first.querySelector('.note-clamp');
+                if(note&&note.textContent.trim())picks.push('Nota: '+note.textContent.trim());
+            }
             return picks.join(' · ');
         }
         function initCollapsiblePanels(){

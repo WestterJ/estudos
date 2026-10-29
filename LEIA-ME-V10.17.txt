@@ -1,0 +1,10 @@
+PLANEJADOR DE ESTUDOS V10.17 — FAVICON E RESUMO DOS CARTÕES
+
+Alterações:
+- Removidas as referências ao favicon da aba do navegador para não exibir o ícone azul claro ao lado do título. Os ícones do PWA (instalação/tela inicial) foram preservados.
+- O resumo do cartão Últimos estudos agora inclui a nota da última sessão quando houver, usando o rótulo “Nota:”, para manter padrão com Sugestões para os próximos estudos.
+- Corrigido o título da página para V10.17.
+- Corrigida a versão exibida no cabeçalho via js/00-config.js para V10.17.
+- Atualizado o nome do cache do service worker.
+
+Ao publicar, preserve o supabase-config.js já existente no repositório se ele não estiver neste pacote.
