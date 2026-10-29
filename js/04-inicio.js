@@ -126,9 +126,11 @@
                     if(container.id==='next-study-container'){
                         const first=container.querySelector('.next-study-card');
                         if(first){
-                            const details=first.querySelector(':scope > div > div');
-                            const discipline=details?.querySelector('.text-xs.font-bold')?.textContent?.trim()||'';
-                            const priority=details?.querySelector('.text-\[10px\].font-bold')?.textContent?.trim()||'';
+                            // Use a estrutura dos filhos, sem seletores CSS escapados que podem
+                            // lançar erro e impedir a inicialização dos outros painéis recolhíveis.
+                            const details=first.children[0]?.children[1];
+                            const discipline=details?.children[0]?.textContent?.trim()||'';
+                            const priority=details?.children[1]?.textContent?.trim()||'';
                             const note=first.querySelector('.suggestion-last-note-text')?.textContent?.trim()||'';
                             summary.innerHTML=`${discipline?`<strong class="panel-summary-highlight">${escapeHtml(discipline)}</strong>`:''}${discipline&&priority?' · ':''}${priority?`<strong class="panel-summary-highlight">${escapeHtml(priority)}</strong>`:''}${note?`<div class="panel-summary-note mt-1.5 border-t border-slate-200 pt-1.5 dark:border-slate-700"><span class="font-semibold">Nota:</span> ${escapeHtml(note)}</div>`:''}`;
                         } else summary.textContent=getPanelSummaryText(container);

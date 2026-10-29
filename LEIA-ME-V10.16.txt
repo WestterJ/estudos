@@ -1,0 +1,9 @@
+PLANEJADOR DE ESTUDOS V10.16 — CORREÇÃO DOS PAINÉIS
+
+Correções desta versão:
+- Restaurado o resumo do cartão “Sugestões para os próximos estudos” quando recolhido: disciplina e prioridade/percentual em destaque, com “Nota:” e a última anotação em linha separada.
+- Corrigido um seletor CSS inválido que interrompia a inicialização dos painéis seguintes.
+- “Últimas revisões” e “Revisões sugeridas” voltam a ter o controle de recolher/expandir.
+- Atualizada a identificação do cache do PWA.
+
+Publicação: copie os arquivos mantendo os caminhos do projeto e publique no GitHub. Preserve o seu supabase-config.js existente, se estiver configurado separadamente.
