@@ -102,3 +102,10 @@ A tela Estatísticas permite selecionar uma semana a partir do seletor no cabeç
 ## V10.21 — Gráficos de Estatísticas
 
 Adiciona seis visualizações construídas localmente (sem bibliotecas externas): evolução de sessões de estudo por semana, horas de estudo por semana, distribuição de horas por disciplina na semana selecionada, estudos por prioridade, comparação semanal entre estudos e revisões e questões respondidas por semana. Os gráficos são calculados a partir de `studySessions`; os gráficos da semana selecionada respondem ao seletor de semana já existente. A renderização é responsiva e mantém suporte offline.
+
+
+## V10.22 — Visão geral nos gráficos de Estatísticas
+- Os gráficos de evolução semanal passam a cobrir todo o histórico datado de sessões até a semana atual, independentemente da semana selecionada nos cartões e na tabela.
+- A distribuição de horas por disciplina usa o acumulado geral de minutos e a distribuição por prioridade usa a quantidade total de sessões de estudo.
+- As séries históricas permitem rolagem horizontal quando há muitas semanas registradas.
+- Os cartões semanais e as colunas semanais da tabela continuam dependentes do seletor.

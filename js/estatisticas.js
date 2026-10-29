@@ -280,27 +280,35 @@
         return { start: statsFormatDate(weekStart), end: statsFormatDate(weekEnd), title: statsWeekRangeLabel(weekStart) };
     }
 
-    function statsBuildWeeklySeries(weekStart, count = 9) {
+    function statsBuildWeeklySeries() {
+        // Os gráficos históricos usam TODO o período com registros, independentemente
+        // da semana selecionada nos cartões e na tabela.
         const sessions = Array.isArray(studySessions) ? studySessions : [];
-        const end = statsWeekBounds(weekStart).start;
-        const first = new Date(end);
-        first.setDate(first.getDate() - 7 * (count - 1));
+        const validDates = sessions.map(statsParseSessionDate)
+            .filter(date => date && Number.isFinite(date.getTime()) && date.getTime() > 0);
+        const currentWeekStart = statsWeekBounds(new Date()).start;
+        const earliestDate = validDates.length
+            ? validDates.reduce((min, date) => date < min ? date : min, validDates[0])
+            : currentWeekStart;
+        let first = statsWeekBounds(earliestDate).start;
+        if (first > currentWeekStart) first = new Date(currentWeekStart);
         const weeks = [];
-        for (let i = 0; i < count; i++) {
-            const start = new Date(first);
-            start.setDate(start.getDate() + i * 7);
-            const next = new Date(start);
+
+        for (let start = new Date(first); start <= currentWeekStart; start.setDate(start.getDate() + 7)) {
+            const weekStart = new Date(start);
+            const next = new Date(weekStart);
             next.setDate(next.getDate() + 7);
-            const label = statsShortWeekLabel(start);
-            weeks.push({ start, next, dateKey: statsDateKey(start), label: label.start, endLabel: label.end, title: label.title, studies: 0, reviews: 0, questions: 0, minutes: 0 });
+            const label = statsShortWeekLabel(weekStart);
+            weeks.push({ start: weekStart, next, dateKey: statsDateKey(weekStart), label: label.start, endLabel: label.end, title: label.title, studies: 0, reviews: 0, questions: 0, minutes: 0 });
         }
+
         const byKey = new Map(weeks.map(week => [week.dateKey, week]));
         sessions.forEach(session => {
             const date = statsParseSessionDate(session);
             if (!date || !Number.isFinite(date.getTime()) || date.getTime() <= 0) return;
             const weekKey = statsDateKey(statsWeekBounds(date).start);
             const week = byKey.get(weekKey);
-            if (!week) return;
+            if (!week) return; // Registros futuros fora da semana atual não entram na série histórica.
             const isReview = typeof isRevisionSession === 'function'
                 ? isRevisionSession(session)
                 : (session.type2 === 'Revisão' || Number(session.isReview) === 1);
@@ -329,12 +337,13 @@
                 <span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span>
             </div>`;
         }).join('');
-        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-bar-plot" style="--stats-bar-count:${items.length}">${columns}</div></div>`;
+        const plotWidth = Math.max(500, items.length * 48);
+        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
     }
 
     function statsLineChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Evolução semanal') {
         if (!items.length || !items.some(item => (Number(item[valueKey]) || 0) > 0)) return statsChartEmpty();
-        const width = 640, height = 230, left = 42, right = 16, top = 26, bottom = 48;
+        const width = Math.max(640, items.length * 72), height = 230, left = 42, right = 16, top = 26, bottom = 48;
         const plotWidth = width - left - right, plotHeight = height - top - bottom;
         const values = items.map(item => Math.max(0, Number(item[valueKey]) || 0));
         const maxValue = Math.max(1, ...values);
@@ -353,7 +362,7 @@
             const value = values[index];
             return `<g><title>${escapeHtml(item.title || item.label)}: ${escapeHtml(valueFormatter(value))}</title><circle cx="${x(index)}" cy="${y(value)}" r="4.1" fill="${color}" stroke="#fff" stroke-width="1.5"/><text x="${x(index)}" y="${Math.max(14,y(value)-9)}" text-anchor="middle" class="stats-svg-value-label">${escapeHtml(valueFormatter(value))}</text><text x="${x(index)}" y="${height-25}" text-anchor="middle" class="stats-svg-axis-label">${escapeHtml(item.label || '')}</text></g>`;
         }).join('');
-        return `<div class="stats-line-chart-wrap"><svg class="stats-line-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)}" preserveAspectRatio="xMidYMid meet">${grid}<polygon points="${areaPoints}" fill="${color}" opacity=".10"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg></div>`;
+        return `<div class="stats-line-chart-wrap"><svg class="stats-line-chart" style="width:${width}px;min-width:${width}px;max-width:none" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)}" preserveAspectRatio="xMidYMid meet">${grid}<polygon points="${areaPoints}" fill="${color}" opacity=".10"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg></div>`;
     }
 
     function statsGroupedBarChartHtml(items, keys, label = 'Comparação semanal') {
@@ -368,50 +377,51 @@
             const values = keys.map(key => `<small style="color:${key.color}">${Number(item[key.key]) || 0}</small>`).join('');
             return `<div class="stats-grouped-column" title="${escapeHtml(item.title || item.label)}"><div class="stats-grouped-values">${values}</div><div class="stats-grouped-track">${bars}</div><span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span></div>`;
         }).join('');
-        return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length}">${groups}</div></div>`;
+        const plotWidth = Math.max(500, items.length * 48);
+        return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><div class="stats-bar-chart-viewport"><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${groups}</div></div></div>`;
     }
 
     function statsDonutChartHtml(items) {
-        const sorted = items.filter(item => item.weekMinutes > 0).sort((a, b) => b.weekMinutes - a.weekMinutes);
-        const total = sorted.reduce((sum, item) => sum + item.weekMinutes, 0);
-        if (!total) return statsChartEmpty('Nenhuma hora registrada na semana selecionada.');
+        const sorted = items.filter(item => item.totalMinutes > 0).sort((a, b) => b.totalMinutes - a.totalMinutes);
+        const total = sorted.reduce((sum, item) => sum + item.totalMinutes, 0);
+        if (!total) return statsChartEmpty('Nenhuma hora registrada no acumulado geral.');
         const top = sorted.slice(0, 5);
-        if (sorted.length > 5) top.push({ discipline: 'Outras disciplinas', weekMinutes: sorted.slice(5).reduce((sum, item) => sum + item.weekMinutes, 0) });
+        if (sorted.length > 5) top.push({ discipline: 'Outras disciplinas', totalMinutes: sorted.slice(5).reduce((sum, item) => sum + item.totalMinutes, 0) });
         let current = 0;
         const segments = top.map((item, index) => {
             const start = current;
-            current += item.weekMinutes / total * 100;
+            current += item.totalMinutes / total * 100;
             return `${STATS_CHART_COLORS[index % STATS_CHART_COLORS.length]} ${start.toFixed(2)}% ${current.toFixed(2)}%`;
         });
         const legend = top.map((item, index) => {
-            const pct = Math.round(item.weekMinutes / total * 100);
-            return `<div class="stats-donut-legend-item"><i style="background:${STATS_CHART_COLORS[index % STATS_CHART_COLORS.length]}"></i><div><strong>${escapeHtml(item.discipline)}</strong><span>${statsFormatMinutes(item.weekMinutes, true)} (${pct}%)</span></div></div>`;
+            const pct = Math.round(item.totalMinutes / total * 100);
+            return `<div class="stats-donut-legend-item"><i style="background:${STATS_CHART_COLORS[index % STATS_CHART_COLORS.length]}"></i><div><strong>${escapeHtml(item.discipline)}</strong><span>${statsFormatMinutes(item.totalMinutes, true)} (${pct}%)</span></div></div>`;
         }).join('');
-        return `<div class="stats-donut-layout"><div class="stats-donut" role="img" aria-label="Distribuição de ${escapeHtml(statsFormatMinutes(total,true))} por disciplina" style="background:conic-gradient(${segments.join(',')})"><div class="stats-donut-center"><strong>${statsFormatMinutes(total,true)}</strong><span>total</span></div></div><div class="stats-donut-legend">${legend}</div></div>`;
+        return `<div class="stats-donut-layout"><div class="stats-donut" role="img" aria-label="Distribuição acumulada de ${escapeHtml(statsFormatMinutes(total,true))} por disciplina" style="background:conic-gradient(${segments.join(',')})"><div class="stats-donut-center"><strong>${statsFormatMinutes(total,true)}</strong><span>total</span></div></div><div class="stats-donut-legend">${legend}</div></div>`;
     }
 
     function renderStatisticsCharts(weekStart, groups) {
         const root = document.getElementById('statistics-charts');
         if (!root) return;
-        const weeks = statsBuildWeeklySeries(weekStart, 9);
-        const selectedLabel = statsWeekRangeLabel(weekStart);
-        const selectedWeekLabel = document.getElementById('statistics-charts-selected-week');
-        if (selectedWeekLabel) selectedWeekLabel.textContent = selectedLabel;
+        // Os gráficos mostram a visão geral do histórico, independentemente da semana
+        // escolhida no seletor. A semana selecionada continua controlando apenas os KPIs
+        // semanais e as colunas semanais da tabela.
+        const weeks = statsBuildWeeklySeries();
         const priorityItems = groups.map(group => ({
             label: group.label.replace(/^Prioridade\s*/i, ''),
             title: group.label,
-            studies: group.items.reduce((sum, item) => sum + item.weekStudies, 0),
+            studies: group.items.reduce((sum, item) => sum + item.totalStudies, 0),
             color: group.color
-        })).filter(item => item.studies > 0);
-        const selectedWeek = statsWeekBounds(weekStart);
-        const subjectMinutes = groups.flatMap(group => group.items.map(item => ({ ...item, priorityLabel: group.label, priorityColor: group.color }))).filter(item => item.weekMinutes > 0);
+        }));
+        const subjectMinutes = groups.flatMap(group => group.items.map(item => ({ ...item, priorityLabel: group.label, priorityColor: group.color })))
+            .filter(item => item.totalMinutes > 0);
         const chartContent = {
-            'statistics-chart-studies-weekly': statsBarChartHtml(weeks, 'studies', '#4f91f4', value => String(value), 'Quantidade de sessões de estudo por semana'),
-            'statistics-chart-hours-weekly': statsLineChartHtml(weeks, 'minutes', '#159669', value => statsFormatMinutes(value, true), 'Horas de estudo por semana'),
+            'statistics-chart-studies-weekly': statsBarChartHtml(weeks, 'studies', '#4f91f4', value => String(value), 'Quantidade de sessões de estudo por semana em todo o histórico'),
+            'statistics-chart-hours-weekly': statsLineChartHtml(weeks, 'minutes', '#159669', value => statsFormatMinutes(value, true), 'Horas de estudo por semana em todo o histórico'),
             'statistics-chart-hours-discipline': statsDonutChartHtml(subjectMinutes),
-            'statistics-chart-studies-priority': statsBarChartHtml(priorityItems, 'studies', '#ef5b61', value => String(value), 'Estudos por prioridade na semana selecionada'),
-            'statistics-chart-comparison': statsGroupedBarChartHtml(weeks, [{ key: 'studies', label: 'Estudos', color: '#3b82f6' }, { key: 'reviews', label: 'Revisões', color: '#8b5cf6' }], 'Comparação semanal de estudos e revisões'),
-            'statistics-chart-questions-weekly': statsBarChartHtml(weeks, 'questions', '#f9a64a', value => String(value), 'Questões respondidas por semana')
+            'statistics-chart-studies-priority': statsBarChartHtml(priorityItems, 'studies', '#ef5b61', value => String(value), 'Total geral de estudos por prioridade'),
+            'statistics-chart-comparison': statsGroupedBarChartHtml(weeks, [{ key: 'studies', label: 'Estudos', color: '#3b82f6' }, { key: 'reviews', label: 'Revisões', color: '#8b5cf6' }], 'Comparação semanal de estudos e revisões em todo o histórico'),
+            'statistics-chart-questions-weekly': statsBarChartHtml(weeks, 'questions', '#f9a64a', value => String(value), 'Questões respondidas por semana em todo o histórico')
         };
         Object.entries(chartContent).forEach(([id, html]) => {
             const target = document.getElementById(id);
@@ -434,7 +444,7 @@
         setText('statistics-total-studies', String(general.totalStudies));
         setText('statistics-total-reviews', String(general.totalReviews));
         setText('statistics-total-questions', String(general.totalQuestions));
-        // Cartões de desempenho semanal: valores baseados apenas nas sessões datadas da semana atual.
+        // Cartões de desempenho semanal: valores baseados apenas nas sessões da semana selecionada.
         setText('statistics-week-hours', statsFormatMinutes(general.weekMinutes, true));
         setText('statistics-week-studies', String(general.weekStudies));
         setText('statistics-week-reviews', String(general.weekReviews));

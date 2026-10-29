@@ -1,6 +1,6 @@
 // 00-config.js — Versão única do app e carga da configuração pública do Supabase. Ao mudar a versão, mude também CACHE_NAME em service-worker.js.
-      // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME-V10.21.txt.
-      window.APP_VERSION = 'V10.21';
+      // Fonte única da versão: ao mudar aqui, mude também CACHE_NAME em service-worker.js e a nota no LEIA-ME-V10.22.txt.
+      window.APP_VERSION = 'V10.22';
       // V10: URL e chave PÚBLICA do Supabase vêm de supabase-config.js (ninguém digita); a chave do Gemini nunca fica no navegador.
       try {
         var cfg = window.PLANEJADOR_SUPABASE;

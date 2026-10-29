@@ -1,0 +1,19 @@
+PLANEJADOR DE ESTUDOS V10.22 — GRÁFICOS GERAIS DE ESTATÍSTICAS
+
+O que mudou nesta versão
+- Adiciona gráficos de evolução semanal de estudos e horas.
+- Adiciona distribuição de horas por disciplina e estudos por prioridade na semana selecionada.
+- Adiciona comparativo semanal de estudos e revisões e gráfico de questões respondidas.
+- Os gráficos usam os registros reais de studySessions e são atualizados quando a semana selecionada muda.
+- Não requer bibliotecas externas; funciona com o shell offline do PWA.
+
+Publicação
+1. Extraia o ZIP na pasta do repositório mantendo a estrutura.
+2. Copie os arquivos para os caminhos correspondentes e faça commit.
+3. Preserve o supabase-config.js já existente no repositório, pois ele não é incluído neste pacote-base.
+4. Após publicar, abra Estatísticas e teste o seletor de semana.
+
+Validação realizada: sintaxe JavaScript, estrutura HTML, referências dos gráficos e integridade do ZIP.
+
+
+V10.22 — Os gráficos de composição mostram acumulados gerais e os gráficos históricos incluem todo o período registrado, independentemente da semana selecionada. Os KPIs e a tabela semanais continuam vinculados ao seletor.
