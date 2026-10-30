@@ -338,7 +338,7 @@
             </div>`;
         }).join('');
         const plotWidth = Math.max(500, items.length * 48);
-        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
+        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
     }
 
     function statsLineChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Evolução semanal') {
@@ -362,7 +362,7 @@
             const value = values[index];
             return `<g><title>${escapeHtml(item.title || item.label)}: ${escapeHtml(valueFormatter(value))}</title><circle cx="${x(index)}" cy="${y(value)}" r="4.1" fill="${color}" stroke="#fff" stroke-width="1.5"/><text x="${x(index)}" y="${Math.max(14,y(value)-9)}" text-anchor="middle" class="stats-svg-value-label">${escapeHtml(valueFormatter(value))}</text><text x="${x(index)}" y="${height-25}" text-anchor="middle" class="stats-svg-axis-label">${escapeHtml(item.label || '')}</text></g>`;
         }).join('');
-        return `<div class="stats-line-chart-wrap"><svg class="stats-line-chart" style="width:${width}px;min-width:${width}px;max-width:none" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)}" preserveAspectRatio="xMidYMid meet">${grid}<polygon points="${areaPoints}" fill="${color}" opacity=".10"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg></div>`;
+        return `<div class="stats-line-chart-wrap"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><svg class="stats-line-chart" style="width:${width}px;min-width:${width}px;max-width:none" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)}" preserveAspectRatio="xMidYMid meet">${grid}<polygon points="${areaPoints}" fill="${color}" opacity=".10"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg></div>`;
     }
 
     function statsGroupedBarChartHtml(items, keys, label = 'Comparação semanal') {
@@ -378,7 +378,7 @@
             return `<div class="stats-grouped-column" title="${escapeHtml(item.title || item.label)}"><div class="stats-grouped-values">${values}</div><div class="stats-grouped-track">${bars}</div><span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span></div>`;
         }).join('');
         const plotWidth = Math.max(500, items.length * 48);
-        return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><div class="stats-bar-chart-viewport"><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${groups}</div></div></div>`;
+        return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${groups}</div></div></div>`;
     }
 
     function statsDonutChartHtml(items) {

@@ -1,7 +1,18 @@
 const CACHE_NAME = 'planejador-estudos-v10-22-graficos-gerais-v1';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './css/estilos.css', './js/00-config.js', './js/01-base.js', './js/02-sugestoes.js', './js/03-utilitarios.js', './js/04-inicio.js', './js/05-registro.js', './js/06-edital.js', './js/07-concursos.js', './js/08-importacao-ia.js', './js/09-sincronizacao.js', './js/10-dados-backup.js', './js/11-datas-anotacoes.js', './js/estatisticas.js', './js/12-iniciar.js', './js/auth.js', './js/pwa.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  // Um arquivo de configuração local pode não existir em todos os ambientes.
+  // O shell restante ainda deve ser instalado e permitir atualização offline.
+  event.waitUntil(caches.open(CACHE_NAME).then(async cache => {
+    await Promise.all(APP_SHELL.map(async asset => {
+      try {
+        const response = await fetch(asset, { cache: 'no-cache' });
+        if (response.ok) await cache.put(asset, response);
+      } catch (_) {
+        // Recurso opcional ausente: não impede a instalação do service worker.
+      }
+    }));
+  }).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('planejador-estudos-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
