@@ -1,0 +1,18 @@
+PLANEJADOR DE ESTUDOS V10.28 — PRIORIDADE GRAVADA NA SESSÃO
+
+Problema corrigido
+- O gráfico "Estudos por prioridade — geral" podia mostrar valores diferentes no desktop e no celular
+  (ex.: Alta 15 + Sem prioridade 3 no desktop; Alta 18 no celular), porque a prioridade era deduzida
+  do edital carregado em cada aparelho.
+
+O que mudou
+- Novas sessões e sessões editadas guardam a prioridade do tópico (campo priority).
+- Sessões antigas sem prioridade são preenchidas automaticamente quando o aparelho tem o tópico no edital;
+  o app salva e sincroniza essa correção.
+- Se o tópico não estiver no edital, a prioridade gravada na sessão é usada.
+- Removido o aviso "Deslize horizontalmente" do gráfico de prioridade.
+
+Como testar
+1. Abra o app no CELULAR (que tem o edital completo), vá em Estatísticas e aguarde a sincronização.
+2. No DESKTOP, sincronize manualmente e recarregue com Ctrl+Shift+R.
+3. O gráfico deve mostrar os mesmos valores nos dois aparelhos.

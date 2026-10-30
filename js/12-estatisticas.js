@@ -196,17 +196,31 @@
             target._progressReviews += Math.max(0, Number(progress.reviews) || 0);
         });
 
+        // V10.28 — Sessões antigas sem prioridade gravada recebem a prioridade do tópico
+        // quando este aparece no edital carregado. Assim a prioridade acompanha a sessão
+        // (e sincroniza), em vez de depender do edital de cada aparelho.
+        let sessionPriorityBackfilled = false;
         sessions.forEach(session => {
             let topic = session.itemId ? topicById.get(String(session.itemId)) : null;
             if (!topic && typeof sessionMatchesTopic === 'function') {
                 topic = topics.find(candidate => sessionMatchesTopic(session, candidate)) || null;
             }
+            if (topic?.priority && !session.priority && priorityRank.has(String(topic.priority))) {
+                session.priority = String(topic.priority);
+                sessionPriorityBackfilled = true;
+            }
             const discipline = String(topic?.discipline || session.discipline || 'Sem disciplina').trim() || 'Sem disciplina';
-            const target = getOrCreateDiscipline(discipline, topic?.priority ? String(topic.priority) : null);
+            const sessionPriority = topic?.priority ? String(topic.priority) : (session.priority && priorityRank.has(String(session.priority)) ? String(session.priority) : null);
+            const target = getOrCreateDiscipline(discipline, sessionPriority);
             const sessionDate = statsParseSessionDate(session);
             const isWeek = Number.isFinite(sessionDate.getTime()) && sessionDate.getTime() > 0 && sessionDate >= week.start && sessionDate < week.end;
             statsAddSession(target, session, isWeek);
         });
+
+        if (sessionPriorityBackfilled && !window.__statsPriorityBackfillSaved) {
+            window.__statsPriorityBackfillSaved = true;
+            try { if (typeof saveData === 'function') setTimeout(saveData, 0); } catch (_) {}
+        }
 
         const general = statsEmpty();
         byDiscipline.forEach(item => {
@@ -340,7 +354,8 @@
         const plotWidth = chartClass.includes('stats-priority-chart')
             ? Math.max(320, items.length * 72)
             : Math.max(500, items.length * 48);
-        return `<div class="stats-bar-chart ${chartClass}" role="img" aria-label="${escapeHtml(label)}"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
+        const scrollNote = chartClass.includes('stats-priority-chart') ? '' : '<p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p>';
+        return `<div class="stats-bar-chart ${chartClass}" role="img" aria-label="${escapeHtml(label)}">${scrollNote}<div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
     }
 
     function statsLineChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Evolução semanal') {

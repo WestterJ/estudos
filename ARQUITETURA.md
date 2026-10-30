@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.27
+# Arquitetura — Planejador de Estudos V10.28
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -132,3 +132,8 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 ## V10.27 — Prioridade do snapshot remoto
 - Quando `updated_at` da Supabase é mais recente, o download inicial prioriza o snapshot remoto correspondente.
 - Isso evita que um timestamp antigo dentro do snapshot local impeça a aplicação dos dados mais novos da nuvem.
+
+## V10.28 — Prioridade gravada na sessão
+- `05-registro.js`: cada sessão nova (e editada) passa a guardar `priority` do tópico.
+- `12-estatisticas.js`: `buildStatisticsModel` usa `session.priority` quando o tópico não está no edital carregado e preenche, uma vez, as sessões antigas sem prioridade (depois salva/sincroniza).
+- O gráfico "Estudos por prioridade — geral" deixa de mostrar o aviso de deslizar (não rola no celular).

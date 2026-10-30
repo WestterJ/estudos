@@ -61,7 +61,7 @@
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
-            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,minutes,questions,isReview:type2==='Revisão'?1:0};
+            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,isReview:type2==='Revisão'?1:0};
             studySessions.unshift(session);
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
             let userItem=userProgress.find(u=>u.id===itemId);
@@ -304,7 +304,7 @@
             }
             const dateValue=document.getElementById('edit-session-date').value;
             const [year,month,day]=dateValue.split('-');
-            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,minutes,questions,isReview});
+            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,isReview});
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress)}
             newProgress.hours=(Number(newProgress.hours)||0)+minutes/60;
