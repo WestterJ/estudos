@@ -456,7 +456,7 @@
             window.addEventListener('focus',()=>refreshCloudTimestampFromServer());
         }
 
-        async function syncSupabase(mode) {
+        async function syncSupabase(mode, silent = false) {
             if (!sbClient || !sbUser) {
                 if (!initializeSupabase()) return showCustomDialog('Configuração necessária', 'Informe e guarde as configurações e entre na conta primeiro.');
                 const { data } = await sbClient.auth.getUser();
@@ -479,9 +479,13 @@
             const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
             if (error) {
                 updateCloudStatus('Erro ao baixar');
+                if (silent) throw error;
                 return showCustomDialog('Falha ao baixar', error.message);
             }
-            if (!data || !data.data) return showCustomDialog('Nuvem vazia', 'Não há dados salvos para esta conta.');
+            if (!data || !data.data) {
+                if (silent) return false;
+                return showCustomDialog('Nuvem vazia', 'Não há dados salvos para esta conta.');
+            }
 
             // O download combina os mapas de concursos: o remoto vence para IDs presentes nos dois lados;
             // os concursos existentes só localmente são preservados em vez de desaparecerem.
@@ -523,7 +527,31 @@
             if(data.updated_at) recordCloudSave(data.updated_at); else recordCloudSave(new Date().toISOString());
             initCronogramaFilters();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
             updateCloudStatus('Dados baixados da nuvem');
-            showCustomDialog('Download concluído','Os dados locais e remotos foram mesclados por item. Lançamentos exclusivos de cada dispositivo foram preservados.');
+            if (!silent) showCustomDialog('Download concluído','Os dados locais e remotos foram mesclados por item. Lançamentos exclusivos de cada dispositivo foram preservados.');
+            return true;
+        }
+
+        // Na abertura, decide a direção da sincronização pelo timestamp confirmado
+        // da nuvem e pelo snapshot local, sem transformar a leitura em um upload.
+        async function syncInitialStateAutomatically() {
+            if (!sbClient || !sbUser) return;
+            const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
+            if (error) throw error;
+            if (!data || !data.data) {
+                await syncLatestChangesToCloud();
+                return;
+            }
+            let localUpdatedAt = 0;
+            try {
+                const snapshot = JSON.parse(localStorage.getItem('tce_contest_data_' + activeContest) || 'null');
+                localUpdatedAt = Date.parse(snapshot?._snapshotUpdatedAt || '') || 0;
+            } catch (_) {}
+            const remoteUpdatedAt = Date.parse(data.updated_at || '') || 0;
+            if (remoteUpdatedAt > localUpdatedAt) {
+                await syncSupabase('download', true);
+            } else {
+                await syncLatestChangesToCloud();
+            }
         }
 
         function buildCurrentSnapshotForStorage(timestamp=new Date().toISOString()) {

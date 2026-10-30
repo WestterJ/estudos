@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.25
+# Arquitetura — Planejador de Estudos V10.26
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -122,3 +122,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 ## V10.25 — Rótulos responsivos nas prioridades
 - Os rótulos de prioridade podem quebrar linha para não se sobreporem.
 - O gráfico de prioridades ocupa a largura disponível no celular, mantendo “Sem prioridade definida” visível.
+
+## V10.26 — Sincronização inicial por timestamp
+- Na abertura, o app compara o `updated_at` remoto com o snapshot local.
+- Dados remotos mais recentes são baixados automaticamente.
+- Dados locais mais recentes continuam sendo enviados e mesclados.
+- O download automático não exibe o diálogo da sincronização manual.

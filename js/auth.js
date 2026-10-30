@@ -130,13 +130,12 @@
     if(changed||firstAccount) {
       try { await resolveInitialCloudSync(); } catch(e) { message('Login concluído, mas não foi possível consultar os dados na nuvem: '+(e.message||e),'error'); }
     }
-    // A cada abertura/recarga, sincroniza a sessão atual automaticamente, mesmo quando
-    // o Supabase recuperou a mesma conta. A mesclagem preserva registros locais e remotos.
+    // A cada abertura/recarga, compara os timestamps antes de escolher download ou upload.
     if(startupSyncUid!==uid && !recoveryMode) {
       startupSyncUid=uid;
       try {
         if(!sbClient) initializeSupabase();
-        await syncLatestChangesToCloud();
+        await syncInitialStateAutomatically();
         await refreshCloudTimestampFromServer();
         startCloudTimestampPolling();
       } catch(e) {

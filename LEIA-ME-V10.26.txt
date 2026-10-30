@@ -1,0 +1,10 @@
+PLANEJADOR DE ESTUDOS V10.26 — SINCRONIZAÇÃO INICIAL AUTOMÁTICA
+
+O que mudou nesta versão
+- A abertura do aplicativo compara a data de atualização local com a data confirmada na Supabase.
+- Quando a nuvem está mais recente, os dados são baixados automaticamente.
+- Quando o dispositivo está mais recente, as alterações são enviadas e mescladas.
+- A sincronização manual continua disponível para decisões explícitas do usuário.
+
+Validação
+- Versão e cache do PWA atualizados para V10.26.
