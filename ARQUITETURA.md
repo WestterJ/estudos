@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.26
+# Arquitetura — Planejador de Estudos V10.27
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -128,3 +128,7 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - Dados remotos mais recentes são baixados automaticamente.
 - Dados locais mais recentes continuam sendo enviados e mesclados.
 - O download automático não exibe o diálogo da sincronização manual.
+
+## V10.27 — Prioridade do snapshot remoto
+- Quando `updated_at` da Supabase é mais recente, o download inicial prioriza o snapshot remoto correspondente.
+- Isso evita que um timestamp antigo dentro do snapshot local impeça a aplicação dos dados mais novos da nuvem.

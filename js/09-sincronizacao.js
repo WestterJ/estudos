@@ -128,7 +128,7 @@
                 _snapshotUpdatedAt: new Date(Math.max(remoteTime,localTime,Date.now())).toISOString()
             };
         }
-        function mergeContestSnapshots(remotePayload, localPayload) {
+        function mergeContestSnapshots(remotePayload, localPayload, preferRemote = false) {
             const deletedMap=mergeDeletedContestMaps(remotePayload?.deletedContests||{},localPayload?.deletedContests||getDeletedContestMap());
             const remoteSnapshots=(remotePayload && remotePayload.contestSnapshots && typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{};
             const localSnapshots=(localPayload && localPayload.contestSnapshots && typeof localPayload.contestSnapshots==='object')?localPayload.contestSnapshots:{};
@@ -142,7 +142,7 @@
             Object.entries(localSnapshots).forEach(([id,localSnap])=>{
                 if(deletedMap[id]||!localSnap || typeof localSnap!=='object') return;
                 const remoteSnap=merged[id];
-                merged[id]=remoteSnap ? mergeContestSnapshot(remoteSnap,localSnap) : localSnap;
+                merged[id]=remoteSnap ? (preferRemote ? remoteSnap : mergeContestSnapshot(remoteSnap,localSnap)) : localSnap;
             });
             return merged;
         }
@@ -456,7 +456,7 @@
             window.addEventListener('focus',()=>refreshCloudTimestampFromServer());
         }
 
-        async function syncSupabase(mode, silent = false) {
+        async function syncSupabase(mode, silent = false, preferRemote = false) {
             if (!sbClient || !sbUser) {
                 if (!initializeSupabase()) return showCustomDialog('Configuração necessária', 'Informe e guarde as configurações e entre na conta primeiro.');
                 const { data } = await sbClient.auth.getUser();
@@ -502,7 +502,7 @@
                 remoteSnapshots={...remoteSnapshots,[data.data.activeContest]:{contestName:data.data.contests?.[data.data.activeContest]?.name||data.data.activeContest,masterEditalData:data.data.masterEditalData||[],userProgress:data.data.userProgress||data.data.masterEditalData||[],studySessions:data.data.studySessions||[],prioritySettings:data.data.prioritySettings||{},disciplineSettings:data.data.disciplineSettings||{},suggestionMode:data.data.suggestionMode||'priority_progress'}};
             }
             // Download também mescla registros de cada concurso: não substitui o snapshot local inteiro.
-            const allSnapshots=mergeContestSnapshots({...data.data,deletedContests:deletedMap,contestSnapshots:remoteSnapshots},{activeContest,deletedContests:deletedMap,contestSnapshots:localSnapshots});
+            const allSnapshots=mergeContestSnapshots({...data.data,deletedContests:deletedMap,contestSnapshots:remoteSnapshots},{activeContest,deletedContests:deletedMap,contestSnapshots:localSnapshots},preferRemote);
             // Mantém o concurso selecionado neste aparelho, salvo se ele tiver sido excluído.
             if((!contests[activeContest]||deletedMap[activeContest])&&data.data.activeContest&&contests[data.data.activeContest]&&!deletedMap[data.data.activeContest]) activeContest=data.data.activeContest;
             if(!contests[activeContest]||deletedMap[activeContest]) activeContest=Object.keys(contests)[0]||'concurso-restaurado-'+Date.now();
@@ -548,7 +548,7 @@
             } catch (_) {}
             const remoteUpdatedAt = Date.parse(data.updated_at || '') || 0;
             if (remoteUpdatedAt > localUpdatedAt) {
-                await syncSupabase('download', true);
+                await syncSupabase('download', true, true);
             } else {
                 await syncLatestChangesToCloud();
             }

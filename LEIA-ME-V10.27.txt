@@ -1,0 +1,9 @@
+PLANEJADOR DE ESTUDOS V10.27 — PRIORIDADE DO SNAPSHOT REMOTO
+
+O que mudou nesta versão
+- Corrige a sincronização inicial quando a linha da Supabase é mais recente, mas o snapshot local possui timestamp interno conflitante.
+- O snapshot remoto passa a prevalecer nesse caso.
+- A sincronização manual continua usando a mesclagem segura normal.
+
+Validação
+- Versão e cache do PWA atualizados para V10.27.
