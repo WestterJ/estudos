@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.23
+# Arquitetura — Planejador de Estudos V10.24
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -114,3 +114,7 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - O módulo de Estatísticas foi renomeado para `js/12-estatisticas.js`.
 - O módulo de inicialização foi renomeado para `js/13-iniciar.js`, mantendo-o como último módulo de lógica.
 - O `index.html` registra a versão e mantém a ordem explícita de carregamento dos módulos.
+
+## V10.24 — Ajustes finais dos gráficos
+- O gráfico de prioridades usa barras mais estreitas e com menor espaçamento.
+- O comparativo semanal posiciona os valores acima das respectivas barras sem ocultar as barras.

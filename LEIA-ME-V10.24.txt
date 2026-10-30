@@ -1,0 +1,10 @@
+PLANEJADOR DE ESTUDOS V10.24 — AJUSTES DOS GRÁFICOS
+
+O que mudou nesta versão
+- Compacta o gráfico de estudos por prioridade geral.
+- Corrige a renderização das barras no comparativo semanal.
+- Mantém os valores do comparativo acima das respectivas barras.
+
+Validação
+- Referências dos módulos JavaScript revisadas.
+- Cache do PWA atualizado para V10.24.

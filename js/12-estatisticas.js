@@ -337,7 +337,9 @@
                 <span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span>
             </div>`;
         }).join('');
-        const plotWidth = Math.max(500, items.length * 48);
+        const plotWidth = chartClass.includes('stats-priority-chart')
+            ? Math.max(260, items.length * 46)
+            : Math.max(500, items.length * 48);
         return `<div class="stats-bar-chart ${chartClass}" role="img" aria-label="${escapeHtml(label)}"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
     }
 
