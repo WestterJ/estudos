@@ -435,9 +435,10 @@
 .dark .stats-grouped-legend{color:#cbd5e1}
 .stats-grouped-column{position:relative;min-width:0;height:100%;display:flex;align-items:center;justify-content:flex-end;flex-direction:column}
 .stats-grouped-track{position:absolute;bottom:0;left:10%;right:10%;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
-.stats-grouped-bar{display:block;flex:1 1 0;max-width:16px;min-width:2px;border-radius:3px 3px 0 0;opacity:.9}
-.stats-grouped-values{position:absolute;top:4px;left:-3px;right:-3px;display:flex;justify-content:center;gap:2px;white-space:nowrap;z-index:2}
-.stats-grouped-values small{font-size:8px;font-weight:850}
+.stats-grouped-item{position:relative;display:block;flex:1 1 0;height:100%;min-width:0}
+.stats-grouped-item>small{position:absolute;bottom:calc(var(--bar-height) + 3px);left:-3px;right:-3px;text-align:center;font-size:8px;font-weight:850;white-space:nowrap;z-index:2}
+.stats-grouped-bar{position:absolute;bottom:0;left:10%;right:10%;display:block;border-radius:3px 3px 0 0;opacity:.9}
+.stats-priority-chart .stats-bar-track{left:28%;right:28%}
 .stats-donut-layout{display:flex;align-items:center;justify-content:center;gap:16px;min-height:190px}
 .stats-donut{display:grid;place-items:center;flex:0 0 144px;width:144px;height:144px;border-radius:50%;position:relative}
 .stats-donut::before{content:"";position:absolute;inset:24px;background:#fff;border-radius:50%}

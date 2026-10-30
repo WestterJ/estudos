@@ -1,0 +1,12 @@
+PLANEJADOR DE ESTUDOS V10.23 — PADRONIZAÇÃO DOS MÓDULOS JAVASCRIPT
+
+O que mudou nesta versão
+- Renomeia estatisticas.js para 12-estatisticas.js, seguindo o padrão numérico dos módulos.
+- Renomeia 12-iniciar.js para 13-iniciar.js, preservando a inicialização como último módulo de lógica.
+- Atualiza a ordem de carregamento no index.html e a lista de arquivos do service worker.
+- Mantém as melhorias de visualização e rolagem dos gráficos de Estatísticas.
+
+Publicação
+1. Preserve o supabase-config.js já existente no ambiente de publicação.
+2. Publique os arquivos alterados mantendo a estrutura da pasta js.
+3. Após publicar, abra Estatísticas e confirme o carregamento dos gráficos e da tabela.

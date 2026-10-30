@@ -1,5 +1,5 @@
-// estatisticas.js — Estatísticas gerais e semanais por disciplina, agrupadas pela prioridade principal.
-// Carregado antes de 12-iniciar.js para manter as funções globais disponíveis para a navegação.
+// 12-estatisticas.js — Estatísticas gerais e semanais por disciplina, agrupadas pela prioridade principal.
+// Carregado antes de 13-iniciar.js para manter as funções globais disponíveis para a navegação.
 (function () {
     'use strict';
 
@@ -324,7 +324,7 @@
         return `<div class="stats-chart-empty"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>${escapeHtml(message)}</span></div>`;
     }
 
-    function statsBarChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Valores') {
+    function statsBarChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Valores', chartClass = '') {
         if (!items.length || !items.some(item => (Number(item[valueKey]) || 0) > 0)) return statsChartEmpty();
         const max = Math.max(1, ...items.map(item => Number(item[valueKey]) || 0));
         const columns = items.map(item => {
@@ -338,7 +338,7 @@
             </div>`;
         }).join('');
         const plotWidth = Math.max(500, items.length * 48);
-        return `<div class="stats-bar-chart" role="img" aria-label="${escapeHtml(label)}"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
+        return `<div class="stats-bar-chart ${chartClass}" role="img" aria-label="${escapeHtml(label)}"><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${columns}</div></div></div>`;
     }
 
     function statsLineChartHtml(items, valueKey, color, valueFormatter = value => String(value), label = 'Evolução semanal') {
@@ -372,10 +372,9 @@
             const bars = keys.map(key => {
                 const value = Math.max(0, Number(item[key.key]) || 0);
                 const height = value ? Math.max(3, value / max * 100) : 0;
-                return `<span class="stats-grouped-bar" title="${escapeHtml(key.label)}: ${value}" style="height:${height}%;background:${key.color}"></span>`;
+                return `<span class="stats-grouped-item" style="--bar-height:${height}%"><small style="color:${key.color}">${value}</small><span class="stats-grouped-bar" title="${escapeHtml(key.label)}: ${value}" style="--bar-height:${height}%;background:${key.color}"></span></span>`;
             }).join('');
-            const values = keys.map(key => `<small style="color:${key.color}">${Number(item[key.key]) || 0}</small>`).join('');
-            return `<div class="stats-grouped-column" title="${escapeHtml(item.title || item.label)}"><div class="stats-grouped-values">${values}</div><div class="stats-grouped-track">${bars}</div><span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span></div>`;
+            return `<div class="stats-grouped-column" title="${escapeHtml(item.title || item.label)}"><div class="stats-grouped-track">${bars}</div><span class="stats-bar-xlabel"><b>${escapeHtml(item.label || '')}</b><small>${escapeHtml(item.endLabel || '')}</small></span></div>`;
         }).join('');
         const plotWidth = Math.max(500, items.length * 48);
         return `<div class="stats-grouped-chart" role="img" aria-label="${escapeHtml(label)}"><div class="stats-grouped-legend">${keys.map(key => `<span><i style="background:${key.color}"></i>${escapeHtml(key.label)}</span>`).join('')}</div><p class="stats-chart-scroll-note">Deslize horizontalmente para ver todo o histórico</p><div class="stats-bar-chart-viewport"><div class="stats-bar-plot stats-grouped-plot" style="--stats-bar-count:${items.length};width:${plotWidth}px;min-width:${plotWidth}px">${groups}</div></div></div>`;
@@ -419,7 +418,7 @@
             'statistics-chart-studies-weekly': statsBarChartHtml(weeks, 'studies', '#4f91f4', value => String(value), 'Quantidade de sessões de estudo por semana em todo o histórico'),
             'statistics-chart-hours-weekly': statsLineChartHtml(weeks, 'minutes', '#159669', value => statsFormatMinutes(value, true), 'Horas de estudo por semana em todo o histórico'),
             'statistics-chart-hours-discipline': statsDonutChartHtml(subjectMinutes),
-            'statistics-chart-studies-priority': statsBarChartHtml(priorityItems, 'studies', '#ef5b61', value => String(value), 'Total geral de estudos por prioridade'),
+            'statistics-chart-studies-priority': statsBarChartHtml(priorityItems, 'studies', '#ef5b61', value => String(value), 'Total geral de estudos por prioridade', 'stats-priority-chart'),
             'statistics-chart-comparison': statsGroupedBarChartHtml(weeks, [{ key: 'studies', label: 'Estudos', color: '#3b82f6' }, { key: 'reviews', label: 'Revisões', color: '#8b5cf6' }], 'Comparação semanal de estudos e revisões em todo o histórico'),
             'statistics-chart-questions-weekly': statsBarChartHtml(weeks, 'questions', '#f9a64a', value => String(value), 'Questões respondidas por semana em todo o histórico')
         };
@@ -427,6 +426,16 @@
             const target = document.getElementById(id);
             if (target) target.innerHTML = html;
         });
+
+        // Em séries históricas, abre o gráfico já no período mais recente.
+        ['statistics-chart-studies-weekly', 'statistics-chart-hours-weekly', 'statistics-chart-comparison', 'statistics-chart-questions-weekly']
+            .map(id => document.getElementById(id))
+            .filter(Boolean)
+            .forEach(target => {
+                const viewport = target.querySelector('.stats-bar-chart-viewport, .stats-line-chart-wrap');
+                if (!viewport) return;
+                requestAnimationFrame(() => { viewport.scrollLeft = viewport.scrollWidth; });
+            });
     }
 
     function renderStudyStatistics() {

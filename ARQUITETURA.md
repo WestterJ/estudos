@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.11
+# Arquitetura — Planejador de Estudos V10.23
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -18,9 +18,9 @@ js/                     lógica, dividida por área (tabela abaixo)
 
 Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escopo global**: uma função de um arquivo pode ser chamada por outro e o HTML usa `onclick="…"`. Por isso:
 
-- Funções (`function x(){}`) podem ser chamadas de qualquer arquivo **depois** que todos carregarem (ou seja, dentro de funções, eventos e do `12-iniciar.js`).
+- Funções (`function x(){}`) podem ser chamadas de qualquer arquivo **depois** que todos carregarem (ou seja, dentro de funções, eventos e do `13-iniciar.js`).
 - Código solto no topo de um arquivo (fora de função) só pode usar o que já foi definido nos arquivos **anteriores** da lista.
-- `12-iniciar.js` roda por último e monta a tela; novos arquivos de lógica entram **antes** dele.
+- `13-iniciar.js` roda por último e monta a tela; novos arquivos de lógica entram **antes** dele.
 
 | # | Arquivo | O que contém |
 |---|---|---|
@@ -36,8 +36,8 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 | 10 | `js/09-sincronizacao.js` | Supabase: login, mesclagem por ID entre aparelhos, sincronização e salvamento na nuvem. |
 | 11 | `js/10-dados-backup.js` | `saveData`, cabeçalho do concurso, configurações do Supabase, reset e backup (exportar/importar). |
 | 12 | `js/11-datas-anotacoes.js` | Modal de anotações e **Datas Importantes** (checklist por concurso). |
-| 13 | `js/estatisticas.js` | Menu **Estatísticas**, totais gerais e semanais agrupados por prioridade e disciplina. |
-| 14 | `js/12-iniciar.js` | Chamadas finais que montam a tela. **Deve ser o último arquivo de lógica** antes de `auth.js`. |
+| 13 | `js/12-estatisticas.js` | Menu **Estatísticas**, totais gerais e semanais agrupados por prioridade e disciplina. |
+| 14 | `js/13-iniciar.js` | Chamadas finais que montam a tela. **Deve ser o último arquivo de lógica** antes de `auth.js`. |
 | 15 | `js/auth.js` | Tela de login, cadastro, recuperação de senha, Google OAuth e botão de instalar o PWA (função autocontida, sem globais). |
 | 16 | `js/pwa.js` | Registro do service worker. |
 
@@ -109,3 +109,8 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - A distribuição de horas por disciplina usa o acumulado geral de minutos e a distribuição por prioridade usa a quantidade total de sessões de estudo.
 - As séries históricas permitem rolagem horizontal quando há muitas semanas registradas.
 - Os cartões semanais e as colunas semanais da tabela continuam dependentes do seletor.
+
+## V10.23 — Padronização dos módulos JavaScript
+- O módulo de Estatísticas foi renomeado para `js/12-estatisticas.js`.
+- O módulo de inicialização foi renomeado para `js/13-iniciar.js`, mantendo-o como último módulo de lógica.
+- O `index.html` registra a versão e mantém a ordem explícita de carregamento dos módulos.
