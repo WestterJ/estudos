@@ -440,6 +440,8 @@
 .stats-grouped-bar{position:absolute;bottom:0;left:12%;width:76%;height:var(--bar-height);display:block;border-radius:3px 3px 0 0;opacity:.9}
 .stats-priority-chart .stats-bar-plot{gap:3px}
 .stats-priority-chart .stats-bar-track{left:32%;right:32%}
+.stats-priority-chart .stats-bar-xlabel{left:-8px;right:-8px;white-space:normal;text-align:center;line-height:1.15;overflow-wrap:anywhere}
+.stats-priority-chart .stats-bar-xlabel b,.stats-priority-chart .stats-bar-xlabel small{display:block}
 .stats-donut-layout{display:flex;align-items:center;justify-content:center;gap:16px;min-height:190px}
 .stats-donut{display:grid;place-items:center;flex:0 0 144px;width:144px;height:144px;border-radius:50%;position:relative}
 .stats-donut::before{content:"";position:absolute;inset:24px;background:#fff;border-radius:50%}
@@ -461,4 +463,4 @@
 .stats-chart-empty i{font-size:22px;color:#a3afbf}
 .dark .stats-chart-empty{color:#94a3b8}
 @media(max-width:1100px){.stats-chart-card{grid-column:span 6}.stats-donut-layout{gap:12px}.stats-donut{flex-basis:126px;width:126px;height:126px}.stats-donut::before{inset:21px}}
-@media(max-width:640px){.stats-chart-card{grid-column:1/-1;padding:13px}.stats-charts-grid{gap:10px}.stats-chart-card h4{font-size:13px}.stats-donut-layout{justify-content:flex-start;gap:14px}.stats-donut{flex-basis:132px;width:132px;height:132px}.stats-donut::before{inset:22px}.stats-donut-legend{max-width:none;flex:1}.stats-donut-legend-item strong,.stats-donut-legend-item span{font-size:11px}.stats-chart-content{min-height:205px}.stats-chart-scroll-note{display:block}.stats-bar-plot{min-width:480px}.stats-line-chart{min-width:560px}}
+@media(max-width:640px){.stats-chart-card{grid-column:1/-1;padding:13px}.stats-charts-grid{gap:10px}.stats-chart-card h4{font-size:13px}.stats-donut-layout{justify-content:flex-start;gap:14px}.stats-donut{flex-basis:132px;width:132px;height:132px}.stats-donut::before{inset:22px}.stats-donut-legend{max-width:none;flex:1}.stats-donut-legend-item strong,.stats-donut-legend-item span{font-size:11px}.stats-chart-content{min-height:205px}.stats-chart-scroll-note{display:block}.stats-bar-plot{min-width:480px}.stats-line-chart{min-width:560px}.stats-priority-chart .stats-bar-plot{width:100%!important;min-width:100%!important;gap:5px;padding-left:4px;padding-right:4px}.stats-priority-chart .stats-bar-xlabel{left:-4px;right:-4px;font-size:8px}.stats-priority-chart .stats-bar-xlabel b{font-size:9px}.stats-priority-chart .stats-bar-xlabel small{font-size:8px}}

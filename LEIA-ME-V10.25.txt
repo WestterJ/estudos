@@ -1,0 +1,9 @@
+PLANEJADOR DE ESTUDOS V10.25 — RÓTULOS RESPONSIVOS NAS PRIORIDADES
+
+O que mudou nesta versão
+- Permite quebra de linha nos rótulos do gráfico de prioridades.
+- Ajusta o espaçamento entre barras.
+- Faz o gráfico ocupar a largura disponível no celular para manter todas as categorias visíveis.
+
+Validação
+- Versão e cache do PWA atualizados para V10.25.

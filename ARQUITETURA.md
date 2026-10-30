@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.24
+# Arquitetura — Planejador de Estudos V10.25
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -118,3 +118,7 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 ## V10.24 — Ajustes finais dos gráficos
 - O gráfico de prioridades usa barras mais estreitas e com menor espaçamento.
 - O comparativo semanal posiciona os valores acima das respectivas barras sem ocultar as barras.
+
+## V10.25 — Rótulos responsivos nas prioridades
+- Os rótulos de prioridade podem quebrar linha para não se sobreporem.
+- O gráfico de prioridades ocupa a largura disponível no celular, mantendo “Sem prioridade definida” visível.
