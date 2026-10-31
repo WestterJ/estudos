@@ -418,7 +418,7 @@
             const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
             if (error) {
                 updateCloudStatus('Erro ao ler nuvem');
-                return showCustomDialog('Erro de sincronização', error.message + '\\nConfira se criou a tabela e as políticas RLS do SQL fornecido.');
+                return showCustomDialog('Erro de sincronização', error.message + '\nConfira se criou a tabela e as políticas RLS do SQL fornecido.');
             }
             if (!data) {
                 showCustomDialog('Primeira sincronização', 'Ainda não há dados na nuvem para esta conta. Escolha “Enviar dados atuais à nuvem” para gravar o progresso deste navegador.');

@@ -125,7 +125,7 @@
                 oldProgress.questions=Math.max(0,(Number(oldProgress.questions)||0)-(Number(oldSession.questions)||0));
                 if(isRevisionSession(oldSession))oldProgress.reviews=Math.max(0,(Number(oldProgress.reviews)||0)-1);
             }
-            Object.assign(session,{itemId:item.id,date:dateToBR(form.querySelector('[name="date"]').value),type1:form.querySelector('[name="type1"]').value,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,minutes,questions,isReview:type2==='Revisão'?1:0});
+            Object.assign(session,{itemId:item.id,date:dateToBR(form.querySelector('[name="date"]').value),type1:form.querySelector('[name="type1"]').value,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,isReview:type2==='Revisão'?1:0});
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress);}
             newProgress.hours=(Number(newProgress.hours)||0)+(minutes/60);
@@ -222,7 +222,7 @@
         function applySessionPatch(s,patch,tr){
             adjustProgressForSession(s,-1);
             Object.assign(s,patch);
-            if(patch.itemId){const it=masterEditalData.find(x=>x.id===patch.itemId);if(it)Object.assign(s,{discipline:it.discipline,topic:it.topic,subtopic:it.subtopic});}
+            if(patch.itemId){const it=masterEditalData.find(x=>x.id===patch.itemId);if(it)Object.assign(s,{discipline:it.discipline,topic:it.topic,subtopic:it.subtopic,priority:String(it.priority||s.priority||'')});}
             adjustProgressForSession(s,+1);
             saveData();
             if(tr){
