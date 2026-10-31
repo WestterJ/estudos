@@ -10,6 +10,8 @@ O que mudou
 - Sessões antigas sem prioridade são preenchidas automaticamente quando o aparelho tem o tópico no edital;
   o app salva e sincroniza essa correção.
 - Se o tópico não estiver no edital, a prioridade gravada na sessão é usada.
+- A edição de sessão (modal, tabela do histórico e edição inline) também atualiza a prioridade.
+- Corrigida a mensagem de erro de sincronização que exibia \n literal.
 - Removido o aviso "Deslize horizontalmente" do gráfico de prioridade.
 
 Como testar
