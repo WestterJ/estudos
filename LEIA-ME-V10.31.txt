@@ -1,0 +1,18 @@
+PLANEJADOR DE ESTUDOS V10.31 — BARRA INFERIOR CONSISTENTE
+
+Nesta etapa
+- Corrigido o espaço reservado no final do conteúdo: a margem é aplicada ao elemento principal que contém e rola as telas, com espaço suficiente para a barra fixa e a área segura do aparelho.
+- Padronizada a barra inferior para manter os cinco destinos (Cronograma, Registro, Edital, Estatísticas e Mais) com a mesma estrutura em todas as telas móveis.
+- A barra continua visível ao abrir o menu lateral; o menu permanece fechável tocando fora dele, sem botão adicional de fechar.
+- Atualizada a versão e o nome do cache do PWA para forçar a atualização dos arquivos.
+
+Fora do escopo
+- Nenhuma alteração na lógica de revisões.
+- Nenhuma alteração na lógica ou nas datas de Datas Importantes.
+- Nenhuma alteração nos dados, autenticação ou sincronização Supabase.
+
+Teste recomendado
+1. Atualizar/recarregar o app no celular.
+2. Abrir Cronograma, Registro, Edital, Estatísticas e Mais.
+3. Rolar cada tela até o final e confirmar que o último cartão, campo e botão não ficam sob a barra inferior.
+4. Abrir o menu lateral e confirmar que a barra inferior mantém o mesmo formato e que tocar fora fecha o menu.
