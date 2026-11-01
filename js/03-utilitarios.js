@@ -3,6 +3,16 @@
         // ===== V10.4: horas em dias/horas/minutos, exclusões duráveis e utilidades =====
         // 0.5 h -> 00:30 · 26.75 h -> 26:45 (as horas passam de 24 sem virar "dias")
         function fmtHM(hours){const t=Math.max(0,Math.round((Number(hours)||0)*60));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
+        // V10.29 — Duração em minutos: aceita 85, 85min, 1:25, 1h25, 1h e 1,5h.
+        function parseMinutesInput(raw){
+            const t=String(raw==null?'':raw).trim().toLowerCase().replace(/\s+/g,'').replace(/min(utos?)?$/,'');
+            if(!t)return null;let m;
+            if((m=t.match(/^(\d{1,2}):(\d{1,2})$/))||(m=t.match(/^(\d{1,2})h(\d{1,2})?$/))){const v=Number(m[1])*60+Number(m[2]||0);return v>0?v:null;}
+            if((m=t.match(/^(\d+(?:[.,]\d+)?)h$/))){const v=Math.round(parseFloat(m[1].replace(',','.'))*60);return v>0?v:null;}
+            if(/^\d+(?:[.,]\d+)?$/.test(t)){const v=Math.round(parseFloat(t.replace(',','.')));return v>0?v:null;}
+            return null;
+        }
+        function fmtMinutesHM(min){const n=Math.max(0,Math.round(Number(min)||0));if(n<60)return n+' min';return Math.floor(n/60)+'h'+String(n%60).padStart(2,'0');}
         function fmtHoras(hours){const n=Number(hours)||0;return n.toFixed(1)+'h ('+fmtHM(n)+')';}
 
         // A mesclagem entre dispositivos faz união por id. Sem registrar o que foi excluído, tópicos e sessões removidos

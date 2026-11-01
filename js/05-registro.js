@@ -57,7 +57,8 @@
             const itemId=document.getElementById('reg-topic').value;
             const dateValue=document.getElementById('reg-date').value||localTodayISO();
             const studyTrack=(document.getElementById('reg-track').value||'Curso regular').trim()||'Curso regular';
-            const minutes=Math.max(1,parseFloat(document.getElementById('reg-minutes').value)||1);
+            const minutes=parseMinutesInput(document.getElementById('reg-minutes').value);
+            if(!minutes)return showCustomDialog('Duração inválida','Digite os minutos (ex.: 85) ou a duração no formato 1:25.');
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
@@ -146,14 +147,15 @@
             const typeFilter=document.getElementById('hist-filter-type')?.value||'all';
             const discFilter=document.getElementById('hist-filter-disc')?.value||'all';
             const trackFilter=document.getElementById('hist-filter-track')?.value||'all';
-            const _fk=[typeFilter,discFilter,trackFilter].join('|');
+            const _fk=[typeFilter,discFilter,trackFilter,document.getElementById('hist-search')?.value||'',document.getElementById('hist-period')?.value||'all'].join('|');
             if(window._sessionsFilterKey!==_fk){window._sessionsFilterKey=_fk;window._sessionsLimit=20;}
             const _limit=window._sessionsLimit||20;
-            const filtered=getSessionsNewestFirst().filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
+            const filtered=getSessionsNewestFirst().filter(historyExtraFilter).filter(s=>(typeFilter==='all'||s.type2===typeFilter)&&(discFilter==='all'||s.discipline===discFilter)&&(trackFilter==='all'||String(s.studyTrack||'Trilha não informada')===trackFilter));
             const badge=document.getElementById('session-count-badge');
             const totalMin=filtered.reduce((a,s)=>a+(Number(s.minutes)||0),0);
             if(badge)badge.innerText=`${filtered.length} ${filtered.length===1?'registro':'registros'} · ${fmtHoras(totalMin/60)}`;
-            if(!filtered.length){container.innerHTML='<p class="text-xs text-slate-400 text-center py-8">Nenhum registro encontrado. Os estudos lançados aparecem aqui.</p>';return;}
+            if(!filtered.length){container.innerHTML=historyEmptyHtml();return;}
+            if(historyUsesCards()){renderSessionCards(container,filtered,_limit);return;}
             const e=escapeHtml;
             const legacyIds=getLegacyIdSet();
             const disciplines=[...new Set(masterEditalData.map(i=>i.discipline))];
@@ -191,6 +193,84 @@
             }
         }
         // As opções de tópico só são montadas quando o campo recebe foco (mantém a tabela leve com centenas de tópicos).
+        // V10.29 — Busca, período e cartões no celular
+        function getTopicNote(itemId){
+            const u=userProgress.find(x=>x.id===itemId);if(u&&u.notes)return String(u.notes);
+            const m=masterEditalData.find(x=>x.id===itemId);return m&&m.notes?String(m.notes):'';
+        }
+        function normText(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+        function historyExtraFilter(s){
+            const period=document.getElementById('hist-period')?.value||'all';
+            if(period!=='all'){
+                const day=getSessionSortInfo(s).day;if(!day)return false;
+                const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+                if(period==='today'&&day!==today)return false;
+                if(period==='7'&&day<today-6*864e5)return false;
+                if(period==='30'&&day<today-29*864e5)return false;
+                if(period==='month'){const d=new Date(day);if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return false;}
+            }
+            const q=normText(document.getElementById('hist-search')?.value).trim();
+            if(q){
+                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
+                const hay=normText([s.discipline,s.topic,s.subtopic,s.studyTrack,s.type2,s.date,item?getTopicNote(item.id):''].join(' '));
+                if(!q.split(/\s+/).every(t=>hay.includes(t)))return false;
+            }
+            return true;
+        }
+        function historyFiltersActive(){
+            return ['hist-filter-type','hist-filter-disc','hist-filter-track'].some(id=>(document.getElementById(id)?.value||'all')!=='all')||(document.getElementById('hist-period')?.value||'all')!=='all'||!!(document.getElementById('hist-search')?.value||'').trim();
+        }
+        function clearHistoryFilters(){
+            ['hist-filter-type','hist-filter-disc','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
+            const p=document.getElementById('hist-period');if(p)p.value='all';
+            const q=document.getElementById('hist-search');if(q)q.value='';
+            renderSessionsList();
+        }
+        function historyEmptyHtml(){
+            const btn='class="mt-3 px-4 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300"';
+            return historyFiltersActive()
+                ?`<div class="text-center py-8 px-4"><p class="text-xs text-slate-500">Nenhum registro encontrado com esses filtros.</p><button type="button" data-act="clear-filters" ${btn}>Limpar filtros</button></div>`
+                :`<div class="text-center py-8 px-4"><p class="text-xs text-slate-500">Nenhum estudo registrado ainda.</p><button type="button" data-act="goform" ${btn}>Lançar o primeiro estudo</button></div>`;
+        }
+        function historyUsesCards(){return !!(window.matchMedia&&window.matchMedia('(max-width:640px)').matches);}
+        function bindSessionsContainer(container){
+            if(container.dataset.bound)return;container.dataset.bound='1';
+            container.addEventListener('change',onSessionTableChange);
+            container.addEventListener('focusin',ev=>{const t=ev.target;if(t&&t.matches&&t.matches('select[data-f="itemId"]'))fillSessionTopicSelect(t);});
+            container.addEventListener('click',onSessionTableClick);
+        }
+        function renderSessionCards(container,list,limit){
+            const e=escapeHtml;const legacyIds=getLegacyIdSet();
+            const cards=list.slice(0,limit).map(s=>{
+                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x))||null;
+                const orphan=!item||legacyIds.has(String(item.id));
+                const topic=item?sessionTopicLabel(item):(s.topic||'Tópico')+(s.subtopic?' → '+s.subtopic:'')+' (não está mais no edital)';
+                const min=Math.max(0,Number(s.minutes)||0);
+                const note=item?String(getTopicNote(item.id)||'').trim():'';
+                const q=Number(s.questions)||0;
+                return `<article class="sess-card${orphan?' sess-orphan':''}" data-id="${e(s.id)}">
+                    <div class="sess-card-top"><span>${e(s.date||'')}</span><span class="sess-card-time">${e(fmtMinutesHM(min))}${min>=60?` <small>(${min} min)</small>`:''}</span></div>
+                    <p class="sess-card-disc">${e(s.discipline||'Sem disciplina')}</p>
+                    <p class="sess-card-topic">${orphan?'⚠ ':''}${e(topic)}</p>
+                    <p class="sess-card-meta">${e(s.type2||'')} · ${e(s.studyTrack||'Trilha não informada')}${q?` · ${q} questões`:''}</p>
+                    ${note?`<p class="sess-card-note" title="Toque para ver tudo">${e(note)}</p>`:'<p class="sess-card-note sess-card-note-empty">Sem anotação neste tópico</p>'}
+                    <div class="sess-card-actions">
+                        <button type="button" data-act="edit" aria-label="Editar registro"><i class="fa-solid fa-pen" aria-hidden="true"></i>Editar</button>
+                        <button type="button" data-act="note" aria-label="Abrir anotações do tópico"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i>Anotação</button>
+                        <button type="button" data-act="copy" aria-label="Copiar para o formulário"><i class="fa-solid fa-copy" aria-hidden="true"></i>Copiar</button>
+                        <button type="button" data-act="del" aria-label="Excluir registro"><i class="fa-solid fa-trash" aria-hidden="true"></i>Excluir</button>
+                    </div></article>`;
+            }).join('');
+            container.innerHTML=cards;
+            if(list.length>limit){
+                const more=document.createElement('button');more.type='button';
+                more.className='m-3 w-[calc(100%-1.5rem)] min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-blue-700 dark:text-blue-300';
+                more.textContent=`Mostrar mais 20 (restam ${list.length-limit})`;
+                more.addEventListener('click',()=>{window._sessionsLimit=limit+20;renderSessionsList();});
+                container.appendChild(more);
+            }
+            bindSessionsContainer(container);
+        }
         function fillSessionTopicSelect(sel,forceId){
             const tr=sel.closest('tr');const disc=tr.querySelector('[data-f="discipline"]').value;
             const cur=forceId||sel.value;
@@ -237,10 +317,15 @@
             try{renderRecentRotation();renderPriorityDisciplineProgress();}catch(err){console.warn(err);}
         }
         function onSessionTableClick(ev){
+            const noteEl=ev.target.closest('.sess-card-note');if(noteEl&&!ev.target.closest('[data-act]')){if(!noteEl.classList.contains('sess-card-note-empty'))noteEl.classList.toggle('open');return;}
             const btn=ev.target.closest('[data-act]');if(!btn)return;
-            const tr=btn.closest('tr');const id=tr.dataset.id;const s=studySessions.find(x=>x.id===id);if(!s)return;
+            if(btn.dataset.act==='clear-filters'){clearHistoryFilters();return;}
+            if(btn.dataset.act==='goform'){document.getElementById('study-session-form')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+            const tr=btn.closest('[data-id]');const id=tr.dataset.id;const s=studySessions.find(x=>x.id===id);if(!s)return;
             if(btn.dataset.act==='del'){
                 showCustomDialog('Excluir registro?','Este registro de estudo será removido e as horas, questões e revisões dele serão descontadas do tópico.','fa-solid fa-triangle-exclamation',()=>deleteSession(id));
+            }else if(btn.dataset.act==='edit'){
+                editSession(id);
             }else if(btn.dataset.act==='note'){
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
                 if(!item)return showCustomDialog('Tópico indisponível','Escolha primeiro um tópico válido do edital nesta linha para abrir as anotações.');
@@ -292,7 +377,7 @@
             const session=studySessions.find(s=>s.id===id);if(!session)return closeSessionEdit();
             const oldSession={...session};
             const item=masterEditalData.find(t=>t.id===document.getElementById('edit-session-item').value);if(!item)return;
-            const minutes=Math.max(1,Number(document.getElementById('edit-session-minutes').value)||1);
+            const minutes=parseMinutesInput(document.getElementById('edit-session-minutes').value)||1;
             const questions=Math.max(0,Number(document.getElementById('edit-session-questions').value)||0);
             const isReview=Number(document.getElementById('edit-session-review').value)||0;
             const oldItem=masterEditalData.find(t=>t.discipline===oldSession.discipline&&t.topic===oldSession.topic&&t.subtopic===oldSession.subtopic);

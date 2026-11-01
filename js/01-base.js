@@ -33,7 +33,7 @@
             aviso: ['bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-100', 'fa-solid fa-triangle-exclamation text-amber-600', 7500],
             erro: ['bg-red-50 border-red-300 text-red-900 dark:bg-red-950 dark:border-red-800 dark:text-red-100', 'fa-solid fa-circle-xmark text-red-600', 10000]
         };
-        function showToast(title, message, nivel) {
+        function showToast(title, message, nivel, acao) {
             let pilha = document.getElementById('toast-stack');
             if (!pilha) {
                 pilha = document.createElement('div'); pilha.id = 'toast-stack'; pilha.setAttribute('aria-live', 'polite');
@@ -54,12 +54,13 @@
             const t = document.createElement('div'); t.className = 'font-bold'; t.textContent = title;
             const m = document.createElement('div'); m.className = 'mt-0.5 opacity-90 break-words'; m.textContent = message || '';
             corpo.append(t); if (message) corpo.append(m);
+            if (acao && acao.label) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'mt-1.5 font-bold underline min-h-[32px]'; ab.textContent = acao.label; ab.addEventListener('click', ev => { ev.stopPropagation(); try { if (acao.onClick) acao.onClick(); } finally { fechar(); } }); corpo.append(ab); }
             const x = document.createElement('button'); x.type = 'button'; x.setAttribute('aria-label', 'Fechar aviso'); x.className = 'opacity-60 hover:opacity-100 px-1'; x.textContent = '×';
             el.append(i, corpo, x); pilha.appendChild(el);
             requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-2'));
             const fechar = () => { el.classList.add('opacity-0'); setTimeout(() => el.remove(), 200); };
             el.addEventListener('click', fechar);
-            setTimeout(fechar, ms + Math.min(String(message || '').length * 20, 4000));
+            setTimeout(fechar, (acao ? 9000 : ms) + Math.min(String(message || '').length * 20, 4000));
         }
         // Caixa própria (substitui confirm/prompt nativos): resolve true/texto ao confirmar e null ao cancelar.
         function abrirCaixa(title, message, opt) {
