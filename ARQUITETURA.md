@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.28
+# Arquitetura — Planejador de Estudos V10.29
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -137,3 +137,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - `05-registro.js`: cada sessão nova (e editada) passa a guardar `priority` do tópico.
 - `12-estatisticas.js`: `buildStatisticsModel` usa `session.priority` quando o tópico não está no edital carregado e preenche, uma vez, as sessões antigas sem prioridade (depois salva/sincroniza).
 - O gráfico "Estudos por prioridade — geral" deixa de mostrar o aviso de deslizar (não rola no celular).
+
+## V10.29 — Interface e histórico
+- `js/12a-ux.js` (novo, carregado antes de `13-iniciar.js`): barra inferior (≤1023px), campo de minutos (±5, h:mm), desfazer exclusão de registro (restaura com id novo por causa dos tombstones) e re-renderização do histórico ao mudar entre tabela e cartões.
+- `05-registro.js`: busca por texto (inclui a anotação do tópico) e filtro de período no histórico; cartões no celular (≤640px) com anotação; ação `edit`; estados vazios com ação.
+- `03-utilitarios.js`: `parseMinutesInput` e `fmtMinutesHM`. `01-base.js`: `showToast(titulo, msg, nivel, {label,onClick})`.
+- `index.html`: `viewport-fit=cover`, `type="button"` em todos os botões, rótulos associados aos campos. `css/estilos.css`: foco visível, `prefers-reduced-motion`, fontes mínimas de 11px, alvos de 44px no celular.

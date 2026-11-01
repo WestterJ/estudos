@@ -1,0 +1,18 @@
+PLANEJADOR DE ESTUDOS V10.29 — INTERFACE E HISTÓRICO
+
+Registro de Estudos
+- Histórico com busca (disciplina, tópico, trilha, tipo, data e texto da anotação do tópico) e filtro de período.
+- No celular, cada registro aparece como cartão (data, tempo, disciplina, tópico, anotação, ações). Toque na anotação para ler tudo.
+- Estados vazios com ação (Limpar filtros / Lançar o primeiro estudo).
+- Desfazer após excluir um registro.
+- Minutos livres: aceita 85, 1:25 ou 1h25; botões −5 e +5.
+
+Interface
+- Barra inferior no celular (Cronograma, Registro, Edital, Estatísticas, Mais).
+- Foco visível em todos os controles, movimento reduzido respeitado, campos de 44px e fonte de 16px no celular, fontes mínimas de 11px.
+- Todos os botões com type="button"; campos com rótulo associado.
+
+Como testar
+1. No celular: Registro de Estudos > histórico (cartões) > buscar uma aula pelo texto da anotação > filtrar por período.
+2. Lançar um estudo digitando 1:25 e outro usando −5/+5.
+3. Excluir um registro e tocar em Desfazer.
