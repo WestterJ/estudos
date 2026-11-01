@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.29
+# Arquitetura — Planejador de Estudos V10.30
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -143,3 +143,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - `05-registro.js`: busca por texto (inclui a anotação do tópico) e filtro de período no histórico; cartões no celular (≤640px) com anotação; ação `edit`; estados vazios com ação.
 - `03-utilitarios.js`: `parseMinutesInput` e `fmtMinutesHM`. `01-base.js`: `showToast(titulo, msg, nivel, {label,onClick})`.
 - `index.html`: `viewport-fit=cover`, `type="button"` em todos os botões, rótulos associados aos campos. `css/estilos.css`: foco visível, `prefers-reduced-motion`, fontes mínimas de 11px, alvos de 44px no celular.
+
+
+## V10.30 — Espaço da navegação inferior
+- Aumentada a altura mínima dos botões da barra inferior em telas até 1023px.
+- Ajustado o espaço reservado no final da página e do conteúdo principal para evitar sobreposição com a navegação fixa e respeitar a área segura do dispositivo.
+- Reposicionados botão flutuante e notificações. Sem mudanças na lógica de Datas Importantes, revisões ou estatísticas.

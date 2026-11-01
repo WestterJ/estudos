@@ -1,0 +1,20 @@
+PLANEJADOR DE ESTUDOS V10.30 — AJUSTE DA NAVEGAÇÃO INFERIOR
+
+Alterações desta etapa
+- Aumentada a altura mínima dos botões da barra inferior no celular.
+- Reservado espaço adicional no final do conteúdo para evitar que textos, cartões e gráficos fiquem encobertos pela navegação fixa.
+- Reposicionados o botão flutuante de lançamento e as notificações para não conflitar com a barra inferior.
+- Considerada a área segura do dispositivo (safe-area-inset-bottom).
+- Atualizada a versão e o cache do service worker para disponibilizar a correção no PWA.
+
+Fora do escopo desta etapa
+- Não foram alteradas as revisões.
+- Não foi alterado o comportamento de fechar o menu lateral tocando fora dele.
+- Não foi alterada a lógica nem os dados de Datas Importantes.
+- Não foram reformuladas as estatísticas.
+
+Teste recomendado
+1. Abrir o app no celular e navegar por Cronograma, Registro, Edital, Estatísticas e Mais.
+2. Rolar até o final de cada módulo e confirmar que o último conteúdo pode ser visto e acionado sem ficar atrás da barra inferior.
+3. Verificar o botão flutuante e as notificações.
+4. Testar em tema claro e escuro.
