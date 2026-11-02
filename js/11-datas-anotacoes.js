@@ -64,15 +64,14 @@
             return {text:`em ${diff} dias`,cls:'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300'};
         }
         function dateRowHtml(i){
-            const e=escapeHtml;const due=i.endDate||i.date;const chip=daysChip(dayDiffFromToday(due),i.done);
+            const e=escapeHtml;const due=i.endDate||i.date;const showEnd=!!i.endDate||!!(window._datesShowEnd&&window._datesShowEnd.has(i.id));const chip=daysChip(dayDiffFromToday(due),i.done);
             return `<li class="date-row${i.done?' is-done':''}" data-id="${e(i.id)}">
                 <input type="checkbox" class="date-check" ${i.done?'checked':''} aria-label="Marcar como concluída" data-df="done">
                 <div class="min-w-0 flex-1">
                     <input class="tbl-field date-title text-sm font-semibold" data-df="title" maxlength="120" value="${e(i.title)}" aria-label="Título">
                     <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                         <input type="date" class="tbl-field" style="width:auto" data-df="date" value="${e(i.date||'')}" aria-label="Data">
-                        <span>até</span>
-                        <input type="date" class="tbl-field" style="width:auto" data-df="endDate" value="${e(i.endDate||'')}" aria-label="Data final (opcional)">
+                        ${showEnd?`<span>até</span><input type="date" class="tbl-field" style="width:auto" data-df="endDate" value="${e(i.endDate||'')}" aria-label="Data final">`:`<button type="button" class="date-add-end" data-df-addend="1" aria-label="Adicionar data final">+ período</button>`}
                         <span class="rounded-full px-2 py-0.5 font-bold ${chip.cls}">${e(chip.text)}</span>
                     </div>
                 </div>
@@ -118,6 +117,13 @@
                     if(f!=='title')renderImportantDates();
                 });
                 box.addEventListener('click',ev=>{
+                    const add=ev.target.closest('[data-df-addend]');
+                    if(add){
+                        const li0=add.closest('li');if(!window._datesShowEnd)window._datesShowEnd=new Set();window._datesShowEnd.add(li0.dataset.id);
+                        renderImportantDates();
+                        const again=document.querySelector('li[data-id="'+li0.dataset.id+'"] [data-df="endDate"]');if(again)again.focus();
+                        return;
+                    }
                     const btn=ev.target.closest('[data-df-del]');if(!btn)return;
                     const li=btn.closest('li');const item=getImportantDates().find(x=>x.id===li.dataset.id);if(!item)return;
                     showCustomDialog('Excluir data?',`“${item.title}” será removida da lista.`,'fa-solid fa-triangle-exclamation',()=>{

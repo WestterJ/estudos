@@ -62,7 +62,7 @@
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
-            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,isReview:type2==='Revisão'?1:0};
+            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,obs:(document.getElementById('reg-obs')?.value||'').trim().slice(0,500),isReview:type2==='Revisão'?1:0};
             studySessions.unshift(session);
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
             let userItem=userProgress.find(u=>u.id===itemId);
@@ -73,6 +73,7 @@
             if(type2==='Estudo Teórico' && userItem.hours>=0.5)userItem.completed=true;
             saveData();
             const _q=document.getElementById('reg-questions');if(_q)_q.value=0;
+            const _o=document.getElementById('reg-obs');if(_o)_o.value='';
             initRegistrationForm();initCronogramaFilters();renderSessionsList();
             renderRecentRotation();renderDashboard();renderPriorityDisciplineProgress();
             showCustomDialog('Registro salvo',`${type2==='Revisão'?'Revisão':'Sessão de estudo'} registrada em ${session.date} na trilha “${studyTrack}”.`,'fa-solid fa-circle-check');
@@ -170,11 +171,11 @@
                 return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Disciplina / Tópico."':''}>
                     <td style="min-width:122px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
                     <td style="min-width:164px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select><select class="tbl-field tbl-sub" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
-                    <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select></td>
+                    <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select><input type="text" class="tbl-field tbl-sub" data-f="obs" maxlength="500" placeholder="Observações" value="${e(s.obs||'')}" aria-label="Observações"></td>
                     <td style="min-width:132px"><select class="tbl-field" data-f="studyTrack" aria-label="Curso ou trilha">${trackOptionsHtml(String(s.studyTrack||'Trilha não informada'))}</select></td>
                     <td style="min-width:78px"><input type="number" min="1" class="tbl-field" data-f="minutes" value="${minutes}" aria-label="Minutos"><div class="px-1.5 text-[10px] text-slate-400" data-dhm>${fmtHoras(minutes/60)}</div></td>
                     <td style="min-width:64px"><input type="number" min="0" class="tbl-field" data-f="questions" value="${Number(s.questions)||0}" aria-label="Questões"></td>
-                    <td style="min-width:96px;white-space:nowrap"><button type="button" data-act="copy" class="sess-ico bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300" title="Copiar para o formulário" aria-label="Copiar para o formulário"><i class="fa-regular fa-copy"></i></button> <button type="button" data-act="note" class="sess-ico bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300" title="Anotações do tópico" aria-label="Anotações do tópico"><i class="fa-regular fa-note-sticky"></i></button> <button type="button" data-act="del" class="sess-ico bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir registro" aria-label="Excluir registro"><i class="fa-regular fa-trash-can"></i></button></td>
+                    <td style="min-width:132px;white-space:nowrap"><button type="button" data-act="edit" class="sess-ico bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200" title="Editar registro" aria-label="Editar registro"><i class="fa-solid fa-pen"></i></button> <button type="button" data-act="copy" class="sess-ico bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300" title="Copiar para o formulário" aria-label="Copiar para o formulário"><i class="fa-regular fa-copy"></i></button> <button type="button" data-act="note" class="sess-ico bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300" title="Anotações do tópico" aria-label="Anotações do tópico"><i class="fa-regular fa-note-sticky"></i></button> <button type="button" data-act="del" class="sess-ico bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir registro" aria-label="Excluir registro"><i class="fa-regular fa-trash-can"></i></button></td>
                 </tr>`;
             }).join('');
             container.innerHTML=`<table class="sess-table"><thead><tr><th>Data</th><th>Atividade / Conteúdo</th><th>Disciplina / Tópico</th><th>Trilha</th><th>Min</th><th>Quest.</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -213,7 +214,7 @@
             const q=normText(document.getElementById('hist-search')?.value).trim();
             if(q){
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
-                const hay=normText([s.discipline,s.topic,s.subtopic,s.studyTrack,s.type2,s.date,item?getTopicNote(item.id):''].join(' '));
+                const hay=normText([s.discipline,s.topic,s.subtopic,s.studyTrack,s.type2,s.date,s.obs,item?getTopicNote(item.id):''].join(' '));
                 if(!q.split(/\s+/).every(t=>hay.includes(t)))return false;
             }
             return true;
@@ -231,6 +232,20 @@
             window._sessionsLimit=20;
             switchTab('registro');
             setTimeout(()=>{renderSessionsList();document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});},60);
+        }
+        // V10.32 — filtra o histórico pela disciplina escolhida no formulário de lançamento (para tirar dúvidas)
+        function filterHistoryByFormDiscipline(){
+            const disc=document.getElementById('reg-discipline')?.value||'';
+            const sel=document.getElementById('hist-filter-disc');
+            if(!disc||!sel)return;
+            if(![...sel.options].some(o=>o.value===disc)){const opt=document.createElement('option');opt.value=disc;opt.textContent=disc;sel.appendChild(opt);}
+            sel.value=disc;
+            ['hist-filter-type','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
+            const per=document.getElementById('hist-period');if(per)per.value='all';
+            const q=document.getElementById('hist-search');if(q)q.value='';
+            window._sessionsLimit=20;
+            renderSessionsList();
+            document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});
         }
         function clearHistoryFilters(){
             ['hist-filter-type','hist-filter-disc','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
@@ -266,6 +281,7 @@
                     <p class="sess-card-topic">${orphan?'⚠ ':''}${e(topic)}</p>
                     <p class="sess-card-meta">${e(s.type2||'')} · ${e(s.studyTrack||'Trilha não informada')}${q?` · ${q} questões`:''}</p>
                     ${note?`<p class="sess-card-note" title="Toque para ver tudo">${e(note)}</p>`:'<p class="sess-card-note sess-card-note-empty">Sem anotação neste tópico</p>'}
+                    ${s.obs?`<p class="sess-card-obs"><strong>Obs.:</strong> ${e(s.obs)}</p>`:''}
                     <div class="sess-card-actions">
                         <button type="button" data-act="edit" aria-label="Editar registro"><i class="fa-solid fa-pen" aria-hidden="true"></i>Editar</button>
                         <button type="button" data-act="note" aria-label="Abrir anotações do tópico"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i>Anotação</button>
@@ -301,6 +317,7 @@
             else if(f==='studyTrack')patch.studyTrack=(el.value||'').trim()||'Trilha não informada';
             else if(f==='minutes')patch.minutes=Math.max(1,Number(el.value)||1);
             else if(f==='questions')patch.questions=Math.max(0,Number(el.value)||0);
+            else if(f==='obs')patch.obs=(el.value||'').trim().slice(0,500);
             else if(f==='discipline'){
                 const first=masterEditalData.find(x=>x.discipline===el.value);
                 if(!first){showCustomDialog('Disciplina sem tópicos','Essa disciplina não tem tópicos cadastrados no edital.');el.value=s.discipline||'';return;}
@@ -378,6 +395,7 @@
             const match=masterEditalData.find(i=>i.discipline===session.discipline&&i.topic===session.topic&&i.subtopic===session.subtopic)||masterEditalData.find(i=>i.discipline===session.discipline);
             updateEditSessionTopics(match?match.id:null);
             document.getElementById('edit-session-minutes').value=Number(session.minutes)||50;
+            const _eo=document.getElementById('edit-session-obs');if(_eo)_eo.value=session.obs||'';
             document.getElementById('edit-session-questions').value=Number(session.questions)||0;
             document.getElementById('edit-session-review').value=(session.isReview || session.type2==='Revisão')?'1':'0';
             document.getElementById('session-edit-modal').classList.remove('hidden');document.getElementById('session-edit-modal').classList.add('flex');
@@ -401,7 +419,7 @@
             }
             const dateValue=document.getElementById('edit-session-date').value;
             const [year,month,day]=dateValue.split('-');
-            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,isReview});
+            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,obs:(document.getElementById('edit-session-obs')?.value||'').trim().slice(0,500),isReview});
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress)}
             newProgress.hours=(Number(newProgress.hours)||0)+minutes/60;

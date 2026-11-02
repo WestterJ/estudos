@@ -350,10 +350,13 @@
             const savedAt=cloud?localStorage.getItem(keys.cloud):localStorage.getItem(keys.local);
             const savedLabel=formatSavedAt(savedAt);
             const rel=formatSavedRelative(savedAt);
+            // V10.32 — só alerta (âmbar) quando há alteração local ainda não confirmada na nuvem; "há 2 dias" sem alteração é normal.
+            const localSavedAt=localStorage.getItem(keys.local);
+            const pending=!!(cloud&&localSavedAt&&Date.parse(localSavedAt)-Date.parse(savedAt)>60000);
             button.classList.remove('local','cloud','error','stale');
             button.classList.add(cloud?'cloud':'local');
-            if(cloud&&rel.stale)button.classList.add('stale');
-            button.innerHTML=`<i class="fa-solid ${cloud?(rel.stale?'fa-triangle-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${rel.text}</span>`;
+            if(pending)button.classList.add('stale');
+            button.innerHTML=`<i class="fa-solid ${cloud?(pending?'fa-triangle-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${pending?'pendente · ':''}${rel.text}</span>`;
             button.title=`${cloud?'Última atualização confirmada na nuvem':'Último salvamento local'}: ${savedLabel}. Clique para abrir as configurações.`;
         }
 
