@@ -514,7 +514,7 @@
 .dark .week-badge{background:rgba(22,163,74,.2);color:#86efac}
 .suggestion-go-btn{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:0;background:#fbbf24;color:#1f2937;font-weight:800;font-size:13px;cursor:pointer}
 .suggestion-go-btn[hidden]{display:none}
-.activity-panel.collapsed .suggestion-go-btn{display:block}
+.activity-panel.collapsed .suggestion-go-btn:not([hidden]){display:block}
 .cloud-indicator.stale{background:#fef3c7;color:#92400e;border-color:#f59e0b}
 /* semana: barras clicáveis e cartão */
 .stats-week-chart .stats-bar-column.is-week-btn{cursor:pointer;border-radius:10px}
@@ -559,16 +559,6 @@
   .sidebar-ver{font-weight:600;font-size:11px;color:#475569;margin-left:6px}
   .sidebar-close-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#0f172a;font-size:18px;cursor:pointer}
   main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
-  /* Cronograma no celular: sugestões primeiro, KPIs em faixa compacta */
-  #content-cronograma{display:flex;flex-direction:column;gap:16px}
-  #content-cronograma>*{margin-top:0!important}
-  #content-cronograma .activity-panels-grid{display:contents}
-  #content-cronograma .suggestions-panel{order:-3}
-  #content-cronograma>.grid.grid-cols-2{order:-2;display:flex!important;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;padding-bottom:4px}
-  #content-cronograma>.grid.grid-cols-2>*{flex:0 0 150px;scroll-snap-align:start}
-  #content-cronograma .review-due-panel{order:-1}
-  #content-cronograma .recent-panel,#content-cronograma .recent-reviews-panel{order:0}
-  #content-cronograma>section{order:1}
 }
 @media (max-width:640px){
   .brand-app-icon{display:none}
