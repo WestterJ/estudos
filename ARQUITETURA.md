@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.30
+# Arquitetura — Planejador de Estudos V10.31
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -149,4 +149,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - `12-estatisticas.js`: barras do gráfico semanal viram botões (`data-week`) que selecionam a semana; `renderStatisticsWeekCard` mostra totais e horas por disciplina; a tabela "Detalhamento por prioridade e disciplina" foi removida. `openHistoryForWeek` (em `05-registro.js`) abre o histórico filtrado pela semana (período `range`).
 - `09-sincronizacao.js`: `mergeImportantDateLists`/`withMergedImportantDates` mesclam as datas importantes por id (`updatedAt`) com lista de excluídas (`importantDatesDeleted`); selo de nuvem relativo ("há 2 dias"; âmbar após 24h).
 - `11-datas-anotacoes.js`: lista única por data, concluídas riscadas e visíveis.
-- `04-inicio.js`: selo "+1h20 na semana" por disciplina e botão "Lançar estudo desta disciplina" nas sugestões. CSS: espaço da barra aplicado ao `main` (o `body` tem `h-full`), botão flutuante ocultado, Cronograma reordenado no celular, cabeçalho compacto.
+- `04-inicio.js`: selo "+1h20 na semana" por disciplina e botão "Lançar estudo desta disciplina" nas sugestões. CSS: espaço da barra aplicado ao `main` (o `body` tem `h-full`), botão flutuante ocultado, cabeçalho compacto.
+
+## V10.31 — Correção do Cronograma
+- Removido o bloco de CSS que reordenava o Cronograma no celular (`display:contents`, `order`, faixa de KPIs): ele sobrescrevia a regra que esconde as abas (`#content-cronograma{display:flex}` vence `.hidden`) e quebrava a ordem dos 4 cartões. A ordem estabelecida continua em `.activity-panels-grid` (colunas `study-column`/`suggestions-column`, `order` 1–4).
+- Regra geral: nunca aplique `display` por id/seletor específico em `.tab-content`; use `:not(.hidden)`.
+- Ícone do selo de nuvem desatualizado trocado por `fa-triangle-exclamation` (o de nuvem com exclamação é Pro).

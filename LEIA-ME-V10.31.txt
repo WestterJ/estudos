@@ -1,18 +1,14 @@
-PLANEJADOR DE ESTUDOS V10.31 — BARRA INFERIOR CONSISTENTE
+PLANEJADOR DE ESTUDOS V10.31 — CORREÇÃO DO CRONOGRAMA
 
-Nesta etapa
-- Corrigido o espaço reservado no final do conteúdo: a margem é aplicada ao elemento principal que contém e rola as telas, com espaço suficiente para a barra fixa e a área segura do aparelho.
-- Padronizada a barra inferior para manter os cinco destinos (Cronograma, Registro, Edital, Estatísticas e Mais) com a mesma estrutura em todas as telas móveis.
-- A barra continua visível ao abrir o menu lateral; o menu permanece fechável tocando fora dele, sem botão adicional de fechar.
-- Atualizada a versão e o nome do cache do PWA para forçar a atualização dos arquivos.
+Problema (V10.30)
+- O Cronograma aparecia em todas as abas, o Cronograma mostrava só 3 cartões e a página rolava para a direita.
+- Causa: uma regra de CSS do Cronograma no celular vencia a que esconde as abas e mudava a ordem estabelecida.
 
-Fora do escopo
-- Nenhuma alteração na lógica de revisões.
-- Nenhuma alteração na lógica ou nas datas de Datas Importantes.
-- Nenhuma alteração nos dados, autenticação ou sincronização Supabase.
+Correção
+- Removida a reordenação do Cronograma no celular. Voltam os 4 cartões (Últimos estudos, Sugestões, Últimas revisões, Revisões sugeridas) na ordem de sempre, no celular e no desktop.
+- Mantidos: barra inferior com Lançar e Mais, menu com Fechar, cartão da semana em Estatísticas, datas mescladas por id, selo semanal nas disciplinas, botão Lançar nas sugestões.
+- Ícone do aviso "há N dias" trocado por um que existe no Font Awesome gratuito.
 
-Teste recomendado
-1. Atualizar/recarregar o app no celular.
-2. Abrir Cronograma, Registro, Edital, Estatísticas e Mais.
-3. Rolar cada tela até o final e confirmar que o último cartão, campo e botão não ficam sob a barra inferior.
-4. Abrir o menu lateral e confirmar que a barra inferior mantém o mesmo formato e que tocar fora fecha o menu.
+Como testar
+1. Abra cada aba (Cronograma, Registro, Edital, Estatísticas, Datas, Personalização, Configurações): só a aba escolhida deve aparecer.
+2. No Cronograma do celular, confira os 4 cartões e role a página: não deve haver rolagem para o lado.
