@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <!-- V10.31 — Correção: Cronograma voltou ao layout original (4 cartões e ordem estabelecida) e não aparece mais em todas as abas. -->
-    <title>Planejador de Estudos | Concursos — V10.31</title>
+    <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
+    <title>Planejador de Estudos | Concursos — V10.32</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -279,6 +279,10 @@
                                 <input type="number" id="reg-questions" min="0" value="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
                             </div>
                         </div>
+                        <div class="sm:col-span-2 xl:col-span-4">
+                            <label for="reg-obs" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Observações <span class="font-normal">(opcional)</span>:</label>
+                            <textarea id="reg-obs" rows="2" maxlength="500" placeholder="Ex.: dúvida sobre a aula, ponto para revisar..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></textarea>
+                        </div>
                         <div class="xl:col-span-4 flex flex-wrap items-center justify-between gap-2">
                             <p class="text-[11px] text-slate-500 dark:text-slate-400">Para registrar uma revisão, selecione <strong>Revisão</strong> em Tipo 2. Assim não é preciso marcar um segundo campo.</p>
                             <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition inline-flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i><span>Salvar registro de estudo</span></button>
@@ -305,6 +309,7 @@
                             <select aria-label="Filtrar por disciplina" id="hist-filter-disc" onchange="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none">
                                 <option value="all">Todas Disciplinas</option>
                             </select>
+                            <button type="button" id="hist-form-disc-btn" class="hist-form-disc-btn" onclick="filterHistoryByFormDiscipline()" title="Filtrar o histórico pela disciplina escolhida no formulário de lançamento"><i class="fa-solid fa-filter" aria-hidden="true"></i> Disciplina do lançamento</button>
                             <select id="hist-filter-track" onchange="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none" aria-label="Filtrar por curso ou trilha">
                                 <option value="all">Todas as trilhas</option>
                             </select>
@@ -328,7 +333,7 @@
                         <h3 class="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">Edital Verticalizado</h3>
                         <p id="edital-contest-caption" class="text-xs text-slate-500 dark:text-slate-400">Conteúdo programático do concurso selecionado, dividido por tópico e subtópico.</p>
                     </div>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <select aria-label="Filtrar por disciplina" id="edital-filter-disc" onchange="renderEditalVerticalizado()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none">
                             <option value="all">Todas as Disciplinas</option>
                         </select>
@@ -632,6 +637,7 @@
           <label class="span-3">Duração (minutos)<input id="edit-session-minutes" type="text" inputmode="numeric" required class="mt-1 rounded-lg border p-2 text-sm"></label>
           <label class="span-3">Questões resolvidas<input id="edit-session-questions" type="number" min="0" required class="mt-1 rounded-lg border p-2 text-sm"></label>
           <label class="span-3">Foi revisão?<select id="edit-session-review" class="mt-1 rounded-lg border p-2 text-sm"><option value="0">Não</option><option value="1">Sim (+1 ciclo)</option></select></label>
+          <label style="grid-column:1/-1">Observações<textarea id="edit-session-obs" rows="2" maxlength="500" class="mt-1 w-full rounded-lg border p-2 text-sm"></textarea></label>
           <div class="span-3 flex items-end gap-2"><button type="button" onclick="closeSessionEdit()" class="flex-1 rounded-lg border px-3 py-2 font-semibold">Cancelar</button><button type="submit" class="flex-1 rounded-lg bg-blue-700 text-white px-3 py-2 font-bold">Salvar alterações</button></div>
         </form>
       </div>

@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.31
+# Arquitetura — Planejador de Estudos V10.32
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -155,3 +155,10 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - Removido o bloco de CSS que reordenava o Cronograma no celular (`display:contents`, `order`, faixa de KPIs): ele sobrescrevia a regra que esconde as abas (`#content-cronograma{display:flex}` vence `.hidden`) e quebrava a ordem dos 4 cartões. A ordem estabelecida continua em `.activity-panels-grid` (colunas `study-column`/`suggestions-column`, `order` 1–4).
 - Regra geral: nunca aplique `display` por id/seletor específico em `.tab-content`; use `:not(.hidden)`.
 - Ícone do selo de nuvem desatualizado trocado por `fa-triangle-exclamation` (o de nuvem com exclamação é Pro).
+
+## V10.32 — Espaço inferior, filtros e observações
+- Espaço no fim das páginas: `main::after` (≤1023px). O `.app-shell` tem `min-height:0` e o `body` altura fixa, então o `main` tem a altura da tela e o conteúdo transborda; padding no `main` não cria espaço, um elemento no fluxo após o conteúdo cria.
+- Rolagem lateral: selects com opções longas (filtros do histórico e do Edital) alargavam a página. `main select{max-width:100%}`, filtros do Edital com `flex-wrap`, `body{overflow-x:clip}` como rede de segurança.
+- `05-registro.js`: campo `obs` na sessão (formulário `#reg-obs`, modal `#edit-session-obs`, tabela inline, cartões, busca) e `filterHistoryByFormDiscipline()` (botão "Disciplina do lançamento").
+- `11-datas-anotacoes.js`: a data final ("até") só aparece quando existe; senão o botão "+ período".
+- `09-sincronizacao.js`: o selo de nuvem só fica âmbar com alteração local pendente (`pendente · há N`).

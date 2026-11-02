@@ -1,0 +1,18 @@
+PLANEJADOR DE ESTUDOS V10.32 — ESPAÇO INFERIOR, FILTROS E OBSERVAÇÕES
+
+Correções
+- O fim de todas as páginas agora fica acima da barra inferior no celular.
+- Edital e Registro não rolam mais para o lado: os filtros com nomes longos de disciplina cabem na tela.
+- Datas Importantes: a data final ("até") só aparece quando existe; para criar, use "+ período".
+- O selo da nuvem só fica âmbar quando há alteração local pendente.
+
+Novidades
+- Registrar sessão: campo Observações (opcional). Aparece nos cartões do histórico, na tabela (campo editável), no modal de edição e na busca.
+- Histórico: botão "Disciplina do lançamento" filtra pela disciplina escolhida no formulário.
+- Tabela do histórico (desktop): botão Editar (lápis).
+
+Como testar
+1. Role cada aba até o fim no celular: o último conteúdo deve ficar acima da barra.
+2. Edital e Registro: sem rolagem lateral.
+3. Registrar uma sessão com observação; ver o cartão; buscar pelo texto da observação.
+4. Escolher uma disciplina no formulário e tocar em "Disciplina do lançamento".
