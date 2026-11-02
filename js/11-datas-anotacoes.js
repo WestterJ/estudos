@@ -97,10 +97,11 @@
                 const next=upcoming[0];
                 sum.textContent=items.length?`${done.length} de ${items.length} concluída${items.length===1?'':'s'}${overdue.length?` · ${overdue.length} atrasada${overdue.length===1?'':'s'}`:''}${next?` · próxima: ${next.title} (${daysChip(dayDiffFromToday(due(next)),false).text})`:''}`:'Nenhuma data cadastrada';
             }
-            const section=(title,icon,color,list,extra='')=>list.length?`<div class="${extra}"><h3 class="mb-2 text-xs font-bold uppercase tracking-wide ${color}"><i class="fa-solid ${icon} mr-1"></i>${title} <span class="font-semibold opacity-70">(${list.length})</span></h3><ul class="space-y-2">${list.map(dateRowHtml).join('')}</ul></div>`:'';
-            let html=section('Atrasadas','fa-triangle-exclamation','text-red-700 dark:text-red-300',overdue)+section('Próximas','fa-hourglass-half','text-blue-700 dark:text-blue-300',upcoming);
-            if(!overdue.length&&!upcoming.length)html+=`<p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-6 text-center text-xs text-slate-500">${items.length?'Tudo concluído por aqui. 🎉':'Cadastre acima as datas importantes do concurso: inscrição, boleto, provas, resultado…'}</p>`;
-            if(done.length)html+=`<details class="mt-2"><summary class="cursor-pointer text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Concluídas (${done.length})</summary><ul class="mt-2 space-y-2">${done.map(dateRowHtml).join('')}</ul></details>`;
+            // V10.30 — Lista única ordenada por data; as concluídas ficam visíveis (riscadas), não recolhidas.
+            const all=[...items].sort((x,y)=>String(due(x)).localeCompare(String(due(y))));
+            const html=all.length
+                ?`<div><h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300"><i class="fa-solid fa-calendar-days mr-1"></i>Todas as datas <span class="font-semibold opacity-70">(${all.length})</span>${overdue.length?` <span class="text-red-700 dark:text-red-300">· ${overdue.length} atrasada${overdue.length===1?'':'s'}</span>`:''}</h3><ul class="space-y-2">${all.map(dateRowHtml).join('')}</ul></div>`
+                :`<p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-6 text-center text-xs text-slate-500">Cadastre acima as datas importantes do concurso: inscrição, boleto, provas, resultado…</p>`;
             box.innerHTML=html;
             if(!box.dataset.bound){
                 box.dataset.bound='1';
@@ -108,6 +109,7 @@
                     const el=ev.target.closest('[data-df]');if(!el)return;
                     const li=el.closest('li');const item=getImportantDates().find(x=>x.id===li.dataset.id);if(!item)return;
                     const f=el.dataset.df;
+                    item.updatedAt=new Date().toISOString();
                     if(f==='done')item.done=el.checked;
                     else if(f==='title'){item.title=(el.value||'').trim()||'Sem título';}
                     else if(f==='date'){if(!el.value){el.value=item.date||'';return;}item.date=el.value;if(item.endDate&&item.endDate<item.date)item.endDate='';}
@@ -119,6 +121,7 @@
                     const btn=ev.target.closest('[data-df-del]');if(!btn)return;
                     const li=btn.closest('li');const item=getImportantDates().find(x=>x.id===li.dataset.id);if(!item)return;
                     showCustomDialog('Excluir data?',`“${item.title}” será removida da lista.`,'fa-solid fa-triangle-exclamation',()=>{
+                        contests[activeContest].importantDatesDeleted=[...(contests[activeContest].importantDatesDeleted||[]),item.id].slice(-500);
                         contests[activeContest].importantDates=getImportantDates().filter(x=>x.id!==item.id);
                         saveImportantDates();renderImportantDates();
                     });
@@ -132,7 +135,7 @@
             let end=document.getElementById('date-new-end').value;
             if(!title||!date)return;
             if(end&&end<date)end='';
-            getImportantDates().push({id:crypto.randomUUID(),title,date,endDate:end,done:false});
+            getImportantDates().push({id:crypto.randomUUID(),title,date,endDate:end,done:false,updatedAt:new Date().toISOString()});
             saveImportantDates();
             ev.target.reset();
             renderImportantDates();

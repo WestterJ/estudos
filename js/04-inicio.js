@@ -71,6 +71,12 @@
                 prova='Prova em '+new Date(cfg.date+'T12:00:00').toLocaleDateString('pt-BR')+resto;
             }
             const meta=[cfg.board?'Banca '+cfg.board:null,prova].filter(Boolean).join(' · ');
+            if(window.matchMedia&&window.matchMedia('(max-width:640px)').matches&&cfg.date){
+                const diff=dayDiffFromToday(cfg.date);
+                if(diff!==null&&diff>1)return `${name} · faltam ${diff} dias`;
+                if(diff===1)return `${name} · falta 1 dia`;
+                if(diff===0)return `${name} · prova hoje`;
+            }
             return meta?`${name} · ${meta}`:name;
         }
         function refreshContestSubtitle(){const sub=document.getElementById('contest-subtitle');if(!sub)return;const t=contestSubtitleText();if(sub.textContent!==t)sub.textContent=t;}
@@ -119,7 +125,14 @@
                 const toggle=()=>{const closed=panel.classList.toggle('collapsed'); head.setAttribute('aria-expanded',String(!closed));};
                 head.addEventListener('click',toggle);
                 head.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+                let goBtn=null;
+                if(container.id==='next-study-container'){
+                    goBtn=document.createElement('button');goBtn.type='button';goBtn.className='suggestion-go-btn';
+                    summary.insertAdjacentElement('afterend',goBtn);
+                    goBtn.addEventListener('click',()=>{const d=goBtn.dataset.discipline;if(d)openDisciplineInCronograma(d);});
+                }
                 const refresh=()=>{
+                    if(goBtn){const first=container.querySelector('.next-study-card');goBtn.hidden=!first;if(first){goBtn.dataset.discipline=first.dataset.discipline||'';goBtn.innerHTML='<i class="fa-solid fa-plus" aria-hidden="true"></i> Lançar estudo desta disciplina';}}
                     // No cartão de sugestões, o resumo com o painel fechado destaca apenas
                     // disciplina, prioridade e percentual. A nota fica em uma linha separada.
                     if(container.id==='next-study-container'){
@@ -220,6 +233,7 @@
             }
             suggestions.forEach((item, index) => {
                 const card = document.createElement('div');
+                card.dataset.discipline = item.discipline;
                 card.className = 'next-study-card flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
                 const colorStyle = 'color:' + (getPrioritySettings()[item.priority]?.color || '#64748b');
                 const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (weekdayAbbr(item.lastDate)?' ('+weekdayAbbr(item.lastDate)+')':'') + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
@@ -313,6 +327,15 @@
 
         window._openHomePriorities = window._openHomePriorities instanceof Set ? window._openHomePriorities : new Set();
         window._openHomeDisciplines = window._openHomeDisciplines instanceof Set ? window._openHomeDisciplines : new Set();
+        // V10.30 — minutos estudados na semana atual (segunda a domingo) por disciplina
+        function getWeekMinutesByDiscipline(){
+            const now=new Date();const dow=(now.getDay()+6)%7;
+            const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow).getTime();
+            const end=start+7*864e5;const map=new Map();
+            studySessions.forEach(s=>{const day=getSessionSortInfo(s).day;if(!day||day<start||day>=end)return;
+                const k=s.discipline||'';map.set(k,(map.get(k)||0)+Math.max(0,Number(s.minutes)||0));});
+            return map;
+        }
         function renderPriorityDisciplineProgress() {
             const container=document.getElementById('priority-progress-container');
             if(!container) return;
@@ -323,6 +346,7 @@
             const summary=document.getElementById('home-progress-summary');
             if(summary) summary.textContent=`${overall}% concluído · ${completed}/${total} tópicos`;
             if(!total){container.innerHTML=onboardingHtml();return;}
+            const weekMinutes=getWeekMinutesByDiscipline();
             const pSettings=getPrioritySettings();
             const priorityOrder=Object.keys(pSettings).sort((a,b)=>(Number(pSettings[b].weight)||1)-(Number(pSettings[a].weight)||1));
             const priorityMeta={};
@@ -348,7 +372,7 @@
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
                         return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${fmtHoras(Number(u.hours)||0)}</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
-                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
+                    inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos${weekMinutes.get(discipline)>0?`<span class="week-badge">+${escapeHtml(fmtMinutesHM(weekMinutes.get(discipline)))} na semana</span>`:''}</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });
                 const priorityIsOpen=window._openHomePriorities.has(priority);
                 group.innerHTML=`<details class="priority-group" data-priority="${priority}" ${priorityIsOpen?'open':''} ontoggle="if(!window._openHomePriorities)window._openHomePriorities=new Set();this.open?window._openHomePriorities.add(this.dataset.priority):window._openHomePriorities.delete(this.dataset.priority)"><summary class="priority-group-head" style="background:${met.bg};color:${met.color}"><span><i class="fa-solid fa-circle text-[9px] mr-2"></i>${met.title}</span><span class="priority-group-stats"><span>${completedPri}/${priorityTopics.length} tópicos · ${priorityTopics.length?Math.round(completedPri/priorityTopics.length*100):0}%</span></span><i class="fa-solid fa-chevron-right priority-chevron"></i></summary><div class="p-2.5 space-y-2.5">${inner}</div></details>`;

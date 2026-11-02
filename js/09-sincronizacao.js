@@ -106,6 +106,24 @@
             });
             return merged;
         }
+        // V10.30 — Datas importantes: mescla por id (nenhum aparelho apaga as datas do outro) e respeita as excluídas.
+        function mergeImportantDateLists(a,b,deleted){
+            const del=new Set((deleted||[]).map(String));const map=new Map();
+            const put=(item,preferNew)=>{
+                if(!item||!item.id||del.has(String(item.id)))return;
+                const cur=map.get(item.id);if(!cur){map.set(item.id,item);return;}
+                const tc=Date.parse(cur.updatedAt||'')||0,tn=Date.parse(item.updatedAt||'')||0;
+                if(tn>tc||(tn===tc&&preferNew))map.set(item.id,item);
+            };
+            (Array.isArray(a)?a:[]).forEach(i=>put(i,false));(Array.isArray(b)?b:[]).forEach(i=>put(i,true));
+            return [...map.values()];
+        }
+        function withMergedImportantDates(target,remoteCfg,localCfg){
+            const rd=remoteCfg&&remoteCfg.importantDates,ld=localCfg&&localCfg.importantDates;
+            const deleted=[...new Set([...(remoteCfg&&remoteCfg.importantDatesDeleted||[]),...(localCfg&&localCfg.importantDatesDeleted||[])].map(String))].slice(-500);
+            if(!Array.isArray(rd)&&!Array.isArray(ld)&&!deleted.length)return target;
+            return {...target,importantDates:mergeImportantDateLists(rd,ld,deleted),importantDatesDeleted:deleted};
+        }
         function mergeContestSnapshot(remoteSnap, localSnap) {
             const remote=(remoteSnap && typeof remoteSnap==='object')?remoteSnap:{};
             const local=(localSnap && typeof localSnap==='object')?localSnap:{};
@@ -168,12 +186,12 @@
                 if(deletedContestMap[id])return;
                 const remoteCfg=mergedContests[id];
                 if(!remoteCfg) { mergedContests[id]=localCfg; return; }
-                if(id===localPayload.activeContest) { mergedContests[id]={...remoteCfg,...localCfg}; return; }
+                if(id===localPayload.activeContest) { mergedContests[id]=withMergedImportantDates({...remoteCfg,...localCfg},remoteCfg,localCfg); return; }
                 const localTime=Date.parse(localCfg?._updatedAt||'')||0;
                 const remoteTime=Date.parse(remoteCfg?._updatedAt||'')||0;
                 // Não deixar um nome genérico reconstruído a partir do ID apagar o nome remoto conhecido.
                 if(!localTime && localCfg?.name===id && remoteCfg?.name && remoteCfg.name!==id) return;
-                if(localTime && localTime>remoteTime) mergedContests[id]={...remoteCfg,...localCfg};
+                mergedContests[id]=withMergedImportantDates((localTime&&localTime>remoteTime)?{...remoteCfg,...localCfg}:remoteCfg,remoteCfg,localCfg);
             });
             Object.keys(mergedSnapshots).forEach(id=>{
                 if(deletedContestMap[id]){delete mergedSnapshots[id];return;}
@@ -217,7 +235,11 @@
                     activeContest=(payload.activeContest&&payload.contests[payload.activeContest]&&payload.activeContest!==DEFAULT_CONTEST_ID&&!deletedMap[payload.activeContest])?payload.activeContest:otherIds[0];
                 }
             }
-            if(payload.contests && typeof payload.contests==='object') contests={...contests,...payload.contests};
+            if(payload.contests && typeof payload.contests==='object'){
+                const previousContests=contests;
+                contests={...contests,...payload.contests};
+                Object.keys(payload.contests).forEach(id=>{if(previousContests[id])contests[id]=withMergedImportantDates(contests[id],payload.contests[id],previousContests[id]);});
+            }
             Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
             Object.keys(deletedMap).forEach(id=>purgeContestLocalStorage(id));
             if(!contests[activeContest])activeContest=(payload.activeContest&&contests[payload.activeContest])?payload.activeContest:Object.keys(contests)[0];
@@ -274,6 +296,16 @@
             }
         }
 
+        // V10.30 — "há 2 dias" em vez de só a data; marca como desatualizado após 24h.
+        function formatSavedRelative(value){
+            const t=value?new Date(value).getTime():NaN;
+            if(!Number.isFinite(t))return {text:'ainda não salvo',stale:false};
+            const min=Math.max(0,Math.round((Date.now()-t)/60000));
+            if(min<1)return {text:'agora',stale:false};
+            if(min<60)return {text:`há ${min} min`,stale:false};
+            const h=Math.floor(min/60);if(h<24)return {text:`há ${h} h`,stale:false};
+            const d=Math.floor(h/24);return {text:`há ${d} dia${d===1?'':'s'}`,stale:true};
+        }
         function formatSavedAt(value) {
             if(!value) return 'ainda não salvo';
             const date=new Date(value);
@@ -317,9 +349,11 @@
             const mode=cloud?'Nuvem':'Local';
             const savedAt=cloud?localStorage.getItem(keys.cloud):localStorage.getItem(keys.local);
             const savedLabel=formatSavedAt(savedAt);
-            button.classList.remove('local','cloud','error');
+            const rel=formatSavedRelative(savedAt);
+            button.classList.remove('local','cloud','error','stale');
             button.classList.add(cloud?'cloud':'local');
-            button.innerHTML=`<i class="fa-solid ${cloud?'fa-cloud-arrow-up':'fa-hard-drive'}"></i><span id="header-cloud-status-text">${mode} · ${savedLabel}</span>`;
+            if(cloud&&rel.stale)button.classList.add('stale');
+            button.innerHTML=`<i class="fa-solid ${cloud?(rel.stale?'fa-cloud-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${rel.text}</span>`;
             button.title=`${cloud?'Última atualização confirmada na nuvem':'Último salvamento local'}: ${savedLabel}. Clique para abrir as configurações.`;
         }
 

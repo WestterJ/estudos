@@ -207,6 +207,7 @@
                 if(period==='today'&&day!==today)return false;
                 if(period==='7'&&day<today-6*864e5)return false;
                 if(period==='30'&&day<today-29*864e5)return false;
+                if(period==='range'){const r=window._histRange;if(!r||day<r.from||day>r.to)return false;}
                 if(period==='month'){const d=new Date(day);if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return false;}
             }
             const q=normText(document.getElementById('hist-search')?.value).trim();
@@ -219,6 +220,17 @@
         }
         function historyFiltersActive(){
             return ['hist-filter-type','hist-filter-disc','hist-filter-track'].some(id=>(document.getElementById(id)?.value||'all')!=='all')||(document.getElementById('hist-period')?.value||'all')!=='all'||!!(document.getElementById('hist-search')?.value||'').trim();
+        }
+        // V10.30 — usado pelo cartão da semana em Estatísticas
+        function openHistoryForWeek(fromMs,toMs,label){
+            window._histRange={from:Number(fromMs),to:Number(toMs)};
+            const sel=document.getElementById('hist-period');
+            if(sel){let opt=sel.querySelector('option[value="range"]');if(!opt){opt=document.createElement('option');opt.value='range';sel.appendChild(opt);}opt.textContent='Semana '+label;sel.value='range';}
+            ['hist-filter-type','hist-filter-disc','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
+            const q=document.getElementById('hist-search');if(q)q.value='';
+            window._sessionsLimit=20;
+            switchTab('registro');
+            setTimeout(()=>{renderSessionsList();document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});},60);
         }
         function clearHistoryFilters(){
             ['hist-filter-type','hist-filter-disc','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
