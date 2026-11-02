@@ -490,24 +490,90 @@
 .sess-card-actions button[data-act="del"]{color:#b91c1c}
 .bottom-nav{display:none}
 @media (max-width:1023px){
-  :root{--bottom-nav-content-height:68px}
-  .bottom-nav{box-sizing:border-box;display:flex;position:fixed;left:0;right:0;bottom:0;z-index:65;min-height:var(--bottom-nav-content-height);background:#fff;border-top:1px solid #cbd5e1;padding:0 0 env(safe-area-inset-bottom,0px)}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;background:#fff;border-top:1px solid #cbd5e1;padding-bottom:env(safe-area-inset-bottom,0px)}
   .dark .bottom-nav{background:#0f172a;border-top-color:#334155}
-  .bottom-nav button{box-sizing:border-box;flex:1;min-width:0;min-height:67px;border:0;background:none;color:#475569;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+  .bottom-nav button{flex:1;min-height:56px;border:0;background:none;color:#475569;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
   .dark .bottom-nav button{color:#cbd5e1}
   .bottom-nav button i{font-size:18px}
   .bottom-nav button.on{color:#003a70;box-shadow:inset 0 3px 0 #003a70}
   .dark .bottom-nav button.on{color:#93c5fd;box-shadow:inset 0 3px 0 #93c5fd}
-  /* V10.31: o main é o contentor que rola; reservar a altura completa da barra aqui evita sobreposição no fim de qualquer tela. */
-  body{padding-bottom:0}
-  .app-shell>main{padding-bottom:calc(var(--bottom-nav-content-height) + 36px + env(safe-area-inset-bottom,0px))!important}
-  .fab-launch{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  #toast-stack{bottom:calc(80px + env(safe-area-inset-bottom,0px))!important}
-  body.auth-locked .bottom-nav,body.auth-locked .fab-launch{display:none}
+  .fab-launch{display:none!important}
+  #toast-stack{bottom:calc(72px + env(safe-area-inset-bottom,0px))!important}
+  body.sidebar-open .bottom-nav,body.auth-locked .bottom-nav,body.auth-locked .fab-launch{display:none}
   body.auth-locked{padding-bottom:0}
-  body.sidebar-open .bottom-nav{z-index:65}
 }
 @media (max-width:640px){
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea{font-size:16px!important}
   select,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]){min-height:44px}
+}
+
+
+/* ===== V10.30 — barra com Lançar central, folha Mais, menu com fechar, cartão da semana, Cronograma e cabeçalho compactos ===== */
+.sidebar-mobile-head,.sidebar-close-btn{display:none}
+.week-badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700}
+.dark .week-badge{background:rgba(22,163,74,.2);color:#86efac}
+.suggestion-go-btn{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:0;background:#fbbf24;color:#1f2937;font-weight:800;font-size:13px;cursor:pointer}
+.suggestion-go-btn[hidden]{display:none}
+.activity-panel.collapsed .suggestion-go-btn{display:block}
+.cloud-indicator.stale{background:#fef3c7;color:#92400e;border-color:#f59e0b}
+/* semana: barras clicáveis e cartão */
+.stats-week-chart .stats-bar-column.is-week-btn{cursor:pointer;border-radius:10px}
+.stats-week-chart .stats-bar-column.is-week-btn:hover .stats-bar-fill{filter:brightness(.92)}
+.stats-week-chart .stats-bar-column.is-selected .stats-bar-fill{outline:3px solid #003a70;outline-offset:1px}
+.stats-week-chart .stats-bar-column.is-selected .stats-bar-xlabel b{color:#003a70;text-decoration:underline}
+.dark .stats-week-chart .stats-bar-column.is-selected .stats-bar-xlabel b{color:#93c5fd}
+.stats-week-card{padding:16px}
+.stats-week-head h4{margin:0;font-size:15px;font-weight:800}.stats-week-head small{font-weight:600;color:#475569}
+.stats-week-head p{margin:4px 0 0;font-size:12px;color:#475569}.dark .stats-week-head p,.dark .stats-week-head small{color:#cbd5e1}
+.stats-week-totals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.stats-week-totals div{background:#f1f5f9;border-radius:12px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.dark .stats-week-totals div{background:#0f172a}
+.stats-week-totals b{font-size:15px}.stats-week-totals span{font-size:11px;color:#475569}.dark .stats-week-totals span{color:#cbd5e1}
+.stats-week-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.stats-week-row-top{display:flex;align-items:center;gap:8px;font-size:13px}
+.stats-week-name{flex:1;min-width:0;font-weight:700}
+.stats-week-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.stats-week-bar{height:8px;border-radius:999px;background:#e2e8f0;margin-top:5px}.dark .stats-week-bar{background:#334155}
+.stats-week-bar span{display:block;height:8px;border-radius:999px}
+.stats-week-meta{margin-top:3px;font-size:12px;color:#475569}.dark .stats-week-meta{color:#cbd5e1}
+.stats-week-empty{font-size:13px;color:#64748b;text-align:center;padding:12px}
+.stats-week-link{margin-top:14px;width:100%;min-height:44px;border-radius:12px;border:1px solid #003a70;background:#fff;color:#003a70;font-weight:700;font-size:13px;cursor:pointer}
+.dark .stats-week-link{background:#0f172a;color:#93c5fd;border-color:#93c5fd}
+/* folha Mais */
+.more-sheet{position:fixed;inset:0;z-index:80}.more-sheet[hidden]{display:none}
+.more-sheet-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+.more-sheet-panel{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(15,23,42,.25)}
+.dark .more-sheet-panel{background:#1e293b;color:#e2e8f0}
+.more-sheet-head{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 4px}
+.more-sheet-close{width:44px;height:44px;border:0;background:none;font-size:18px;color:inherit;cursor:pointer}
+.more-sheet-item{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;border:0;border-radius:12px;background:none;font-size:15px;font-weight:600;text-align:left;padding:0 10px;color:inherit;cursor:pointer}
+.more-sheet-item:active,.more-sheet-item:hover{background:#f1f5f9}.dark .more-sheet-item:hover{background:#0f172a}
+.more-sheet-item i{width:22px;text-align:center;color:#003a70}.dark .more-sheet-item i{color:#93c5fd}
+.bottom-nav .bn-launch{position:relative}
+.bn-launch-fab{width:50px;height:50px;border-radius:50%;background:#fbbf24;color:#1f2937;display:flex;align-items:center;justify-content:center;margin-top:-22px;box-shadow:0 6px 16px rgba(15,23,42,.3);border:3px solid #fff}
+.dark .bn-launch-fab{border-color:#0f172a}
+.bottom-nav button.bn-launch.on{box-shadow:none}
+.bottom-nav button.bn-launch.on .bn-launch-fab{outline:3px solid #003a70;outline-offset:1px}
+@media (max-width:1023px){
+  .sidebar-mobile-head{display:flex;align-items:center;justify-content:space-between;min-height:48px;font-weight:800;font-size:15px;margin:-6px 0 6px}
+  .sidebar-ver{font-weight:600;font-size:11px;color:#475569;margin-left:6px}
+  .sidebar-close-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#0f172a;font-size:18px;cursor:pointer}
+  main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+  /* Cronograma no celular: sugestões primeiro, KPIs em faixa compacta */
+  #content-cronograma{display:flex;flex-direction:column;gap:16px}
+  #content-cronograma>*{margin-top:0!important}
+  #content-cronograma .activity-panels-grid{display:contents}
+  #content-cronograma .suggestions-panel{order:-3}
+  #content-cronograma>.grid.grid-cols-2{order:-2;display:flex!important;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;padding-bottom:4px}
+  #content-cronograma>.grid.grid-cols-2>*{flex:0 0 150px;scroll-snap-align:start}
+  #content-cronograma .review-due-panel{order:-1}
+  #content-cronograma .recent-panel,#content-cronograma .recent-reviews-panel{order:0}
+  #content-cronograma>section{order:1}
+}
+@media (max-width:640px){
+  .brand-app-icon{display:none}
+  header>div{flex-wrap:nowrap!important}
+  header #contest-subtitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 190px)}
+  header .cloud-mode{display:none}
+  header .cloud-indicator{padding-left:10px;padding-right:10px}
 }
