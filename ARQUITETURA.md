@@ -144,8 +144,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - `03-utilitarios.js`: `parseMinutesInput` e `fmtMinutesHM`. `01-base.js`: `showToast(titulo, msg, nivel, {label,onClick})`.
 - `index.html`: `viewport-fit=cover`, `type="button"` em todos os botões, rótulos associados aos campos. `css/estilos.css`: foco visível, `prefers-reduced-motion`, fontes mínimas de 11px, alvos de 44px no celular.
 
-
-## V10.30 — Espaço da navegação inferior
-- Aumentada a altura mínima dos botões da barra inferior em telas até 1023px.
-- Ajustado o espaço reservado no final da página e do conteúdo principal para evitar sobreposição com a navegação fixa e respeitar a área segura do dispositivo.
-- Reposicionados botão flutuante e notificações. Sem mudanças na lógica de Datas Importantes, revisões ou estatísticas.
+## V10.30 — Navegação, semana e datas
+- `12a-ux.js`: barra inferior reorganizada (Cronograma · Edital · ＋ Lançar · Estatísticas · Mais) e folha "Mais" (Datas, Personalização, Configurações, tema, menu completo); Esc fecha menu e folha; foco no botão Fechar do menu.
+- `12-estatisticas.js`: barras do gráfico semanal viram botões (`data-week`) que selecionam a semana; `renderStatisticsWeekCard` mostra totais e horas por disciplina; a tabela "Detalhamento por prioridade e disciplina" foi removida. `openHistoryForWeek` (em `05-registro.js`) abre o histórico filtrado pela semana (período `range`).
+- `09-sincronizacao.js`: `mergeImportantDateLists`/`withMergedImportantDates` mesclam as datas importantes por id (`updatedAt`) com lista de excluídas (`importantDatesDeleted`); selo de nuvem relativo ("há 2 dias"; âmbar após 24h).
+- `11-datas-anotacoes.js`: lista única por data, concluídas riscadas e visíveis.
+- `04-inicio.js`: selo "+1h20 na semana" por disciplina e botão "Lançar estudo desta disciplina" nas sugestões. CSS: espaço da barra aplicado ao `main` (o `body` tem `h-full`), botão flutuante ocultado, Cronograma reordenado no celular, cabeçalho compacto.

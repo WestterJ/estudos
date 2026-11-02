@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <!-- V10.31 — Ajuste de espaço da navegação inferior no celular e área segura. -->
-    <title>Planejador de Estudos | Concursos — V10.31</title>
+    <!-- V10.30 — Barra inferior com Lançar e Mais, cartão da semana, datas mescladas por id, menu com fechar, cabeçalho compacto. -->
+    <title>Planejador de Estudos | Concursos — V10.30</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -50,7 +50,7 @@
   <section class="auth-card w-full max-w-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden my-auto p-0">
     <div class="bg-[#003a70] text-white px-6 py-5 border-b-4 border-[#ffc20e]">
       <div class="brand-app-icon brand-auth-icon mb-3" aria-hidden="true"><i class="fa-solid fa-book-open-reader"></i></div>
-      <h1 id="auth-title" class="text-xl sm:text-2xl font-bold">Planejador de Estudos <span data-app-version class="ml-1.5 align-middle text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"></span></h1>
+      <h1 id="auth-title" class="text-xl sm:text-2xl font-bold">Planejador de Estudos <span data-app-version class="hidden sm:inline ml-1.5 align-middle text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"></span></h1>
       <p class="text-sm text-blue-100 mt-1">Entre com segurança para acessar seu cronograma, edital e histórico.</p>
     </div>
     <div class="p-5 sm:p-6 space-y-4">
@@ -97,6 +97,7 @@
     <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebarMobile()"></div>
     <div class="app-shell">
         <aside id="app-sidebar" class="app-sidebar" aria-label="Menu principal">
+            <div class="sidebar-mobile-head"><span>Menu <small data-app-version class="sidebar-ver"></small></span><button type="button" class="sidebar-close-btn" onclick="closeSidebarMobile()" aria-label="Fechar menu"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
           <div class="sidebar-contest">
             <label for="contest-selector" class="sidebar-label nav-label">Concurso</label>
             <select id="contest-selector" onchange="changeContest(this.value)" class="sidebar-select" aria-label="Concurso"></select>
@@ -472,6 +473,7 @@
             <div class="stats-charts-section-head"><div><h3 id="statistics-charts-heading" class="stats-kpi-section-title">Evolução e distribuição geral dos estudos</h3><p>Histórico semanal completo e composição acumulada dos registros de estudo.</p></div><span class="stats-chart-period-note">Gráficos baseados nos registros de sessões</span></div>
             <div id="statistics-charts" class="stats-charts-grid">
               <section class="stats-chart-card"><header><h4>Evolução de estudos por semana</h4><p>Quantidade de sessões em cada semana do histórico</p></header><div id="statistics-chart-studies-weekly" class="stats-chart-content"></div></section>
+              <section id="statistics-week-card" class="stats-chart-card stats-week-card" style="grid-column:1/-1" aria-live="polite"></section>
               <section class="stats-chart-card"><header><h4>Horas de estudo por semana</h4><p>Tempo total registrado em cada semana do histórico</p></header><div id="statistics-chart-hours-weekly" class="stats-chart-content"></div></section>
               <section class="stats-chart-card"><header><h4>Distribuição geral das horas por disciplina</h4><p>Tempo acumulado registrado por disciplina</p></header><div id="statistics-chart-hours-discipline" class="stats-chart-content"></div></section>
               <section class="stats-chart-card"><header><h4>Estudos por prioridade — geral</h4><p>Total de sessões de estudo de todo o histórico por prioridade</p></header><div id="statistics-chart-studies-priority" class="stats-chart-content"></div></section>
@@ -480,22 +482,6 @@
             </div>
           </section>
 
-          <section class="app-card stats-table-card overflow-hidden">
-            <div class="stats-table-toolbar flex items-center justify-between gap-3 flex-wrap p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700">
-              <div><h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Detalhamento por prioridade e disciplina</h3><p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">O subtítulo de cada disciplina reúne os acumulados gerais. As colunas mostram apenas a semana selecionada.</p></div>
-              <label class="stats-search-wrap"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="statistics-discipline-search" type="search" value="" oninput="filterStudyStatistics(this.value)" placeholder="Buscar disciplina..." aria-label="Buscar disciplina"></label>
-            </div>
-            <p class="stats-mobile-note">Deslize a tabela horizontalmente para consultar horas, estudos, revisões e questões da semana.</p>
-            <div class="stats-table-wrapper">
-              <table class="study-stats-table" aria-label="Estatísticas gerais e semanais por disciplina">
-                <thead><tr><th class="stats-discipline-col">Disciplina <span>Totais gerais aparecem abaixo do nome</span></th><th>Horas na semana</th><th>Estudos</th><th>Revisões</th><th>Questões</th></tr></thead>
-                <tbody id="statistics-table-body"></tbody>
-                <tfoot><tr class="study-stats-total-row"><td>Total da semana</td><td id="statistics-week-total-hours">0h 00m</td><td id="statistics-week-total-studies">0</td><td id="statistics-week-total-reviews">0</td><td id="statistics-week-total-questions">0</td></tr></tfoot>
-              </table>
-            </div>
-            <div id="statistics-empty-state" class="stats-empty-state" hidden><i class="fa-solid fa-magnifying-glass mb-2"></i><p class="font-bold">Nenhuma disciplina encontrada</p><p class="mt-1">Tente outro termo de busca ou cadastre disciplinas no edital.</p></div>
-            <div class="stats-table-foot"><span>Exibindo <strong id="statistics-visible-count">0 disciplinas em 0 prioridades</strong></span><span class="hidden sm:inline">Totais gerais aparecem no subtítulo de cada disciplina.</span></div>
-          </section>
           <div class="stats-info-note"><i class="fa-solid fa-circle-info mt-0.5"></i><p>Os acumulados gerais consolidam os valores do progresso e do histórico. Cada disciplina aparece uma vez, no grupo de sua prioridade mais alta; os números da semana selecionada vêm das sessões datadas, considerando segunda-feira a domingo.</p></div>
         </div>
 

@@ -1,20 +1,19 @@
-PLANEJADOR DE ESTUDOS V10.30 — AJUSTE DA NAVEGAÇÃO INFERIOR
+PLANEJADOR DE ESTUDOS V10.30 — NAVEGAÇÃO, SEMANA E DATAS
 
-Alterações desta etapa
-- Aumentada a altura mínima dos botões da barra inferior no celular.
-- Reservado espaço adicional no final do conteúdo para evitar que textos, cartões e gráficos fiquem encobertos pela navegação fixa.
-- Reposicionados o botão flutuante de lançamento e as notificações para não conflitar com a barra inferior.
-- Considerada a área segura do dispositivo (safe-area-inset-bottom).
-- Atualizada a versão e o cache do service worker para disponibilizar a correção no PWA.
+Correções
+- A barra inferior não cobre mais o fim das páginas (o espaço agora é reservado no conteúdo principal).
+- O botão flutuante "+" foi removido no celular; "＋ Lançar" fica no centro da barra.
+- Menu lateral com botão Fechar (X); Esc e toque fora também fecham.
+- Datas Importantes: lista única por data, com as concluídas visíveis (riscadas).
+- Sincronização: as datas importantes agora são mescladas por id (um aparelho não apaga as datas do outro).
 
-Fora do escopo desta etapa
-- Não foram alteradas as revisões.
-- Não foi alterado o comportamento de fechar o menu lateral tocando fora dele.
-- Não foi alterada a lógica nem os dados de Datas Importantes.
-- Não foram reformuladas as estatísticas.
+Novidades
+- Barra inferior: Cronograma, Edital, ＋ Lançar, Estatísticas, Mais (Datas, Personalização, Configurações, tema).
+- Estatísticas: toque numa barra do gráfico semanal para ver o cartão da semana (horas por disciplina) e abrir os registros daquela semana. A tabela de detalhamento foi removida.
+- Cronograma: selo "+1h20 na semana" nas disciplinas; sugestões primeiro no celular, com botão para lançar; KPIs em faixa.
+- Cabeçalho compacto no celular; selo da nuvem mostra "há 2 dias" (âmbar após 24h).
 
-Teste recomendado
-1. Abrir o app no celular e navegar por Cronograma, Registro, Edital, Estatísticas e Mais.
-2. Rolar até o final de cada módulo e confirmar que o último conteúdo pode ser visto e acionado sem ficar atrás da barra inferior.
-3. Verificar o botão flutuante e as notificações.
-4. Testar em tema claro e escuro.
+Como testar
+1. Estatísticas > toque numa barra do gráfico de sessões > veja o cartão da semana > "Ver registros desta semana".
+2. Datas Importantes: confira se as 4 datas aparecem; marque/desmarque uma e sincronize nos dois aparelhos.
+3. Role até o fim de cada tela no celular: o último conteúdo deve ficar acima da barra.
