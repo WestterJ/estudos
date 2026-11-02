@@ -353,7 +353,7 @@
             button.classList.remove('local','cloud','error','stale');
             button.classList.add(cloud?'cloud':'local');
             if(cloud&&rel.stale)button.classList.add('stale');
-            button.innerHTML=`<i class="fa-solid ${cloud?(rel.stale?'fa-cloud-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${rel.text}</span>`;
+            button.innerHTML=`<i class="fa-solid ${cloud?(rel.stale?'fa-triangle-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${rel.text}</span>`;
             button.title=`${cloud?'Última atualização confirmada na nuvem':'Último salvamento local'}: ${savedLabel}. Clique para abrir as configurações.`;
         }
 
