@@ -558,12 +558,28 @@
   .sidebar-mobile-head{display:flex;align-items:center;justify-content:space-between;min-height:48px;font-weight:800;font-size:15px;margin:-6px 0 6px}
   .sidebar-ver{font-weight:600;font-size:11px;color:#475569;margin-left:6px}
   .sidebar-close-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#0f172a;font-size:18px;cursor:pointer}
-  main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+  /* O .app-shell tem min-height:0 e o body altura fixa: o main fica do tamanho da tela e o conteúdo transborda.
+     Padding no main não cria espaço no fim; um elemento no fluxo após o conteúdo (::after) cria. */
+  main::after{content:'';display:block;flex:none;height:calc(96px + env(safe-area-inset-bottom,0px))}
+  body{overflow-x:clip}
 }
 @media (max-width:640px){
+  main select{max-width:100%;min-width:0}
+  #edital-filter-disc,#edital-filter-topic{flex:1 1 0;min-width:0}
+  .date-row input[type="date"]{width:10.5rem!important;font-size:14px!important;min-height:40px}
   .brand-app-icon{display:none}
   header>div{flex-wrap:nowrap!important}
   header #contest-subtitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 190px)}
   header .cloud-mode{display:none}
   header .cloud-indicator{padding-left:10px;padding-right:10px}
 }
+
+/* ===== V10.32 — observações, datas sem período, filtro por disciplina do lançamento ===== */
+.sess-card-obs{margin:6px 0 0;padding:6px 10px;border-left:3px solid #f59e0b;font-size:13px;line-height:1.4;color:#334155;white-space:pre-wrap}
+.dark .sess-card-obs{color:#e2e8f0}
+.sess-obs-line{display:block;margin-top:3px;font-size:11px;color:#64748b;white-space:pre-wrap;max-width:300px}
+.date-add-end{min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed #94a3b8;background:none;color:#475569;font-size:12px;font-weight:700;cursor:pointer}
+.dark .date-add-end{color:#cbd5e1;border-color:#64748b}
+.hist-form-disc-btn{min-height:36px;padding:0 12px;border-radius:12px;border:1px solid #003a70;background:#fff;color:#003a70;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.dark .hist-form-disc-btn{background:#0f172a;color:#93c5fd;border-color:#93c5fd}
+@media (max-width:640px){.hist-form-disc-btn{min-height:44px;width:100%}}
