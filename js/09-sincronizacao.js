@@ -1,0 +1,642 @@
+// 09-sincronizacao.js — Supabase: login, mesclagem de dados, sincronização e salvamento na nuvem.
+// Planejador de Estudos V10.9 (ver ARQUITETURA.md). Scripts clássicos compartilham o escopo global: a ORDEM de carga em index.html importa.
+        // Supabase: mantém o funcionamento local e sincroniza os dados do usuário autenticado.
+        let sbClient = null;
+        let sbUser = null;
+        let cloudSaveTimer = null;
+        let cloudSaveInFlight = false;
+        let cloudSaveQueued = false;
+        let dataRevision = 0;
+        let startupSyncUid = null;
+        let cloudStatusPollTimer = null;
+        const SB_TABLE = 'study_planner_data';
+
+        function collectContestSnapshots() {
+            const snapshots={};
+            const deletedMap=getDeletedContestMap();
+            try {
+                for(let i=0;i<localStorage.length;i++){
+                    const key=localStorage.key(i);
+                    if(!key || !key.startsWith('tce_contest_data_')) continue;
+                    try {
+                        const id=key.slice('tce_contest_data_'.length);
+                        if(deletedMap[id]) continue;
+                        const snap=JSON.parse(localStorage.getItem(key));
+                        if(!snap || typeof snap!=='object') continue;
+                        snap.prioritySettings=JSON.parse(localStorage.getItem('tce_'+id+'_priority_settings')||JSON.stringify(snap.prioritySettings||{}));
+                        snap.disciplineSettings=JSON.parse(localStorage.getItem('tce_'+id+'_discipline_settings')||JSON.stringify(snap.disciplineSettings||{}));
+                        snap.suggestionMode=localStorage.getItem('tce_'+id+'_suggestion_mode')||snap.suggestionMode||'priority_progress';
+                        snap.deleted=unionTombstones(getTombstones(id),snap.deleted);
+                        snapshots[id]=snap;
+                    } catch(e) { console.warn('Snapshot local ignorado:',key,e); }
+                }
+                const old=(()=>{try{return JSON.parse(localStorage.getItem('tce_contest_data_'+activeContest)||'{}')||{};}catch(e){return {};}})();
+                if(!deletedMap[activeContest]) snapshots[activeContest]={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:old._snapshotUpdatedAt||new Date().toISOString()};
+            } catch(e) { console.warn('Não foi possível reunir os snapshots dos concursos',e); }
+            return snapshots;
+        }
+
+        function buildCurrentCloudPayload(timestamp=new Date().toISOString()) {
+            const activeSnapshot={contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:timestamp};
+            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(activeSnapshot));
+            return {userProgress,studySessions,masterEditalData,activeContest,contests:{...contests},deletedContests:getDeletedContestMap(),prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),contestSnapshots:collectContestSnapshots()};
+        }
+
+        // Mescla registros por ID. Para anotações do mesmo tópico, preserva apenas o último texto salvo.
+        // O carimbo notesUpdatedAt permite decidir mesmo quando dois dispositivos editaram offline.
+        function mergeNoteValues(remoteValue, localValue, remoteRecord, localRecord, preferLocal) {
+            if(remoteValue===undefined||remoteValue===null)return localValue;
+            if(localValue===undefined||localValue===null)return remoteValue;
+            const remoteTime=Date.parse(remoteRecord?.notesUpdatedAt||'')||0;
+            const localTime=Date.parse(localRecord?.notesUpdatedAt||'')||0;
+            if(remoteTime!==localTime&&(remoteTime||localTime))return localTime>remoteTime?localValue:remoteValue;
+            return preferLocal?localValue:remoteValue;
+        }
+        function mergeRecordValue(field, remoteValue, localValue, preferLocal, remoteRecord, localRecord) {
+            if(field==='notes') return mergeNoteValues(remoteValue,localValue,remoteRecord||{},localRecord||{},preferLocal);
+            if(field==='notesUpdatedAt') {
+                const remoteTime=Date.parse(remoteValue||'')||0;
+                const localTime=Date.parse(localValue||'')||0;
+                if(remoteTime!==localTime&&(remoteTime||localTime))return localTime>remoteTime?localValue:remoteValue;
+            }
+            if(remoteValue===undefined || remoteValue===null || remoteValue==='') return localValue===undefined?remoteValue:localValue;
+            if(localValue===undefined || localValue===null || localValue==='') return remoteValue;
+            if(JSON.stringify(remoteValue)===JSON.stringify(localValue)) return remoteValue;
+            if(field==='completed') return Boolean(remoteValue || localValue);
+            if(field==='isReview') return Math.max(Number(remoteValue)||0,Number(localValue)||0) ? 1 : 0;
+            if(['hours','questions','reviews','minutes'].includes(field)) {
+                const r=Number(remoteValue), l=Number(localValue);
+                if(Number.isFinite(r) && Number.isFinite(l)) return Math.max(r,l);
+            }
+            if(Array.isArray(remoteValue) && Array.isArray(localValue)) {
+                const values=[...remoteValue];
+                localValue.forEach(v=>{if(!values.some(x=>JSON.stringify(x)===JSON.stringify(v)))values.push(v);});
+                return values;
+            }
+            if(remoteValue && localValue && typeof remoteValue==='object' && typeof localValue==='object') return {...remoteValue,...localValue};
+            return preferLocal ? localValue : remoteValue;
+        }
+        function mergeRecordLists(remoteList, localList, preferLocal) {
+            const merged=[]; const indexByKey=new Map();
+            const addOrMerge=(item,source)=>{
+                if(!item || typeof item!=='object') return;
+                const key=(item.id!==undefined && item.id!==null && String(item.id)!=='') ? 'id:'+String(item.id) : 'json:'+JSON.stringify(item);
+                if(!indexByKey.has(key)) { indexByKey.set(key,merged.length); merged.push({...item}); return; }
+                const idx=indexByKey.get(key), existing=merged[idx];
+                if(source==='local') {
+                    const result={...existing,...item};
+                    const fields=new Set([...Object.keys(existing),...Object.keys(item)]);
+                    fields.forEach(field=>{result[field]=mergeRecordValue(field,existing[field],item[field],preferLocal,existing,item);});
+                    merged[idx]=result;
+                }
+            };
+            (Array.isArray(remoteList)?remoteList:[]).forEach(item=>addOrMerge(item,'remote'));
+            (Array.isArray(localList)?localList:[]).forEach(item=>addOrMerge(item,'local'));
+            return merged;
+        }
+        function mergeSettingsObjects(remoteValue, localValue, preferLocal) {
+            const remote=(remoteValue && typeof remoteValue==='object' && !Array.isArray(remoteValue))?remoteValue:{};
+            const local=(localValue && typeof localValue==='object' && !Array.isArray(localValue))?localValue:{};
+            const merged={...remote};
+            Object.entries(local).forEach(([key,value])=>{
+                const current=remote[key];
+                if(value && typeof value==='object' && !Array.isArray(value)) merged[key]=mergeSettingsObjects(current,value,preferLocal);
+                else if(value!==undefined && value!==null && value!=='' && (!Object.prototype.hasOwnProperty.call(remote,key) || preferLocal)) merged[key]=value;
+                else if(!Object.prototype.hasOwnProperty.call(remote,key)) merged[key]=value;
+            });
+            return merged;
+        }
+        // V10.30 — Datas importantes: mescla por id (nenhum aparelho apaga as datas do outro) e respeita as excluídas.
+        function mergeImportantDateLists(a,b,deleted){
+            const del=new Set((deleted||[]).map(String));const map=new Map();
+            const put=(item,preferNew)=>{
+                if(!item||!item.id||del.has(String(item.id)))return;
+                const cur=map.get(item.id);if(!cur){map.set(item.id,item);return;}
+                const tc=Date.parse(cur.updatedAt||'')||0,tn=Date.parse(item.updatedAt||'')||0;
+                if(tn>tc||(tn===tc&&preferNew))map.set(item.id,item);
+            };
+            (Array.isArray(a)?a:[]).forEach(i=>put(i,false));(Array.isArray(b)?b:[]).forEach(i=>put(i,true));
+            return [...map.values()];
+        }
+        function withMergedImportantDates(target,remoteCfg,localCfg){
+            const rd=remoteCfg&&remoteCfg.importantDates,ld=localCfg&&localCfg.importantDates;
+            const deleted=[...new Set([...(remoteCfg&&remoteCfg.importantDatesDeleted||[]),...(localCfg&&localCfg.importantDatesDeleted||[])].map(String))].slice(-500);
+            if(!Array.isArray(rd)&&!Array.isArray(ld)&&!deleted.length)return target;
+            return {...target,importantDates:mergeImportantDateLists(rd,ld,deleted),importantDatesDeleted:deleted};
+        }
+        function mergeContestSnapshot(remoteSnap, localSnap) {
+            const remote=(remoteSnap && typeof remoteSnap==='object')?remoteSnap:{};
+            const local=(localSnap && typeof localSnap==='object')?localSnap:{};
+            const remoteTime=Date.parse(remote._snapshotUpdatedAt||'')||0;
+            const localTime=Date.parse(local._snapshotUpdatedAt||'')||0;
+            const preferLocal=localTime>=remoteTime;
+            const dead=unionTombstones(remote.deleted,local.deleted);
+            const deadItems=new Set(dead.items),deadSessions=new Set(dead.sessions);
+            return {
+                ...remote,
+                ...local,
+                contestName: local.contestName || remote.contestName,
+                masterEditalData: mergeRecordLists(remote.masterEditalData,local.masterEditalData,preferLocal).filter(x=>!deadItems.has(String(x.id))),
+                userProgress: mergeRecordLists(remote.userProgress,local.userProgress,preferLocal).filter(x=>!deadItems.has(String(x.id))),
+                studySessions: mergeRecordLists(remote.studySessions,local.studySessions,preferLocal).filter(x=>!deadSessions.has(String(x.id))),
+                deleted: dead,
+                prioritySettings: mergeSettingsObjects(remote.prioritySettings,local.prioritySettings,preferLocal),
+                disciplineSettings: mergeSettingsObjects(remote.disciplineSettings,local.disciplineSettings,preferLocal),
+                suggestionMode: (preferLocal && local.suggestionMode) ? local.suggestionMode : (remote.suggestionMode || local.suggestionMode || 'priority_progress'),
+                _snapshotUpdatedAt: new Date(Math.max(remoteTime,localTime,Date.now())).toISOString()
+            };
+        }
+        function mergeContestSnapshots(remotePayload, localPayload, preferRemote = false) {
+            const deletedMap=mergeDeletedContestMaps(remotePayload?.deletedContests||{},localPayload?.deletedContests||getDeletedContestMap());
+            const remoteSnapshots=(remotePayload && remotePayload.contestSnapshots && typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{};
+            const localSnapshots=(localPayload && localPayload.contestSnapshots && typeof localPayload.contestSnapshots==='object')?localPayload.contestSnapshots:{};
+            const merged={};
+            Object.entries(remoteSnapshots).forEach(([id,snap])=>{if(!deletedMap[id])merged[id]=snap;});
+            // Compatibilidade com versões antigas que só guardavam o concurso ativo no nível principal.
+            const remoteActive=remotePayload && remotePayload.activeContest;
+            if(remoteActive && !deletedMap[remoteActive] && !merged[remoteActive] && (Array.isArray(remotePayload.masterEditalData)||Array.isArray(remotePayload.userProgress))) {
+                merged[remoteActive]={contestName:remotePayload.contests?.[remoteActive]?.name||remoteActive,masterEditalData:remotePayload.masterEditalData||[],userProgress:remotePayload.userProgress||remotePayload.masterEditalData||[],studySessions:remotePayload.studySessions||[],prioritySettings:remotePayload.prioritySettings||{},disciplineSettings:remotePayload.disciplineSettings||{},suggestionMode:remotePayload.suggestionMode||'priority_progress'};
+            }
+            Object.entries(localSnapshots).forEach(([id,localSnap])=>{
+                if(deletedMap[id]||!localSnap || typeof localSnap!=='object') return;
+                const remoteSnap=merged[id];
+                merged[id]=remoteSnap ? (preferRemote ? remoteSnap : mergeContestSnapshot(remoteSnap,localSnap)) : localSnap;
+            });
+            return merged;
+        }
+
+        async function upsertCloudPayloadSafely(localPayload, uid) {
+            if(!sbClient || !uid) throw new Error('Sessão Supabase não disponível.');
+            const {data:remoteRow,error:readError}=await sbClient.from(SB_TABLE).select('data').eq('user_id',uid).maybeSingle();
+            if(readError) throw readError; // Nunca tenta gravar por cima se não conseguiu ler a cópia atual.
+            const remotePayload=remoteRow && remoteRow.data && typeof remoteRow.data==='object'?remoteRow.data:{};
+            const deletedContestMap=mergeDeletedContestMaps(remotePayload.deletedContests||{},localPayload.deletedContests||getDeletedContestMap());
+            localPayload={...localPayload,deletedContests:deletedContestMap};
+            const remoteContestIds=Object.keys((remotePayload.contests&&typeof remotePayload.contests==='object')?remotePayload.contests:{}).concat(Object.keys((remotePayload.contestSnapshots&&typeof remotePayload.contestSnapshots==='object')?remotePayload.contestSnapshots:{}));
+            const remoteIds=remoteContestIds.filter(id=>!deletedContestMap[id]);
+            if(isPristineLocalState()&&remoteIds.some(id=>id!==DEFAULT_CONTEST_ID)){
+                localPayload={...localPayload,contests:{},contestSnapshots:{},activeContest:(remotePayload.activeContest&&remotePayload.activeContest!==DEFAULT_CONTEST_ID&&!deletedContestMap[remotePayload.activeContest])?remotePayload.activeContest:remoteIds.find(id=>id!==DEFAULT_CONTEST_ID)};
+            }
+            const mergedSnapshots=mergeContestSnapshots(remotePayload,localPayload);
+            const remoteContests=remotePayload.contests && typeof remotePayload.contests==='object'?remotePayload.contests:{};
+            const localContests=localPayload.contests && typeof localPayload.contests==='object'?localPayload.contests:{};
+            const mergedContests={};
+            Object.entries(remoteContests).forEach(([id,cfg])=>{if(!deletedContestMap[id])mergedContests[id]=cfg;});
+            Object.entries(localContests).forEach(([id,localCfg])=>{
+                if(deletedContestMap[id])return;
+                const remoteCfg=mergedContests[id];
+                if(!remoteCfg) { mergedContests[id]=localCfg; return; }
+                if(id===localPayload.activeContest) { mergedContests[id]=withMergedImportantDates({...remoteCfg,...localCfg},remoteCfg,localCfg); return; }
+                const localTime=Date.parse(localCfg?._updatedAt||'')||0;
+                const remoteTime=Date.parse(remoteCfg?._updatedAt||'')||0;
+                // Não deixar um nome genérico reconstruído a partir do ID apagar o nome remoto conhecido.
+                if(!localTime && localCfg?.name===id && remoteCfg?.name && remoteCfg.name!==id) return;
+                mergedContests[id]=withMergedImportantDates((localTime&&localTime>remoteTime)?{...remoteCfg,...localCfg}:remoteCfg,remoteCfg,localCfg);
+            });
+            Object.keys(mergedSnapshots).forEach(id=>{
+                if(deletedContestMap[id]){delete mergedSnapshots[id];return;}
+                if(!mergedContests[id]) mergedContests[id]={name:mergedSnapshots[id]?.contestName||id,board:'',date:''};
+            });
+            let resolvedActive=localPayload.activeContest;
+            if(!resolvedActive||deletedContestMap[resolvedActive]||!mergedContests[resolvedActive]){
+                resolvedActive=Object.keys(mergedContests).sort((a,b)=>String(mergedContests[a]?.name||a).localeCompare(String(mergedContests[b]?.name||b),'pt-BR'))[0];
+                if(!resolvedActive){resolvedActive='concurso-restaurado-'+Date.now();mergedContests[resolvedActive]={name:'Concurso restaurado',board:'',date:''};mergedSnapshots[resolvedActive]={contestName:'Concurso restaurado',masterEditalData:[],userProgress:[],studySessions:[],prioritySettings:{},disciplineSettings:{},suggestionMode:'priority_progress',_snapshotUpdatedAt:new Date().toISOString()};}
+            }
+            const mergedPayload={...remotePayload,...localPayload,activeContest:resolvedActive,deletedContests:deletedContestMap,contests:mergedContests,contestSnapshots:mergedSnapshots};
+            // Os campos legados do nível principal devem refletir o snapshot mesclado do concurso ativo,
+            // e não uma cópia antiga de um dos dispositivos.
+            const activeMerged=mergedSnapshots[resolvedActive];
+            if(activeMerged) Object.assign(mergedPayload,{userProgress:activeMerged.userProgress||[],studySessions:activeMerged.studySessions||[],masterEditalData:activeMerged.masterEditalData||[],prioritySettings:activeMerged.prioritySettings||{},disciplineSettings:activeMerged.disciplineSettings||{},suggestionMode:activeMerged.suggestionMode||'priority_progress'});
+            const savedAt=new Date().toISOString();
+            const {error:writeError}=await sbClient.from(SB_TABLE).upsert({user_id:uid,data:mergedPayload,updated_at:savedAt},{onConflict:'user_id'});
+            if(writeError) throw writeError;
+            return {savedAt,mergedPayload};
+        }
+
+        function persistSnapshotMapToLocal(snapshotMap) {
+            const deletedMap=getDeletedContestMap();
+            Object.entries(snapshotMap||{}).forEach(([id,snapshot])=>{
+                if(deletedMap[id]||!snapshot || typeof snapshot!=='object') return;
+                localStorage.setItem('tce_contest_data_'+id,JSON.stringify(snapshot));
+                if(snapshot.prioritySettings) localStorage.setItem('tce_'+id+'_priority_settings',JSON.stringify(snapshot.prioritySettings));
+                if(snapshot.disciplineSettings) localStorage.setItem('tce_'+id+'_discipline_settings',JSON.stringify(snapshot.disciplineSettings));
+                if(snapshot.suggestionMode) localStorage.setItem('tce_'+id+'_suggestion_mode',snapshot.suggestionMode);
+                if(snapshot.deleted) setTombstones(id,unionTombstones(getTombstones(id),snapshot.deleted));
+            });
+        }
+        function adoptMergedCloudPayloadLocally(payload) {
+            if(!payload || typeof payload!=='object') return;
+            const deletedMap=setDeletedContestMap(mergeDeletedContestMaps(getDeletedContestMap(),payload.deletedContests||{}));
+            if(isPristineLocalState()&&payload.contests&&typeof payload.contests==='object'){
+                const otherIds=Object.keys(payload.contests).filter(id=>id!==DEFAULT_CONTEST_ID&&!deletedMap[id]);
+                if(otherIds.length){
+                    delete contests[DEFAULT_CONTEST_ID];
+                    try{localStorage.removeItem('tce_contest_data_'+DEFAULT_CONTEST_ID);}catch(e){}
+                    activeContest=(payload.activeContest&&payload.contests[payload.activeContest]&&payload.activeContest!==DEFAULT_CONTEST_ID&&!deletedMap[payload.activeContest])?payload.activeContest:otherIds[0];
+                }
+            }
+            if(payload.contests && typeof payload.contests==='object'){
+                const previousContests=contests;
+                contests={...contests,...payload.contests};
+                Object.keys(payload.contests).forEach(id=>{if(previousContests[id])contests[id]=withMergedImportantDates(contests[id],payload.contests[id],previousContests[id]);});
+            }
+            Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
+            Object.keys(deletedMap).forEach(id=>purgeContestLocalStorage(id));
+            if(!contests[activeContest])activeContest=(payload.activeContest&&contests[payload.activeContest])?payload.activeContest:Object.keys(contests)[0];
+            if(!activeContest){activeContest='concurso-restaurado-'+Date.now();contests[activeContest]={name:'Concurso restaurado',board:'',date:''};}
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            localStorage.setItem('tce_active_contest',activeContest);
+            const rawSnapshots=payload.contestSnapshots && typeof payload.contestSnapshots==='object'?payload.contestSnapshots:{};
+            const snapshots={};Object.entries(rawSnapshots).forEach(([id,snap])=>{if(!deletedMap[id])snapshots[id]=snap;});
+            persistSnapshotMapToLocal(snapshots);
+            const activeSnapshot=snapshots[activeContest];
+            if(activeSnapshot) {
+                restoreSnapshotToMemory(activeSnapshot);
+                localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
+                localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+                localStorage.setItem('tce_master_edital',JSON.stringify(masterEditalData));
+                if(activeSnapshot.prioritySettings) localStorage.setItem('tce_'+activeContest+'_priority_settings',JSON.stringify(activeSnapshot.prioritySettings));
+                if(activeSnapshot.disciplineSettings) localStorage.setItem('tce_'+activeContest+'_discipline_settings',JSON.stringify(activeSnapshot.disciplineSettings));
+                if(activeSnapshot.suggestionMode) localStorage.setItem('tce_'+activeContest+'_suggestion_mode',activeSnapshot.suggestionMode);
+            }
+            try { renderContestSelector(); initCronogramaFilters(); initRegistrationForm(); initEditalFilters(); renderSessionsList(); renderRecentRotation(); renderPriorityDisciplineProgress(); renderDashboard(); renderCustomization(); updateContestHeader(); applyPriorityColors(); }
+            catch(error) { console.warn('Não foi possível atualizar algum painel após a mesclagem:',error); }
+        }
+
+        function saveSupabaseSettings() {
+            const url = document.getElementById('sb-url').value.trim();
+            const key = document.getElementById('sb-key').value.trim();
+            if (!url || !key) {
+                showCustomDialog('Configuração incompleta', 'Informe Project URL e a chave pública (publishable/anon).');
+                return;
+            }
+            saveSupabaseSettingsQuietly(url,key);
+            const emailField=document.getElementById('sb-email');
+            if(emailField && emailField.value.trim()) localStorage.setItem('tce_sb_email',emailField.value.trim());
+            updateCloudStatus('Configuração guardada; entre na conta');
+            showCustomDialog('Configuração guardada', 'Agora informe o e-mail e a senha da conta do aplicativo e clique em “Entrar e sincronizar”. Depois escolha baixar os dados da nuvem ou enviar os dados locais.');
+        }
+
+        let sbClientConfigSignature = '';
+        function initializeSupabase() {
+            const url = (document.getElementById('sb-url').value || localStorage.getItem('tce_sb_url') || '').trim().replace(/\/$/,'');
+            const key = (document.getElementById('sb-key').value || localStorage.getItem('tce_sb_key') || '').trim();
+            if (!url || !key || !window.supabase || typeof window.supabase.createClient !== 'function') return false;
+            try {
+                const signature = url + '|' + key;
+                if (!sbClient || sbClientConfigSignature !== signature) {
+                    sbClient = window.supabase.createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+                    sbClientConfigSignature = signature;
+                    if (typeof window.attachPlannerAuthListener === 'function') window.attachPlannerAuthListener(sbClient);
+                }
+                return true;
+            } catch (e) {
+                updateCloudStatus('Erro na configuração');
+                return false;
+            }
+        }
+
+        // V10.30 — "há 2 dias" em vez de só a data; marca como desatualizado após 24h.
+        function formatSavedRelative(value){
+            const t=value?new Date(value).getTime():NaN;
+            if(!Number.isFinite(t))return {text:'ainda não salvo',stale:false};
+            const min=Math.max(0,Math.round((Date.now()-t)/60000));
+            if(min<1)return {text:'agora',stale:false};
+            if(min<60)return {text:`há ${min} min`,stale:false};
+            const h=Math.floor(min/60);if(h<24)return {text:`há ${h} h`,stale:false};
+            const d=Math.floor(h/24);return {text:`há ${d} dia${d===1?'':'s'}`,stale:true};
+        }
+        function formatSavedAt(value) {
+            if(!value) return 'ainda não salvo';
+            const date=new Date(value);
+            if(Number.isNaN(date.getTime())) return 'ainda não salvo';
+            return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+        }
+        function storageStatusKeys() {
+            const uid=sbUser&&sbUser.id;
+            return uid ? {
+                mode:'tce_last_saved_mode_'+uid,
+                local:'tce_last_local_saved_at_'+uid,
+                cloud:'tce_last_cloud_saved_at_'+uid
+            } : {mode:'tce_last_saved_mode_local',local:'tce_last_local_saved_at',cloud:null};
+        }
+        function recordLocalSave() {
+            const now=new Date().toISOString();
+            const keys=storageStatusKeys();
+            localStorage.setItem(keys.local,now);
+            localStorage.setItem(keys.mode,'Local');
+            return now;
+        }
+        function recordCloudSave(timestamp=new Date().toISOString()) {
+            if(!sbUser || !sbUser.id) return;
+            const keys=storageStatusKeys();
+            localStorage.setItem(keys.cloud,timestamp);
+            localStorage.setItem(keys.mode,'Nuvem');
+        }
+        function updateCloudStatus(message) {
+            const el=document.getElementById('cloud-status');if(el)el.textContent=message;
+            const keys=storageStatusKeys();
+            const detail=document.getElementById('cloud-save-detail');
+            if(detail){
+                const localAt=localStorage.getItem(keys.local);
+                const cloudAt=keys.cloud?localStorage.getItem(keys.cloud):null;
+                detail.textContent=`${message}. Último salvamento local: ${formatSavedAt(localAt)}. Última atualização confirmada na nuvem: ${sbUser?formatSavedAt(cloudAt):'não conectado'}. O horário da nuvem é consultado no servidor.`;
+            }
+            const button=document.getElementById('header-cloud-status');
+            if(!button)return;
+            const modeValue=localStorage.getItem(keys.mode)||'Local';
+            const cloud=!!(sbUser && keys.cloud && modeValue==='Nuvem' && localStorage.getItem(keys.cloud));
+            const mode=cloud?'Nuvem':'Local';
+            const savedAt=cloud?localStorage.getItem(keys.cloud):localStorage.getItem(keys.local);
+            const savedLabel=formatSavedAt(savedAt);
+            const rel=formatSavedRelative(savedAt);
+            // V10.32 — só alerta (âmbar) quando há alteração local ainda não confirmada na nuvem; "há 2 dias" sem alteração é normal.
+            const localSavedAt=localStorage.getItem(keys.local);
+            const pending=!!(cloud&&localSavedAt&&Date.parse(localSavedAt)-Date.parse(savedAt)>60000);
+            button.classList.remove('local','cloud','error','stale');
+            button.classList.add(cloud?'cloud':'local');
+            if(pending)button.classList.add('stale');
+            button.innerHTML=`<i class="fa-solid ${cloud?(pending?'fa-triangle-exclamation':'fa-cloud-arrow-up'):'fa-hard-drive'}"></i><span id="header-cloud-status-text"><span class="cloud-mode">${mode} · </span>${pending?'pendente · ':''}${rel.text}</span>`;
+            button.title=`${cloud?'Última atualização confirmada na nuvem':'Último salvamento local'}: ${savedLabel}. Clique para abrir as configurações.`;
+        }
+
+        async function testSupabaseConnection() {
+            const url=(document.getElementById('sb-url').value||localStorage.getItem('tce_sb_url')||'').trim().replace(/\/$/,'');
+            const key=(document.getElementById('sb-key').value||localStorage.getItem('tce_sb_key')||'').trim();
+            if(!url||!key)return showCustomDialog('Dados de conexão necessários','Informe a URL do projeto e a chave pública, depois clique em Salvar conexão.');
+            if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url))return showCustomDialog('Confira a URL','Informe a URL base do projeto, no formato https://seu-projeto.supabase.co, sem caminhos extras.');
+            updateCloudStatus('Testando conexão...');
+            try {
+                const resp=await fetch(url+'/auth/v1/health',{method:'GET',headers:{apikey:key}});
+                if(!resp.ok) {
+                    const detail=(await resp.text()).slice(0,300);
+                    updateCloudStatus('Falha no teste de conexão');
+                    return showCustomDialog('A API respondeu com erro',`HTTP ${resp.status}. Verifique se a URL e a chave pública pertencem ao mesmo projeto. ${detail}`);
+                }
+                const health=await resp.json().catch(()=>({}));
+                saveSupabaseSettingsQuietly(url,key);
+                let detail='A API de autenticação do projeto respondeu corretamente.';
+                if(sbUser && sbClient){
+                    const {error}=await sbClient.from(SB_TABLE).select('user_id').limit(1);
+                    if(error) detail+=' A API respondeu, mas a tabela '+SB_TABLE+' não pôde ser lida nesta sessão: '+error.message;
+                    else detail+=' A tabela '+SB_TABLE+' também respondeu para a conta conectada.';
+                } else detail+=' Próximo passo: entre com e-mail ou Google para testar o acesso protegido aos dados.';
+                updateCloudStatus('Conexão com Supabase validada');
+                showCustomDialog('Conexão validada',detail,'fa-solid fa-circle-check');
+            } catch(e) {
+                updateCloudStatus('Falha no teste de conexão');
+                showCustomDialog('Não foi possível testar',`O navegador não conseguiu alcançar a API. Confira sua internet, URL e chave. Detalhe: ${e.message}`);
+            }
+        }
+        function saveSupabaseSettingsQuietly(url,key){
+            localStorage.setItem('tce_sb_url',url);localStorage.setItem('tce_sb_key',key);
+            document.getElementById('sb-url').value=url;document.getElementById('sb-key').value=key;
+            initializeSupabase();
+        }
+        async function signInWithGoogleSupabase(){
+            if(location.protocol==='file:') return showCustomDialog('O Google OAuth precisa de um endereço web','Abra o Planejador em um endereço HTTPS (site hospedado) ou em localhost e cadastre esse endereço em Supabase → Authentication → URL Configuration. Um arquivo HTML aberto diretamente do computador não é um endereço de retorno OAuth válido.');
+            if(!initializeSupabase())return showCustomDialog('Configure a conexão','Informe a URL e chave pública do projeto Supabase e clique em Salvar conexão.');
+            const redirectTo=window.location.origin+window.location.pathname;
+            const {error}=await sbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+            if(error)showCustomDialog('Não foi possível iniciar o Google OAuth',error.message+' Confira se o provedor Google está habilitado em Authentication → Sign In / Providers e se esta URL está na lista de Redirect URLs.');
+        }
+
+        async function signInSupabase() {
+            const url=(document.getElementById('sb-url').value||'').trim().replace(/\/$/,'');
+            const key=(document.getElementById('sb-key').value||'').trim();
+            if (!url || !key) return showCustomDialog('Configuração necessária', 'Informe a URL do projeto e a chave pública.');
+            if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) return showCustomDialog('URL inválida', 'Use a URL base do projeto, como https://seu-projeto.supabase.co.');
+            saveSupabaseSettingsQuietly(url,key);
+            if (!initializeSupabase()) return showCustomDialog('Configuração necessária', 'Não foi possível iniciar o cliente Supabase. Confira a URL e a chave pública.');
+            const email = document.getElementById('sb-email').value.trim();
+            const password = document.getElementById('sb-password').value;
+            if (!email || !password) return showCustomDialog('Dados necessários', 'Informe e-mail e senha.');
+            localStorage.setItem('tce_sb_email',email);
+            updateCloudStatus('Conectando...');
+            const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                updateCloudStatus('Falha no login');
+                return showCustomDialog('Não foi possível entrar', error.message);
+            }
+            sbUser = data.user;
+            updateCloudStatus('Conectado: ' + email);
+            await resolveInitialCloudSync();
+        }
+
+        async function signUpSupabase() {
+            const url=(document.getElementById('sb-url').value||'').trim().replace(/\/$/,'');
+            const key=(document.getElementById('sb-key').value||'').trim();
+            if (!url || !key) return showCustomDialog('Configuração necessária', 'Informe a URL do projeto e a chave pública.');
+            if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) return showCustomDialog('URL inválida', 'Use a URL base do projeto, como https://seu-projeto.supabase.co.');
+            saveSupabaseSettingsQuietly(url,key);
+            if (!initializeSupabase()) return showCustomDialog('Configuração necessária', 'Não foi possível iniciar o cliente Supabase. Confira a URL e a chave pública.');
+            const email = document.getElementById('sb-email').value.trim();
+            const password = document.getElementById('sb-password').value;
+            if (!email || password.length < 6) return showCustomDialog('Dados necessários', 'Informe o e-mail e uma senha com pelo menos 6 caracteres.');
+            localStorage.setItem('tce_sb_email',email);
+            const { data, error } = await sbClient.auth.signUp({ email, password });
+            if (error) return showCustomDialog('Erro ao criar conta', error.message);
+            if (data.session) {
+                sbUser = data.user;
+                updateCloudStatus('Conta criada e conectada');
+                await resolveInitialCloudSync();
+            } else {
+                showCustomDialog('Verifique seu e-mail', 'A conta foi solicitada. Confirme o e-mail se a verificação estiver habilitada e depois entre.');
+            }
+        }
+
+        async function signOutSupabase() {
+            if (sbClient) await sbClient.auth.signOut();
+            sbUser = null;
+            updateCloudStatus('Sessão encerrada; dados locais preservados');
+        }
+
+        async function resolveInitialCloudSync() {
+            const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
+            if (error) {
+                updateCloudStatus('Erro ao ler nuvem');
+                return showCustomDialog('Erro de sincronização', error.message + '\nConfira se criou a tabela e as políticas RLS do SQL fornecido.');
+            }
+            if (!data) {
+                showCustomDialog('Primeira sincronização', 'Ainda não há dados na nuvem para esta conta. Escolha “Enviar dados atuais à nuvem” para gravar o progresso deste navegador.');
+                updateCloudStatus('Conectado; nuvem ainda vazia');
+                return;
+            }
+            if(data.updated_at) {
+                const keys=storageStatusKeys();
+                if(keys.cloud) localStorage.setItem(keys.cloud,data.updated_at);
+                if(!localStorage.getItem(keys.mode)) localStorage.setItem(keys.mode,'Nuvem');
+            }
+            showCustomDialog('Dados encontrados na nuvem', 'Para evitar sobrescrever seu progresso, abra “Sincronização manual e recuperação (avançado)” abaixo e escolha “Baixar dados da nuvem” para carregar os dados remotos ou “Enviar dados atuais à nuvem” para mesclar os concursos locais com os remotos. A sincronização preserva concursos remotos que não estão ativos neste navegador.');
+            updateCloudStatus('Conectado; dados remotos encontrados');
+        }
+
+        async function refreshCloudTimestampFromServer() {
+            if(!sbClient || !sbUser || document.visibilityState==='hidden') return;
+            try {
+                const {data,error}=await sbClient.from(SB_TABLE).select('updated_at').eq('user_id',sbUser.id).maybeSingle();
+                if(error) throw error;
+                if(data && data.updated_at) {
+                    recordCloudSave(data.updated_at);
+                    updateCloudStatus('Conectado à nuvem');
+                }
+            } catch(error) {
+                console.warn('Não foi possível atualizar o horário confirmado da nuvem:',error);
+            }
+        }
+        function startCloudTimestampPolling() {
+            if(cloudStatusPollTimer) clearInterval(cloudStatusPollTimer);
+            cloudStatusPollTimer=setInterval(()=>refreshCloudTimestampFromServer(),30000);
+            document.addEventListener('visibilitychange',()=>{
+                if(document.visibilityState==='visible') refreshCloudTimestampFromServer();
+            });
+            window.addEventListener('focus',()=>refreshCloudTimestampFromServer());
+        }
+
+        async function syncSupabase(mode, silent = false, preferRemote = false) {
+            if (!sbClient || !sbUser) {
+                if (!initializeSupabase()) return showCustomDialog('Configuração necessária', 'Informe e guarde as configurações e entre na conta primeiro.');
+                const { data } = await sbClient.auth.getUser();
+                sbUser = data && data.user ? data.user : null;
+            }
+            if (!sbUser) return showCustomDialog('Entre primeiro', 'Faça login antes de sincronizar.');
+            updateCloudStatus('Sincronizando...');
+            if (mode === 'upload') {
+                try {
+                    const payload=buildCurrentCloudPayload();
+                    const syncResult=await upsertCloudPayloadSafely(payload,sbUser.id);
+                    adoptMergedCloudPayloadLocally(syncResult.mergedPayload);
+                    recordCloudSave(syncResult.savedAt);updateCloudStatus('Sincronizado com a nuvem');
+                    return showCustomDialog('Sincronização concluída','Os registros locais e remotos foram mesclados por item. Os lançamentos recebidos da nuvem também foram aplicados neste dispositivo.');
+                } catch(error) {
+                    updateCloudStatus('Erro ao enviar');
+                    return showCustomDialog('Falha ao enviar',String(error.message||error)+'\nNada foi enviado porque a leitura/mesclagem segura falhou. Confira a tabela e as políticas RLS.');
+                }
+            }
+            const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
+            if (error) {
+                updateCloudStatus('Erro ao baixar');
+                if (silent) throw error;
+                return showCustomDialog('Falha ao baixar', error.message);
+            }
+            if (!data || !data.data) {
+                if (silent) return false;
+                return showCustomDialog('Nuvem vazia', 'Não há dados salvos para esta conta.');
+            }
+
+            // O download combina os mapas de concursos: o remoto vence para IDs presentes nos dois lados;
+            // os concursos existentes só localmente são preservados em vez de desaparecerem.
+            let localContests={};try{localContests=JSON.parse(localStorage.getItem('tce_contests')||'{}')||{};}catch(e){}
+            const remoteDeleted=data.data.deletedContests&&typeof data.data.deletedContests==='object'?data.data.deletedContests:{};
+            setDeletedContestMap(mergeDeletedContestMaps(getDeletedContestMap(),remoteDeleted));
+            const deletedMap=getDeletedContestMap();
+            const remoteContests=data.data.contests&&typeof data.data.contests==='object'?data.data.contests:{};
+            contests={...localContests,...remoteContests};Object.keys(contests).forEach(id=>{if(deletedMap[id])delete contests[id];});
+            const localSnapshots=collectContestSnapshots();
+            let remoteSnapshots=data.data.contestSnapshots&&typeof data.data.contestSnapshots==='object'?data.data.contestSnapshots:{};
+            Object.keys(remoteSnapshots).forEach(id=>{if(deletedMap[id])delete remoteSnapshots[id];});
+            if(data.data.activeContest && !remoteSnapshots[data.data.activeContest] && (Array.isArray(data.data.masterEditalData)||Array.isArray(data.data.userProgress))) {
+                remoteSnapshots={...remoteSnapshots,[data.data.activeContest]:{contestName:data.data.contests?.[data.data.activeContest]?.name||data.data.activeContest,masterEditalData:data.data.masterEditalData||[],userProgress:data.data.userProgress||data.data.masterEditalData||[],studySessions:data.data.studySessions||[],prioritySettings:data.data.prioritySettings||{},disciplineSettings:data.data.disciplineSettings||{},suggestionMode:data.data.suggestionMode||'priority_progress'}};
+            }
+            // Download também mescla registros de cada concurso: não substitui o snapshot local inteiro.
+            const allSnapshots=mergeContestSnapshots({...data.data,deletedContests:deletedMap,contestSnapshots:remoteSnapshots},{activeContest,deletedContests:deletedMap,contestSnapshots:localSnapshots},preferRemote);
+            // Mantém o concurso selecionado neste aparelho, salvo se ele tiver sido excluído.
+            if((!contests[activeContest]||deletedMap[activeContest])&&data.data.activeContest&&contests[data.data.activeContest]&&!deletedMap[data.data.activeContest]) activeContest=data.data.activeContest;
+            if(!contests[activeContest]||deletedMap[activeContest]) activeContest=Object.keys(contests)[0]||'concurso-restaurado-'+Date.now();
+            if(!contests[activeContest])contests[activeContest]={name:activeContest.includes('restaurado')?'Concurso restaurado':(activeContest===DEFAULT_CONTEST_ID?DEFAULT_CONTEST_NAME:activeContest),board:'',date:''};
+            Object.keys(allSnapshots).forEach(id=>{if(!contests[id])contests[id]={name:allSnapshots[id]?.contestName||id,board:'',date:''};});
+            localStorage.setItem('tce_active_contest',activeContest);
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            localStorage.setItem('tce_deleted_contests',JSON.stringify(deletedMap));
+            persistSnapshotMapToLocal(allSnapshots);
+            const activeSnapshot=allSnapshots[activeContest];
+            if(activeSnapshot) restoreSnapshotToMemory(activeSnapshot);
+            else if(data.data.activeContest===activeContest&&!deletedMap[activeContest]) {
+                if(Array.isArray(data.data.masterEditalData))masterEditalData=data.data.masterEditalData;
+                if(Array.isArray(data.data.userProgress))userProgress=data.data.userProgress;
+                if(Array.isArray(data.data.studySessions))studySessions=data.data.studySessions;
+            } else { masterEditalData=[];userProgress=[];studySessions=[]; }
+            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify({...buildCurrentSnapshotForStorage(),_snapshotUpdatedAt:activeSnapshot?._snapshotUpdatedAt||new Date().toISOString()}));
+            localStorage.setItem('tce_go_pro_data', JSON.stringify(userProgress));
+            localStorage.setItem('tce_go_pro_sessions', JSON.stringify(studySessions));
+            localStorage.setItem('tce_master_edital', JSON.stringify(masterEditalData));
+            renderContestSelector();
+            if(data.updated_at) recordCloudSave(data.updated_at); else recordCloudSave(new Date().toISOString());
+            initCronogramaFilters();renderSessionsList();renderRecentRotation();renderPriorityDisciplineProgress();renderDashboard();renderCustomization();updateContestHeader();applyPriorityColors();
+            updateCloudStatus('Dados baixados da nuvem');
+            if (!silent) showCustomDialog('Download concluído','Os dados locais e remotos foram mesclados por item. Lançamentos exclusivos de cada dispositivo foram preservados.');
+            return true;
+        }
+
+        // Na abertura, decide a direção da sincronização pelo timestamp confirmado
+        // da nuvem e pelo snapshot local, sem transformar a leitura em um upload.
+        async function syncInitialStateAutomatically() {
+            if (!sbClient || !sbUser) return;
+            const { data, error } = await sbClient.from(SB_TABLE).select('data, updated_at').eq('user_id', sbUser.id).maybeSingle();
+            if (error) throw error;
+            if (!data || !data.data) {
+                await syncLatestChangesToCloud();
+                return;
+            }
+            let localUpdatedAt = 0;
+            try {
+                const snapshot = JSON.parse(localStorage.getItem('tce_contest_data_' + activeContest) || 'null');
+                localUpdatedAt = Date.parse(snapshot?._snapshotUpdatedAt || '') || 0;
+            } catch (_) {}
+            const remoteUpdatedAt = Date.parse(data.updated_at || '') || 0;
+            if (remoteUpdatedAt > localUpdatedAt) {
+                await syncSupabase('download', true, true);
+            } else {
+                await syncLatestChangesToCloud();
+            }
+        }
+
+        function buildCurrentSnapshotForStorage(timestamp=new Date().toISOString()) {
+            return {contestName:contests[activeContest]?.name||activeContest,masterEditalData,userProgress,studySessions,prioritySettings:getPrioritySettings(),disciplineSettings:getDisciplineSettings(),suggestionMode:getSuggestionMode(),deleted:getTombstones(activeContest),_snapshotUpdatedAt:timestamp};
+        }
+
+        function scheduleCloudAutoSave() {
+            if(!sbClient || !sbUser){updateCloudStatus('Salvo neste dispositivo; nuvem não conectada');return;}
+            clearTimeout(cloudSaveTimer);
+            updateCloudStatus('Salvo localmente; aguardando sincronização automática');
+            cloudSaveTimer=setTimeout(()=>syncLatestChangesToCloud(),1200);
+        }
+        async function syncLatestChangesToCloud() {
+            if(!sbClient||!sbUser)return;
+            if(cloudSaveInFlight){cloudSaveQueued=true;return;}
+            cloudSaveInFlight=true;
+            const uid=sbUser.id;
+            try{
+                do{
+                    cloudSaveQueued=false;
+                    const revisionAtRequest=dataRevision;
+                    const payload=buildCurrentCloudPayload(new Date().toISOString());
+                    const syncResult=await upsertCloudPayloadSafely(payload,uid);
+                    if(!sbUser||sbUser.id!==uid){cloudSaveQueued=false;return;}
+                    recordCloudSave(syncResult.savedAt);
+                    if(dataRevision!==revisionAtRequest) cloudSaveQueued=true;
+                    else adoptMergedCloudPayloadLocally(syncResult.mergedPayload);
+                }while(cloudSaveQueued&&sbUser&&sbUser.id===uid);
+                if(sbUser&&sbUser.id===uid)updateCloudStatus('Sincronizado com a nuvem');
+            }catch(error){
+                console.warn('Falha na sincronização automática:',error);
+                updateCloudStatus('Falha na sincronização automática; dados locais preservados');
+            }finally{
+                cloudSaveInFlight=false;
+                if(cloudSaveQueued&&sbUser&&sbUser.id===uid){cloudSaveQueued=false;scheduleCloudAutoSave();}else if(!sbUser||sbUser.id!==uid){cloudSaveQueued=false;}
+            }
+        }
+        function saveData() {
+            const savedAtLocal=new Date().toISOString();
+            localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
+            localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
+            localStorage.setItem('tce_master_edital',JSON.stringify(masterEditalData));
+            localStorage.setItem('tce_contests',JSON.stringify(contests));
+            localStorage.setItem('tce_active_contest',activeContest);
+            localStorage.setItem('tce_contest_data_'+activeContest,JSON.stringify(buildCurrentSnapshotForStorage(savedAtLocal)));
+            recordLocalSave();
+            dataRevision++;
+            updateCloudStatus('Salvamento local realizado');
+            scheduleCloudAutoSave();
+        }
+
