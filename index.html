@@ -1,687 +1,781 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
-    <title>Planejador de Estudos | Concursos — V10.32</title>
-    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            850: '#1e293b',
-                            900: '#0f172a'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-    <script src="./supabase-config.js"></script>
-    <script src="./js/00-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/estilos.css">
-
-    <meta name="theme-color" content="#003a70">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Planejador">
-    <link rel="icon" href="data:,">
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <!-- Diário Nutricional V47 (base V40): menu lateral, relatório por período, cardio sem tempo, IA com novas tentativas (V42: uma chamada só, contagem em segundos e log ia_logs). Ver ARQUITETURA.md. -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Diário Nutricional V47</title>
+<script>try{var t=localStorage.getItem('nutri_tema');if(t==='escuro'||((!t||t==='auto')&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}</script>
+<meta name="color-scheme" content="light dark">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="css/app.css">
+  <meta name="theme-color" content="#003a70">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Diário Nutri">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
-<body class="h-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col auth-locked">
-<script>try{if(localStorage.getItem('tce_ui_sidebar')==='collapsed')document.body.classList.add('sidebar-collapsed');}catch(e){}</script>
-<div id="auth-gate" class="fixed inset-0 z-[1000] items-center justify-center p-4 bg-slate-100/95 dark:bg-slate-950/95 overflow-y-auto" role="main" aria-labelledby="auth-title">
-  <section class="auth-card w-full max-w-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden my-auto p-0">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col auth-locked">
+<script>try{if(localStorage.getItem('nutri_ui_sidebar')==='collapsed')document.body.classList.add('sidebar-collapsed');}catch(e){}</script>
+
+
+<div id="auth-gate" class="fixed inset-0 z-[1000] items-center justify-center p-4 bg-slate-100/95 overflow-y-auto" role="main" aria-labelledby="auth-title">
+  <section class="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden my-auto">
     <div class="bg-[#003a70] text-white px-6 py-5 border-b-4 border-[#ffc20e]">
-      <div class="brand-app-icon brand-auth-icon mb-3" aria-hidden="true"><i class="fa-solid fa-book-open-reader"></i></div>
-      <h1 id="auth-title" class="text-xl sm:text-2xl font-bold">Planejador de Estudos <span data-app-version class="hidden sm:inline ml-1.5 align-middle text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"></span></h1>
-      <p class="text-sm text-blue-100 mt-1">Entre com segurança para acessar seu cronograma, edital e histórico.</p>
+      <div class="text-3xl mb-2">🥗</div>
+      <h1 id="auth-title" class="text-xl font-bold">Diário Nutricional & Bioimpedância</h1>
+      <p class="text-sm text-blue-100 mt-1">Entre para acessar seus registros com segurança.</p>
     </div>
-    <div class="p-5 sm:p-6 space-y-4">
+    <div class="p-6 space-y-4">
       <div id="auth-normal-fields" class="space-y-3">
-        <input id="auth-supabase-url" type="hidden"><input id="auth-supabase-key" type="hidden">
-        <div><label><span class="auth-label">E-mail</span><input id="auth-email" class="auth-field" type="email" autocomplete="username" placeholder="voce@exemplo.com"></label></div>
-        <div><label><span class="auth-label">Senha</span><input id="auth-password" class="auth-field" type="password" autocomplete="current-password" placeholder="Sua senha"></label></div>
-        <button id="auth-login" type="button" class="auth-btn w-full bg-[#0a5cad] hover:bg-blue-800 text-white">Entrar com e-mail</button>
+        <div><label for="auth-email" class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label><input id="auth-email" class="auth-field" type="email" autocomplete="username" placeholder="voce@exemplo.com"></div>
+        <div><label for="auth-password" class="block text-xs font-semibold text-slate-600 mb-1">Senha</label><input id="auth-password" class="auth-field" type="password" autocomplete="current-password" placeholder="Sua senha" /></div>
+        <button id="auth-login" class="auth-btn w-full bg-[#0a5cad] hover:bg-blue-800 text-white">Entrar</button>
         <button id="auth-google" type="button" class="auth-btn w-full border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 flex items-center justify-center gap-2"><span aria-hidden="true" class="font-bold text-lg">G</span> Continuar com Google</button>
-        <div class="grid grid-cols-2 gap-2"><button id="auth-signup" type="button" class="auth-btn border border-emerald-600 text-emerald-800 hover:bg-emerald-50">Criar conta</button><button id="auth-forgot" type="button" class="auth-btn border border-slate-300 text-slate-700 hover:bg-slate-50">Esqueci a senha</button></div>
+        <div class="grid grid-cols-2 gap-2"><button id="auth-signup" class="auth-btn border border-emerald-600 text-emerald-800 hover:bg-emerald-50">Criar conta</button><button id="auth-forgot" class="auth-btn border border-slate-300 text-slate-700 hover:bg-slate-50">Esqueci a senha</button></div>
       </div>
       <div id="auth-recovery-fields" class="hidden space-y-3">
-        <h2 class="font-bold text-slate-800 dark:text-slate-100">Definir nova senha</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-300">Digite a nova senha para sua conta.</p>
-        <label><span class="auth-label">Nova senha</span><input id="auth-new-password" class="auth-field" type="password" autocomplete="new-password" minlength="8" placeholder="Use pelo menos 8 caracteres"></label>
-        <button id="auth-update-password" type="button" class="auth-btn w-full bg-[#0a5cad] text-white">Salvar nova senha</button>
-        <button id="auth-back-login" type="button" class="auth-btn w-full border border-slate-300 text-slate-700">Voltar ao login</button>
+        <h2 class="font-bold text-slate-800">Definir nova senha</h2>
+        <p class="text-sm text-slate-600">Digite a nova senha para sua conta.</p>
+        <div><label for="auth-new-password" class="block text-xs font-semibold text-slate-600 mb-1">Nova senha</label><input id="auth-new-password" class="auth-field" type="password" autocomplete="new-password" minlength="8" placeholder="Use pelo menos 8 caracteres"></div>
+        <button id="auth-update-password" class="auth-btn w-full bg-[#0a5cad] text-white">Salvar nova senha</button>
+        <button id="auth-back-login" class="auth-btn w-full border border-slate-300 text-slate-700">Voltar ao login</button>
       </div>
-      <p id="auth-message" class="auth-message" role="status" aria-live="polite">A sessão pode permanecer ativa neste dispositivo. O conteúdo do app só aparece após autenticação.</p>
-      <button id="pwa-install" type="button" hidden class="auth-btn w-full bg-[#ffc20e] text-slate-900">＋ Instalar Planejador no dispositivo</button>
-      <p class="text-[11px] leading-relaxed text-slate-500">Google OAuth exige o provedor Google habilitado no Supabase e o endereço deste aplicativo incluído em Authentication → URL Configuration → Redirect URLs. Se preferir, o login tradicional por e-mail e senha continua disponível.</p>
+      <p id="auth-message" class="text-sm rounded-lg p-3 bg-slate-50 text-slate-700" role="status" aria-live="polite">Sua sessão fica salva neste dispositivo até você sair da conta.</p>
     </div>
   </section>
 </div>
 
-<header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
-        <div class="w-full px-3 sm:px-6 min-h-[64px] py-2 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-                <button id="mobile-menu-btn" type="button" onclick="openSidebarMobile()" aria-label="Abrir menu" aria-controls="app-sidebar" class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
-                <div class="brand-app-icon" aria-hidden="true"><i class="fa-solid fa-book-open-reader"></i></div>
-                <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight">Planejador de Estudos <span data-app-version class="ml-1.5 align-middle text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-white/15 text-white border border-white/25"></span></h1>
-                    <p id="contest-subtitle" class="text-[10px] sm:text-xs text-blue-100">Selecione um concurso para começar</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-2">
-                <button type="button" id="header-cloud-status" onclick="switchTab('configuracoes')" class="cloud-indicator local" title="Estado do armazenamento. Clique para abrir as configurações">
-                    <i class="fa-solid fa-hard-drive"></i><span id="header-cloud-status-text">Local • Neste navegador</span>
-                </button>
-            </div>
+<header class="app-header bg-[#003a70] text-white shadow-md sticky top-0 z-40 no-print border-b-4 border-[#ffc20e]">
+  <div class="px-3 sm:px-5 py-2.5 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <button type="button" id="btn-menu-mobile" class="mobile-menu-btn" aria-label="Abrir menu" aria-controls="app-sidebar" aria-expanded="false">☰</button>
+      <div class="hidden sm:block bg-white text-[#003a70] p-2 rounded-xl font-bold text-xl shadow-inner">🥗</div>
+      <div class="min-w-0">
+        <h1 class="text-base md:text-xl font-bold tracking-tight truncate">Diário Nutricional & Bioimpedância</h1>
+        <small id="app-version" class="hidden sm:block text-emerald-100 opacity-90 text-xs">Versão V47</small>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+    <button type="button" id="btn-tema" class="shrink-0 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white text-lg flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffc20e]" aria-label="Tema: automático" title="Tema: automático">◐</button>
+    <button id="btn-cloud-status" class="text-xs px-3 py-1 rounded-full bg-amber-600 text-white border border-amber-500 font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-sm transition-all hover:bg-amber-500" title="Clique para sincronizar agora com a nuvem">
+      <span id="cloud-status-icon">☁️</span><span class="flex flex-col text-left leading-tight"><span id="cloud-status-text">Nuvem</span><span id="cloud-status-time" class="text-xs opacity-90">aguardando sincronização</span></span>
+    </button>
+    </div>
+  </div>
+  <input type="file" id="file-input-json" accept=".json" class="hidden">
+</header>
+
+<div id="sidebar-backdrop" class="sidebar-backdrop no-print"></div>
+<div class="app-shell">
+  <aside id="app-sidebar" class="app-sidebar no-print" aria-label="Menu principal">
+    <button type="button" id="sidebar-novo" class="sidebar-launch" title="Novo lançamento"><span class="nav-ico" aria-hidden="true">➕</span><span class="nav-label">Novo lançamento</span></button>
+    <div class="sidebar-divider" role="presentation"></div>
+    <nav class="sidebar-nav" aria-label="Seções do diário">
+      <button type="button" id="btn-tab-diario" class="nav-btn active" title="Diário"><span class="nav-ico" aria-hidden="true">🍽️</span><span class="nav-label">Diário</span></button>
+      <button type="button" id="btn-tab-metas-nutri" class="nav-btn" title="Metas"><span class="nav-ico" aria-hidden="true">🎯</span><span class="nav-label">Metas</span></button>
+      <button type="button" id="btn-tab-medidas" class="nav-btn" title="Medidas"><span class="nav-ico" aria-hidden="true">📏</span><span class="nav-label">Medidas</span></button>
+      <button type="button" id="btn-tab-bio" class="nav-btn" title="Bioimpedância"><span class="nav-ico" aria-hidden="true">⚡</span><span class="nav-label">Bioimpedância</span></button>
+      <button type="button" id="btn-tab-treinos" class="nav-btn" title="Treinos"><span class="nav-ico" aria-hidden="true">🏋️</span><span class="nav-label">Treinos</span></button>
+      <button type="button" id="btn-tab-graficos" class="nav-btn" title="Gráficos"><span class="nav-ico" aria-hidden="true">📈</span><span class="nav-label">Gráficos</span></button>
+      <button type="button" id="btn-tab-relatorio" class="nav-btn" title="Relatório"><span class="nav-ico" aria-hidden="true">📄</span><span class="nav-label">Relatório</span></button>
+      <span class="sidebar-spacer"></span>
+      <button type="button" id="btn-tab-metas" class="nav-btn" title="Configurações"><span class="nav-ico" aria-hidden="true">⚙️</span><span class="nav-label">Configurações</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <button type="button" id="sidebar-toggle" class="nav-btn sidebar-collapse-btn" aria-expanded="true" aria-controls="app-sidebar" title="Recolher menu"><span class="nav-ico" aria-hidden="true">«</span><span class="nav-label">Recolher menu</span></button>
+    </div>
+  </aside>
+  <button type="button" id="fab-novo" class="fab-novo no-print" aria-label="Novo lançamento" title="Novo lançamento">＋</button>
+  <nav id="bottom-bar" class="bottom-bar no-print" aria-label="Navegação principal">
+    <button type="button" class="bb-item" data-aba="btn-tab-diario"><span class="bb-ico" aria-hidden="true">🍽️</span><span>Diário</span></button>
+    <button type="button" class="bb-item" data-aba="btn-tab-treinos"><span class="bb-ico" aria-hidden="true">🏋️</span><span>Treinos</span></button>
+    <button type="button" id="bb-novo" class="bb-item bb-novo" aria-label="Novo lançamento"><span class="bb-plus" aria-hidden="true">＋</span><span>Lançar</span></button>
+    <button type="button" class="bb-item" data-aba="btn-tab-relatorio"><span class="bb-ico" aria-hidden="true">📄</span><span>Relatório</span></button>
+    <button type="button" id="bb-mais" class="bb-item" aria-controls="app-sidebar" aria-expanded="false"><span class="bb-ico" aria-hidden="true">☰</span><span>Mais</span></button>
+  </nav>
+<main class="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6 relative">
+  
+  <!-- MODULO: DIÁRIO ALIMENTAR -->
+  <div id="view-diario" class="space-y-6">
+    <section class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-bold text-slate-600 uppercase">Filtros de Período:</span>
+          <select id="filtro-periodo" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 focus:ring-2 focus:ring-[#0a5cad]">
+            <option value="todos">Todos os Registros</option>
+            <option value="hoje">Hoje</option>
+            <option value="semana">Semana Atual</option>
+            <option value="mes">Mês Atual</option>
+            <option value="ano" selected>Ano Atual</option>
+            <option value="personalizado">Período Personalizado</option>
+          </select>
+          <div id="box-datas-personalizadas" class="hidden flex items-center gap-2">
+            <input type="date" id="filtro-data-inicio" class="text-xs px-2 py-1.5 border border-slate-300 rounded-lg">
+            <span class="text-xs text-slate-500">até</span>
+            <input type="date" id="filtro-data-fim" class="text-xs px-2 py-1.5 border border-slate-300 rounded-lg">
+          </div>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 cursor-pointer select-none">
+            <input type="checkbox" id="filtro-sem-estimativa" class="accent-amber-600">
+            Sem estimativa <span id="contador-sem-estimativa" class="bg-amber-200 rounded-full px-1.5 text-xs">0</span>
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-sky-800 bg-sky-50 border border-sky-200 rounded-lg px-3 py-2 cursor-pointer select-none" title="Dias anteriores a hoje com menos de 4 refeições lançadas">
+            <input type="checkbox" id="filtro-poucas-refeicoes" class="accent-sky-600">
+            Menos de 4 refeições <span id="contador-poucas-refeicoes" class="bg-sky-200 rounded-full px-1.5 text-xs">0</span>
+          </label>
         </div>
-    </header>
-    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeSidebarMobile()"></div>
-    <div class="app-shell">
-        <aside id="app-sidebar" class="app-sidebar" aria-label="Menu principal">
-            <div class="sidebar-mobile-head"><span>Menu <small data-app-version class="sidebar-ver"></small></span><button type="button" class="sidebar-close-btn" onclick="closeSidebarMobile()" aria-label="Fechar menu"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
-          <div class="sidebar-contest">
-            <label for="contest-selector" class="sidebar-label nav-label">Concurso</label>
-            <select id="contest-selector" onchange="changeContest(this.value)" class="sidebar-select" aria-label="Concurso"></select>
-            <button type="button" id="sidebar-contest-icon" class="sidebar-icon-btn" onclick="toggleSidebar()" title="Concurso ativo. Expanda o menu para trocar" aria-label="Expandir o menu para trocar de concurso"><i class="fa-solid fa-flag-checkered"></i></button>
-          </div>
-          <button type="button" id="sidebar-launch" class="app-primary sidebar-launch" onclick="launchStudyFromSidebar()" title="Lançar estudo"><i class="fa-solid fa-plus"></i><span class="nav-label">Lançar estudo</span></button>
-          <div class="sidebar-divider" role="presentation"></div>
-          <nav class="sidebar-nav" aria-label="Seções do planejador">
-            <button type="button" onclick="switchTab('cronograma',true)" id="tab-cronograma" class="tab-btn active-tab bg-blue-600 text-white shadow-sm" title="Cronograma & Prioridades" aria-current="page"><i class="fa-solid fa-list-check"></i><span class="nav-label">Cronograma & Prioridades</span></button>
-            <button type="button" onclick="switchTab('registro',true)" id="tab-registro" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Registro de Estudos"><i class="fa-solid fa-clock-rotate-left"></i><span class="nav-label">Registro de Estudos</span></button>
-            <button type="button" onclick="switchTab('edital',true)" id="tab-edital" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Edital Verticalizado"><i class="fa-solid fa-book-open"></i><span class="nav-label">Edital Verticalizado</span></button>
-            <button type="button" onclick="switchTab('estatisticas',true)" id="tab-estatisticas" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Estatísticas"><i class="fa-solid fa-chart-column"></i><span class="nav-label">Estatísticas</span></button>
-            <button type="button" onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Datas Importantes"><i class="fa-solid fa-calendar-check"></i><span class="nav-label">Datas Importantes</span></button>
-            <button type="button" onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Personalização"><i class="fa-solid fa-sliders"></i><span class="nav-label">Personalização</span></button>
-            <span class="sidebar-spacer"></span>
-            <button type="button" onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Configurações"><i class="fa-solid fa-gear"></i><span class="nav-label">Configurações</span></button>
-          </nav>
-          <div class="sidebar-foot">
-            <button type="button" id="sidebar-theme" class="sidebar-foot-btn" onclick="toggleDarkMode()" title="Alternar tema claro/escuro"><i id="theme-icon" class="fa-solid fa-moon"></i><span class="nav-label">Alternar tema</span></button>
-            <button type="button" id="sidebar-toggle" class="sidebar-foot-btn sidebar-collapse-btn" onclick="toggleSidebar()" aria-expanded="true" aria-controls="app-sidebar" title="Recolher menu"><i class="fa-solid fa-angles-left"></i><span class="nav-label">Recolher menu</span></button>
-          </div>
-          <span id="countdown-badge" hidden data-exam-date=""><span id="countdown-text"></span></span>
-        </aside>
-        <button type="button" id="fab-launch" class="fab-launch app-primary" onclick="launchStudyFromSidebar()" aria-label="Lançar estudo" title="Lançar estudo"><i class="fa-solid fa-plus"></i></button>
-<main class="flex-1 min-w-0 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col">
-        <!-- ABA 1: CRONOGRAMA & PRIORIDADES -->
-        <div id="content-cronograma" class="tab-content flex-1 flex flex-col space-y-4 sm:space-y-6">
-            
-            <!-- Indicadores gerais de progresso -->
-            <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
-                <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Disciplinas Estudadas</p>
-                    <div class="flex items-end justify-between mt-1.5">
-                        <h3 id="stat-disciplines-count" class="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">0/0</h3>
-                        <span id="stat-disc-percent" class="text-[10px] text-slate-500 font-bold">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div id="stat-disc-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Tópicos Estudados</p>
-                    <div class="flex items-end justify-between mt-1.5">
-                        <h3 id="stat-topics-count" class="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">0/0</h3>
-                        <span id="stat-percent" class="text-[10px] text-slate-500 font-bold">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div id="stat-bar" class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">Horas de Estudo</p>
-                    <div class="flex items-end justify-between mt-1.5">
-                        <h3 id="stat-total-hours" class="text-lg sm:text-xl font-bold">0.0h</h3>
-                        <span id="stat-total-hours-dhm" class="text-[10px] text-slate-500">Acumulado</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div id="stat-hours-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Questões Resolvidas</p>
-                    <div class="flex items-end justify-between mt-1.5">
-                        <h3 id="stat-total-questions" class="text-lg sm:text-xl font-bold">0</h3>
-                        <span class="text-[10px] text-slate-500">Questões</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div id="stat-questions-bar" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 col-span-2">
-                    <p class="text-[10px] font-semibold text-purple-600 dark:text-purple-400">Ciclos de Revisão</p>
-                    <div class="flex items-end justify-between mt-1.5">
-                        <h3 id="stat-total-reviews" class="text-lg sm:text-xl font-bold">0</h3>
-                        <span class="text-[10px] text-slate-500">Revisões realizadas</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                        <div id="stat-reviews-bar" class="bg-purple-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="activity-panels-grid grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-              <div class="activity-panel-column study-column space-y-4 min-w-0">
-              <section class="activity-panel recent-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-blue-700 dark:text-blue-300"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Últimos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Sua rotação recente, com data, duração e questões.</p></div><div class="activity-header-badges"><span class="activity-count">Recentes</span></div></div>
-                <div id="recent-rotation-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-              <section class="activity-panel recent-reviews-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-purple-700 dark:text-purple-300"><i class="fa-solid fa-rotate mr-2"></i>Últimas revisões</h3><p class="text-[11px] text-slate-500 mt-1">Revisões ficam separadas da rotação de estudos.</p></div><div class="activity-header-badges"><span id="recent-review-count" class="activity-count">0 registros</span><span id="recent-review-week-count" class="activity-count activity-week-count">0 revisões na semana</span></div></div>
-                <div id="recent-reviews-container" class="space-y-2"></div>
-              </section>
-              </div>
-              <div class="activity-panel-column suggestions-column space-y-4 min-w-0">
-              <section class="activity-panel suggestions-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-compass mr-2"></i>Sugestões para os próximos estudos</h3><p class="text-[11px] text-slate-500 mt-1">Ordem calculada pela estratégia configurada.</p></div><div class="activity-header-badges"><span id="suggestion-mode-badge" class="activity-count suggestions-count">Prioridade + progresso</span></div></div>
-                <div id="next-study-container" class="space-y-2"><!-- Inserido dinamicamente --></div>
-              </section>
-              <section class="activity-panel review-due-panel bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-                <div class="activity-panel-head flex items-center justify-between gap-2"><div><h3 class="font-bold text-sm text-violet-700 dark:text-violet-300"><i class="fa-solid fa-calendar-check mr-2"></i>Revisões sugeridas</h3><p class="text-[11px] text-slate-500 mt-1">Conteúdos estudados que podem entrar no ciclo de revisão.</p></div><div class="activity-header-badges"><span id="review-due-count" class="activity-count">0 pendentes</span><span id="review-due-week-count" class="activity-count activity-week-count">0 revisões na semana</span></div></div>
-                <div id="review-due-container" class="space-y-2"></div>
-                <p class="text-[10px] text-slate-400">Cadência inicial sugerida: 1, 7, 15 e 30 dias após o estudo/revisão. Você poderá ajustar essa regra em uma versão futura.</p>
-              </section>
-              </div>
-            </div>
-
-            <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-3">
-              <div class="flex items-start justify-between flex-wrap gap-2">
-                <div><h3 class="font-bold text-sm sm:text-base text-blue-700 dark:text-blue-300"><i class="fa-solid fa-chart-simple mr-2"></i>Progresso por prioridade e disciplina</h3><p class="text-xs text-slate-500 mt-1">Abra cada prioridade e disciplina para acompanhar tópicos, subtópicos, horas, questões e ciclos de revisão.</p></div>
-                <div class="flex flex-wrap items-center justify-end gap-2"><span id="home-progress-summary" class="text-xs font-bold rounded-full bg-blue-50 text-blue-700 px-3 py-1">0% concluído</span></div>
-              </div>
-              <div id="priority-progress-container" class="space-y-3"></div>
-            </section>
-
-
-
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="search" id="busca-input" placeholder="Pesquisar alimento ou refeição..." class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a5cad] flex-1 min-w-[9rem] sm:flex-none sm:w-56">
+          <button id="btn-novo-registro" class="bg-[#ffc20e] hover:bg-amber-400 text-slate-900 text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm flex items-center gap-1">➕ Novo Lançamento</button>
         </div>
+      </div>
+    </section>
 
-        <!-- ABA 2: REGISTRO DE ESTUDOS -->
-        <div id="content-registro" class="tab-content hidden flex-1 flex flex-col space-y-4">
-            <div class="flex flex-col gap-4">
-                <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
-                    <h3 class="font-bold text-sm sm:text-base flex items-center space-x-2 text-blue-600 dark:text-blue-400">
-                        <i class="fa-solid fa-plus-circle"></i>
-                        <span>Registrar Sessão de Estudo</span>
-                    </h3>
-                    
-                    <div id="next-study-recommendation" class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-xs dark:border-emerald-900 dark:bg-emerald-950/20">
-                      <div><span class="font-semibold text-emerald-800 dark:text-emerald-300"><i class="fa-solid fa-compass mr-1"></i>Próxima recomendação:</span> <span id="next-study-recommendation-text" class="text-slate-700 dark:text-slate-200">calculando...</span></div>
-                      <button id="use-study-recommendation" type="button" onclick="applyStudyRecommendation()" class="rounded-lg bg-emerald-700 px-3 py-1.5 font-bold text-white hover:bg-emerald-800">Usar disciplina</button>
-                    </div>
-                    <form id="study-session-form" onsubmit="handleStudySessionSubmit(event)" class="session-entry-form grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 items-end text-xs">
-                        <div class="grid grid-cols-2 gap-3 sm:col-span-2">
-                            <div>
-                                <label for="reg-type1" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Tipo 1 · Grupo:</label>
-                                <select id="reg-type1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                                    <option value="Conhecimentos Específicos">Conhecimentos Específicos</option>
-                                    <option value="Conhecimentos Gerais">Conhecimentos Gerais</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="reg-type2" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Tipo 2 · Atividade:</label>
-                                <select id="reg-type2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                                    <option value="Estudo Teórico">📖 Estudo Teórico</option>
-                                    <option value="Resolução de Questões">📝 Resolução de Questões</option>
-                                    <option value="Revisão">🔄 Revisão</option>
-                                    <option value="Simulado">🎯 Simulado</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="reg-date" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Data do estudo:</label>
-                            <input type="date" id="reg-date" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                        </div>
-                        <div>
-                            <label for="reg-track" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Curso / trilha:</label>
-                            <select id="reg-track" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></select>
-                            
-                        </div>
-                        <div>
-                            <label for="reg-discipline" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Disciplina:</label>
-                            <select id="reg-discipline" onchange="updateRegTopics()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></select>
-                        </div>
-                        <div class="xl:col-span-2">
-                            <label for="reg-topic" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Tópico & subtópico:</label>
-                            <select id="reg-topic" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label for="reg-minutes" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Minutos:</label>
-                                <div class="flex items-stretch gap-1.5"><button type="button" id="reg-min-minus" class="min-step" aria-label="Diminuir 5 minutos">−5</button><input type="text" inputmode="numeric" autocomplete="off" id="reg-minutes" value="50" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none text-center"><button type="button" id="reg-min-plus" class="min-step" aria-label="Aumentar 5 minutos">+5</button></div><p id="reg-minutes-hint" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1" aria-live="polite">= 0h50 · digite 85 ou 1:25</p>
-                            </div>
-                            <div>
-                                <label for="reg-questions" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Questões:</label>
-                                <input type="number" id="reg-questions" min="0" value="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
-                            </div>
-                        </div>
-                        <div class="sm:col-span-2 xl:col-span-4">
-                            <label for="reg-obs" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Observações <span class="font-normal">(opcional)</span>:</label>
-                            <textarea id="reg-obs" rows="2" maxlength="500" placeholder="Ex.: dúvida sobre a aula, ponto para revisar..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></textarea>
-                        </div>
-                        <div class="xl:col-span-4 flex flex-wrap items-center justify-between gap-2">
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Para registrar uma revisão, selecione <strong>Revisão</strong> em Tipo 2. Assim não é preciso marcar um segundo campo.</p>
-                            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition inline-flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i><span>Salvar registro de estudo</span></button>
-                        </div>
-                    </form>
-                </div>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-cards"></section>
 
-                <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col space-y-4">
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                        <h3 class="font-bold text-sm sm:text-base flex items-center space-x-2">
-                            <i class="fa-solid fa-history text-emerald-500"></i>
-                            <span>Histórico de Sessões Registradas</span>
-                        </h3>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <input id="hist-search" type="search" placeholder="Buscar aula, tópico ou anotação..." aria-label="Buscar no histórico" oninput="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none w-full sm:w-64">
-                            <select id="hist-period" onchange="renderSessionsList()" aria-label="Filtrar por período" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none"><option value="all">Todo o período</option><option value="today">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="month">Este mês</option></select>
-                            <select aria-label="Filtrar por tipo de atividade" id="hist-filter-type" onchange="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none">
-                                <option value="all">Filtrar por Tipo</option>
-                                <option value="Estudo Teórico">Estudo Teórico</option>
-                                <option value="Resolução de Questões">Resolução de Questões</option>
-                                <option value="Revisão">Revisão</option>
-                                <option value="Simulado">Simulado</option>
-                            </select>
-                            <select aria-label="Filtrar por disciplina" id="hist-filter-disc" onchange="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none">
-                                <option value="all">Todas Disciplinas</option>
-                            </select>
-                            <button type="button" id="hist-form-disc-btn" class="hist-form-disc-btn" onclick="filterHistoryByFormDiscipline()" title="Filtrar o histórico pela disciplina escolhida no formulário de lançamento"><i class="fa-solid fa-filter" aria-hidden="true"></i> Disciplina do lançamento</button>
-                            <select id="hist-filter-track" onchange="renderSessionsList()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-medium outline-none" aria-label="Filtrar por curso ou trilha">
-                                <option value="all">Todas as trilhas</option>
-                            </select>
-                            <span id="session-count-badge" class="text-xs bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">0 reg</span>
-                        </div>
-                    </div>
-
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Dica: edite direto na tabela (a alteração é salva ao sair do campo). Use <strong>Copiar</strong> para reaproveitar um registro. Linhas em destaque apontam para tópicos que não fazem parte do seu edital atual. No celular, cada registro aparece como cartão; toque na anotação para ler tudo.</p>
-                    <div class="overflow-auto max-h-[70vh] flex-1 rounded-xl border border-slate-200 dark:border-slate-700" id="sessions-list">
-                        <!-- Histórico inserido por JS -->
-                    </div>
-                </div>
-            </div>
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden relative">
+      <div class="p-4 md:p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Diário Alimentar e Refeições</h2>
+          <p class="text-xs text-slate-500">Dica: Edite direto na tabela, ou use <strong>Copiar</strong> para reaproveitar refeições frequentes.</p>
         </div>
-
-        <!-- ABA 3: EDITAL VERTICALIZADO -->
-        <div id="content-edital" class="tab-content hidden flex-1 flex flex-col space-y-6">
-            <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">Edital Verticalizado</h3>
-                        <p id="edital-contest-caption" class="text-xs text-slate-500 dark:text-slate-400">Conteúdo programático do concurso selecionado, dividido por tópico e subtópico.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <select aria-label="Filtrar por disciplina" id="edital-filter-disc" onchange="renderEditalVerticalizado()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none">
-                            <option value="all">Todas as Disciplinas</option>
-                        </select>
-                        <select aria-label="Filtrar por tópico" id="edital-filter-topic" onchange="renderEditalVerticalizado()" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none">
-                            <option value="all">Todos os Tópicos</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="app-card p-4 sm:p-5 mt-5 space-y-4" id="syllabus-manager-panel">
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-list-check mr-2"></i>Cadastro manual e importação de conteúdo</h4>
-                      <p class="text-xs text-slate-500 mt-1">Cadastre uma linha por subtópico. Para um tópico sem divisão, deixe o campo Subtópico em branco. As alterações são salvas no navegador e sincronizadas com o Supabase quando a conta estiver conectada.</p>
-                    </div>
-                    <button type="button" onclick="downloadSyllabusTemplate()" class="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-semibold"><i class="fa-solid fa-file-excel mr-1"></i>Baixar modelo Excel</button>
-                  </div>
-                  <form id="manual-syllabus-form" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" onsubmit="event.preventDefault();saveManualSyllabusItem();">
-                    <label class="block text-xs font-semibold text-slate-600">Disciplina *
-                      <input id="manual-discipline" list="manual-discipline-options" required maxlength="180" placeholder="Ex.: Noções de AFO" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
-                      <datalist id="manual-discipline-options"></datalist>
-                    </label>
-                    <label class="block text-xs font-semibold text-slate-600">Tópico *
-                      <input id="manual-topic" required maxlength="240" placeholder="Ex.: Orçamento Público" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
-                    </label>
-                    <label class="block text-xs font-semibold text-slate-600">Subtópico (opcional)
-                      <input id="manual-subtopic" maxlength="600" placeholder="Ex.: Conceito e princípios orçamentários" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
-                    </label>
-                    <label class="block text-xs font-semibold text-slate-600">Prioridade
-                      <select id="manual-priority" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal"><option value="Vermelha">Vermelha (alta)</option><option value="Amarela" selected>Amarela (média)</option><option value="Verde">Verde (baixa)</option></select>
-                    </label>
-                    <label class="block text-xs font-semibold text-slate-600">Peso no edital (opcional)
-                      <input id="manual-weight" maxlength="80" placeholder="Ex.: 5 questões / peso 2" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal">
-                    </label>
-                    <div class="flex flex-wrap items-end gap-2">
-                      <button id="manual-save-btn" type="submit" class="px-4 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold"><i class="fa-solid fa-plus mr-1"></i>Adicionar item</button>
-                      <button type="button" onclick="clearManualSyllabusForm()" class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold">Limpar</button>
-                    </div>
-                    <p id="manual-syllabus-form-status" class="md:col-span-2 xl:col-span-3 text-xs text-slate-500" aria-live="polite">Para incluir vários subtópicos, repita a disciplina e o tópico em linhas separadas. Não é necessário usar IA.</p>
-                  </form>
-                  <div class="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
-                    <div>
-                      <h5 class="font-bold text-sm text-slate-800 dark:text-slate-100"><i class="fa-solid fa-file-excel mr-2 text-emerald-700"></i>Importar estrutura do Excel/CSV/JSON</h5>
-                      <p class="text-xs text-slate-500 mt-1">Use o modelo acima. Cabeçalhos esperados: Disciplina, Tópico, Subtópico, Prioridade e Peso edital. Cada linha representa um tópico ou subtópico. A importação não depende de chave de IA.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(180px,auto)_auto] gap-2 items-end">
-                      <label class="block text-xs font-semibold text-slate-600">Planilha de conteúdo
-                        <input id="manual-import-file" type="file" accept=".xlsx,.xls,.csv,.json" class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs font-normal">
-                      </label>
-                      <label class="block text-xs font-semibold text-slate-600">Como importar
-                        <select id="manual-import-mode" class="mt-1 w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm font-normal"><option value="merge" selected>Adicionar/atualizar sem apagar progresso</option><option value="replace">Substituir todo o edital (reinicia o progresso)</option></select>
-                      </label>
-                      <button type="button" onclick="importManualSyllabusFile()" class="px-4 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold"><i class="fa-solid fa-file-import mr-1"></i>Importar estrutura</button>
-                    </div>
-                  </div>
-                  <details class="border-t border-slate-200 dark:border-slate-700 pt-3">
-                    <summary class="cursor-pointer py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Ver, editar ou excluir conteúdo existente <span id="manual-syllabus-count" class="ml-1 text-xs font-normal text-slate-500"></span></summary>
-                    <div class="space-y-3 pt-2">
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <input aria-label="Buscar disciplina, tópico ou subtópico..." id="manual-list-search" oninput="renderSyllabusManager()" placeholder="Buscar disciplina, tópico ou subtópico..." class="w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm">
-                        <select aria-label="Filtrar por disciplina" id="manual-list-discipline" onchange="renderSyllabusManager()" class="w-full rounded-lg border border-slate-300 bg-slate-50 p-2.5 text-sm"><option value="all">Todas as disciplinas</option></select>
-                      </div>
-                      <div id="manual-syllabus-list" class="space-y-3"></div>
-                    </div>
-                  </details>
-                </div>
-
-                <div class="app-card p-4 sm:p-5 mt-5 space-y-3">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Análise assistida do edital com IA</h4>
-                        <p class="text-xs text-slate-500 mt-1">A IA pode sugerir disciplinas, tópicos, subtópicos, pesos e datas. Para cadastro manual ou importação estruturada de Excel, use o painel acima. Confira qualquer sugestão com o edital oficial antes de aplicar.</p>
-                      </div>
-                      <span class="text-[11px] text-slate-500">IA pelo servidor, sem chave no navegador</span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-2 items-end">
-                      <label class="block text-xs font-semibold text-slate-600">Arquivo do edital
-                        <input id="ai-edital-file" type="file" accept=".xlsx,.xls,.csv,.json,.pdf" onchange="window._editalText='';document.getElementById('ai-results').textContent='Arquivo selecionado. Clique em Analisar com IA para extrair a estrutura proposta.'" class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 p-2 text-xs font-normal dark:bg-slate-900 dark:border-slate-600">
-                      </label>
-                      <button type="button" onclick="analyzeEditalAI()" class="px-4 py-2.5 rounded-lg bg-violet-700 hover:bg-violet-800 text-white text-sm font-semibold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Analisar com IA</button>
-                    </div>
-                    <div id="ai-results" class="text-sm"></div>
-                </div>
-                <div id="edital-verticalizado-container" class="space-y-4 pt-2">
-                    <!-- Inserido por JS -->
-                </div>
-            </div>
+        <div class="text-xs text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200" id="contador-registros">
+          0 registros exibidos
         </div>
+      </div>
 
-        <!-- ABA 4: DASHBOARD & KPIS -->
-        <div id="content-dashboard" class="tab-content hidden flex-1 flex flex-col space-y-5">
-            <div class="mx-auto w-full max-w-4xl space-y-5">
-                <section class="app-card p-5 sm:p-6 space-y-4">
-                    <div>
-                        <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-calendar-check text-indigo-600 mr-2"></i>Datas importantes</h2>
-                        <p id="dates-summary" class="mt-1 text-xs text-slate-500"></p>
-                    </div>
-                    <div id="dates-exam" class="rounded-xl border border-blue-100 dark:border-slate-700 bg-blue-50/70 dark:bg-slate-900/50 p-4"></div>
-                    <form id="date-add-form" onsubmit="addImportantDate(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end text-xs">
-                        <label class="sm:col-span-5 block font-semibold text-slate-500 dark:text-slate-400">Nova data<input id="date-new-title" required maxlength="120" placeholder="Ex.: Pagar a taxa de inscrição" class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
-                        <label class="sm:col-span-3 block font-semibold text-slate-500 dark:text-slate-400">Data<input id="date-new-date" type="date" required class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
-                        <label class="sm:col-span-3 block font-semibold text-slate-500 dark:text-slate-400">Até (opcional)<input id="date-new-end" type="date" class="mt-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none"></label>
-                        <button type="submit" aria-label="Adicionar data" class="sm:col-span-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2.5"><i class="fa-solid fa-plus"></i></button>
-                    </form>
-                </section>
-                <section class="app-card p-5 sm:p-6"><div id="dates-checklist" class="space-y-5"></div></section>
-            </div>
+      <div class="overflow-x-auto max-h-[60vh]">
+        <table class="tabela-cards tabela-cards--diario w-full text-left border-collapse text-sm min-w-[1200px]">
+          <thead class="bg-[#003a70] text-white uppercase text-xs sticky top-0 z-10">
+            <tr>
+              <th class="p-3">Data</th>
+              <th class="p-3">Refeição</th>
+              <th class="p-3">Alimentos Consumidos</th>
+              <th class="p-3 text-center">Calorias (kcal)</th>
+              <th class="p-3 text-center">Proteínas (g)</th>
+              <th class="p-3 text-center">Carboidratos (g)</th>
+              <th class="p-3 text-center">Gorduras (g)</th>
+              <th class="p-3 text-center">Água (ml)</th>
+              <th class="p-3">Observação</th>
+              <th class="p-3 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODULO: METAS NUTRICIONAIS -->
+  <div id="view-metas-nutri" class="hidden space-y-6 max-w-4xl mx-auto">
+    <!-- Metas Nutricionais integradas a Medidas -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">🎯 Metas Nutricionais</h2>
+      <p class="text-xs text-slate-500 mb-4">Defina seus objetivos diários de calorias, macronutrientes e água.</p>
+      
+      <form id="form-metas" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Meta de Peso Desejado (kg)</label>
+          <input type="number" id="meta-peso" step="any" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
         </div>
-
-        <!-- NOVA ABA: ESTATÍSTICAS -->
-        <div id="content-estatisticas" class="tab-content hidden flex-1 flex flex-col space-y-5">
-          <div class="stats-page-head flex items-start justify-between flex-wrap gap-3">
-            <div>
-              <p class="text-[10px] uppercase tracking-[.12em] font-extrabold text-blue-600 dark:text-blue-300 mb-1">Acompanhamento de desempenho</p>
-              <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">Estatísticas de estudo</h2>
-              <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-2xl">Disciplinas agrupadas por prioridade. Os subtítulos mostram os totais gerais e as colunas acompanham a semana selecionada.</p>
-            </div>
-            <div class="stats-week-label"><i class="fa-regular fa-calendar" aria-hidden="true"></i><label for="statistics-week-picker" class="stats-week-picker-label">Semana:</label><select id="statistics-week-picker" class="stats-week-picker" aria-label="Selecionar semana das estatísticas" onchange="changeStatisticsWeek(this.value)"><option value="">Carregando semanas…</option></select></div>
-          </div>
-
-          <section class="stats-kpi-section" aria-labelledby="statistics-general-heading">
-            <h3 id="statistics-general-heading" class="stats-kpi-section-title">Acumulado geral</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid">
-              <section class="stats-kpi stats-kpi-hours"><div class="stats-kpi-top"><span>Total de horas</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-total-hours" class="stats-kpi-value">0h 00m</div><p>Acumulado geral</p></section>
-              <section class="stats-kpi stats-kpi-studies"><div class="stats-kpi-top"><span>Total de estudos</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-total-studies" class="stats-kpi-value">0</div><p>Sessões de estudo registradas</p></section>
-              <section class="stats-kpi stats-kpi-reviews"><div class="stats-kpi-top"><span>Total de revisões</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-total-reviews" class="stats-kpi-value">0</div><p>Revisões registradas</p></section>
-              <section class="stats-kpi stats-kpi-questions"><div class="stats-kpi-top"><span>Total de questões</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-total-questions" class="stats-kpi-value">0</div><p>Questões respondidas</p></section>
-            </div>
-          </section>
-
-          <section class="stats-kpi-section" aria-labelledby="statistics-week-heading">
-            <div class="stats-kpi-section-head"><h3 id="statistics-week-heading" class="stats-kpi-section-title">Desempenho da semana selecionada</h3><p>De segunda-feira a domingo</p></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 stats-kpi-grid stats-weekly-kpi-grid">
-              <section class="stats-kpi stats-kpi-hours stats-kpi-week"><div class="stats-kpi-top"><span>Horas na semana</span><span class="stats-kpi-icon"><i class="fa-regular fa-clock"></i></span></div><div id="statistics-week-hours" class="stats-kpi-value">0h 00m</div><p>Tempo registrado na semana selecionada</p></section>
-              <section class="stats-kpi stats-kpi-studies stats-kpi-week"><div class="stats-kpi-top"><span>Estudos na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-book-open"></i></span></div><div id="statistics-week-studies" class="stats-kpi-value">0</div><p>Sessões de estudo na semana selecionada</p></section>
-              <section class="stats-kpi stats-kpi-reviews stats-kpi-week"><div class="stats-kpi-top"><span>Revisões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-rotate"></i></span></div><div id="statistics-week-reviews" class="stats-kpi-value">0</div><p>Revisões registradas na semana selecionada</p></section>
-              <section class="stats-kpi stats-kpi-questions stats-kpi-week"><div class="stats-kpi-top"><span>Questões na semana</span><span class="stats-kpi-icon"><i class="fa-solid fa-list-check"></i></span></div><div id="statistics-week-questions" class="stats-kpi-value">0</div><p>Questões respondidas na semana selecionada</p></section>
-            </div>
-          </section>
-
-          <section class="stats-charts-section" aria-labelledby="statistics-charts-heading">
-            <div class="stats-charts-section-head"><div><h3 id="statistics-charts-heading" class="stats-kpi-section-title">Evolução e distribuição geral dos estudos</h3><p>Histórico semanal completo e composição acumulada dos registros de estudo.</p></div><span class="stats-chart-period-note">Gráficos baseados nos registros de sessões</span></div>
-            <div id="statistics-charts" class="stats-charts-grid">
-              <section class="stats-chart-card"><header><h4>Evolução de estudos por semana</h4><p>Quantidade de sessões em cada semana do histórico</p></header><div id="statistics-chart-studies-weekly" class="stats-chart-content"></div></section>
-              <section id="statistics-week-card" class="stats-chart-card stats-week-card" style="grid-column:1/-1" aria-live="polite"></section>
-              <section class="stats-chart-card"><header><h4>Horas de estudo por semana</h4><p>Tempo total registrado em cada semana do histórico</p></header><div id="statistics-chart-hours-weekly" class="stats-chart-content"></div></section>
-              <section class="stats-chart-card"><header><h4>Distribuição geral das horas por disciplina</h4><p>Tempo acumulado registrado por disciplina</p></header><div id="statistics-chart-hours-discipline" class="stats-chart-content"></div></section>
-              <section class="stats-chart-card"><header><h4>Estudos por prioridade — geral</h4><p>Total de sessões de estudo de todo o histórico por prioridade</p></header><div id="statistics-chart-studies-priority" class="stats-chart-content"></div></section>
-              <section class="stats-chart-card"><header><h4>Comparativo semanal</h4><p>Estudos e revisões semana a semana em todo o histórico</p></header><div id="statistics-chart-comparison" class="stats-chart-content"></div></section>
-              <section class="stats-chart-card"><header><h4>Questões respondidas por semana</h4><p>Quantidade registrada em cada semana do histórico</p></header><div id="statistics-chart-questions-weekly" class="stats-chart-content"></div></section>
-            </div>
-          </section>
-
-          <div class="stats-info-note"><i class="fa-solid fa-circle-info mt-0.5"></i><p>Os acumulados gerais consolidam os valores do progresso e do histórico. Cada disciplina aparece uma vez, no grupo de sua prioridade mais alta; os números da semana selecionada vêm das sessões datadas, considerando segunda-feira a domingo.</p></div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Meta Diária de Calorias (kcal)</label>
+          <input type="number" id="meta-calorias" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
         </div>
-
-        <div id="content-personalizacao" class="tab-content hidden flex-1 flex flex-col space-y-5">
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <h2 class="font-bold text-lg mb-1">Personalização do concurso</h2>
-            <p class="text-xs text-slate-500 mb-4">Defina grupos, prioridades e pesos por disciplina para o concurso selecionado.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div><label for="contest-name" class="block text-xs mb-1">Nome do concurso</label><input id="contest-name" class="w-full rounded-lg border p-2 text-sm" placeholder="Ex.: Concurso do Tribunal 2027"></div>
-              <div><label for="contest-board" class="block text-xs mb-1">Banca</label><input id="contest-board" class="w-full rounded-lg border p-2 text-sm" placeholder="Ex.: FCC"></div>
-              <div><label for="contest-date" class="block text-xs mb-1">Data da prova</label><input id="contest-date" type="date" class="w-full rounded-lg border p-2 text-sm"></div>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-4">
-              <button type="button" onclick="saveContestSettings()" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Salvar concurso</button>
-              <button type="button" onclick="addContest()" class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-sm font-semibold">Criar outro concurso</button>
-            </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Proteínas (g)</label>
+            <input type="number" id="meta-proteinas" step="any" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
           </div>
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
-              <div><h3 class="font-bold"><i class="fa-solid fa-folder-open mr-2 text-blue-600"></i>Gerenciar concursos</h3><p class="text-xs text-slate-500 mt-1">Veja os concursos cadastrados e exclua os que não utiliza mais.</p></div>
-              <span class="text-[10px] rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-200 px-2.5 py-1 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i>Pelo menos um concurso deve ser mantido</span>
-            </div>
-            <div id="contest-manager-list" class="contest-manager-list" aria-live="polite"></div>
-            <p class="text-[11px] text-slate-500 mt-3"><i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i>Excluir um concurso remove seu edital, progresso, histórico e personalizações. Faça um backup antes da exclusão.</p>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Carboidratos (g)</label>
+            <input type="number" id="meta-carboidratos" step="any" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
           </div>
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <div class="flex items-start gap-3 flex-wrap mb-3">
-              <div class="flex-1"><h3 class="font-bold"><i class="fa-solid fa-route mr-2 text-blue-600"></i>Estratégia das sugestões de estudo</h3><p class="text-xs text-slate-500 mt-1">Define a próxima disciplina recomendada no registro de estudos. A configuração é individual por concurso.</p></div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
-              <label class="block text-xs font-semibold">Ordem das próximas disciplinas
-                <select id="study-suggestion-mode" onchange="updateSuggestionModeHelp()" class="mt-1 w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:bg-slate-900 dark:border-slate-600">
-                  <option value="priority_first">Prioridade primeiro — concluir a prioridade mais alta antes de avançar</option>
-                  <option value="priority_progress">Prioridade + progresso — menor percentual concluído primeiro</option>
-                  <option value="priority_date">Prioridade + data — há mais tempo sem estudar primeiro</option>
-                </select>
-              </label>
-              <button type="button" onclick="saveSuggestionMode()" class="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar estratégia</button>
-            </div>
-            <p id="study-suggestion-help" class="text-xs text-slate-500 mt-3">No modo “Prioridade primeiro”, a recomendação fica restrita à prioridade mais alta que ainda tenha tópicos pendentes.</p>
-          </div>
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
-              <div><h3 class="font-bold">Parâmetros de prioridades e pesos</h3><p class="text-xs text-slate-500 mt-1">Defina o nome exibido, a cor e o peso-base de cada prioridade. Esses pesos orientam o cálculo de participação das disciplinas.</p></div>
-              <div class="flex gap-2 flex-wrap"><button type="button" onclick="savePrioritySettings()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"><i class="fa-solid fa-check mr-1"></i>Salvar parâmetros</button><button type="button" onclick="recalculateDisciplineWeightsByPriority()" class="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 text-sm font-semibold"><i class="fa-solid fa-scale-balanced mr-1"></i>Recalcular pesos das disciplinas</button></div>
-            </div>
-            <div id="priority-config-table" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
-              <div><h3 class="font-bold">Disciplinas do edital</h3><p class="text-xs text-slate-500 mt-1">A lista é criada a partir do Edital Verticalizado. Edite diretamente as células; o percentual é recalculado automaticamente para totalizar 100%.</p></div>
-              <div id="discipline-weight-summary" class="text-xs font-bold px-3 py-2 rounded-lg bg-blue-50 text-blue-800 border border-blue-100">Peso total: 100%</div>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2 mb-4">
-              <input aria-label="Nome da nova disciplina (ex.: Noções de Direito Constitucional)" id="new-discipline-name" class="flex-1 rounded-lg border border-slate-300 p-2.5 text-sm dark:bg-slate-900 dark:border-slate-600" placeholder="Nome da nova disciplina (ex.: Noções de Direito Constitucional)" onkeydown="if(event.key==='Enter'){event.preventDefault();addDisciplineToContest();}">
-              <button type="button" onclick="addDisciplineToContest()" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Adicionar disciplina</button>
-            </div>
-            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
-              <div id="discipline-custom-table" class="min-w-[760px]"></div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 mt-4">
-              <button type="button" onclick="saveDisciplineCustomizations()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar disciplinas</button>
-              <span class="text-[11px] text-slate-500">Remover uma disciplina exclui seus tópicos do edital e do cronograma, mas preserva os lançamentos históricos já feitos.</span>
-            </div>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border dark:border-slate-700">
-            <h2 class="font-bold text-lg mb-1">Cursos e trilhas de estudo</h2>
-            <p class="text-xs text-slate-500 mb-4">Cadastre as opções que aparecem no campo “Curso / trilha” do Registro de Estudos (ex.: Curso regular, Simulados, Estudo individual).</p>
-            <div class="flex flex-col sm:flex-row gap-2 mb-4">
-              <input aria-label="Nome do curso ou trilha (ex.: Curso intensivo)" id="new-track-name" maxlength="60" class="flex-1 rounded-lg border border-slate-300 p-2.5 text-sm dark:bg-slate-900 dark:border-slate-600" placeholder="Nome do curso ou trilha (ex.: Curso intensivo)" onkeydown="if(event.key==='Enter'){event.preventDefault();addStudyTrack();}">
-              <button type="button" onclick="addStudyTrack()" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Adicionar</button>
-            </div>
-            <ul id="study-tracks-manager" class="space-y-2"></ul>
-            <p class="mt-3 text-[11px] text-slate-500">Renomear uma trilha atualiza também os registros que já usam esse nome. Excluir apenas retira a opção da lista.</p>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Gorduras (g)</label>
+            <input type="number" id="meta-gorduras" step="any" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
           </div>
         </div>
-        <div id="content-configuracoes" class="tab-content hidden flex-1 flex flex-col space-y-5">
-          <div class="mx-auto w-full max-w-4xl space-y-5">
-            <section class="app-card p-5 sm:p-6">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-cloud text-blue-600 mr-2"></i>Sincronização automática</h2>
-                  <p class="mt-1 text-xs text-slate-500">Entre com a sua conta para guardar o progresso na nuvem e usar o planejador em mais de um aparelho.</p>
-                </div>
-                <span id="cloud-status" class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600">Não conectado</span>
-              </div>
-              <p id="cloud-save-detail" class="mt-3 text-[11px] text-slate-500">As alterações são gravadas primeiro neste dispositivo e, quando conectado, enviadas à nuvem após uma breve pausa.</p>
-              <input id="sb-url" type="hidden"><input id="sb-key" type="hidden">
-              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <label class="block font-medium">E-mail<input id="sb-email" type="email" autocomplete="username" placeholder="voce@exemplo.com" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
-                <label class="block font-medium">Senha<input id="sb-password" type="password" autocomplete="current-password" placeholder="Sua senha" class="mt-1 w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 dark:bg-slate-900 dark:border-slate-600 font-normal"></label>
-              </div>
-              <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
-                <button type="button" onclick="testSupabaseConnection()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-slate-700 hover:bg-slate-800 text-white">Verificar conexão</button>
-                <button type="button" onclick="signInSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-blue-700 hover:bg-blue-800 text-white">Entrar e sincronizar</button>
-                <button type="button" onclick="signUpSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-emerald-600 hover:bg-emerald-700 text-white">Criar conta</button>
-                <button type="button" onclick="signOutSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800">Sair da conta</button>
-              </div>
-              <details class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
-                <summary class="cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200">Mais opções de sincronização</summary>
-                <p class="mt-2 mb-3 text-xs text-slate-500">Use somente para comparar ou recuperar dados. O envio mescla os concursos e não substitui a nuvem às cegas.</p>
-                <div class="flex flex-wrap gap-2">
-                  <button type="button" onclick="syncSupabase('upload')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-amber-500 hover:bg-amber-600 text-slate-900">Enviar dados atuais à nuvem</button>
-                  <button type="button" onclick="syncSupabase('download')" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 hover:bg-indigo-700 text-white">Baixar dados da nuvem</button>
-                  <button type="button" onclick="signInWithGoogleSupabase()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google mr-1"></i>Entrar com Google</button>
-                </div>
-              </details>
-            </section>
-
-            <section class="app-card p-5 sm:p-6">
-              <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-box-archive text-emerald-600 mr-2"></i>Backup e arquivos</h2>
-              <p class="mt-1 text-xs text-slate-500">Exporte uma cópia de todos os concursos (editais, progresso, histórico e personalizações) ou restaure um backup existente. Guarde o arquivo em local seguro.</p>
-              <div class="mt-4 flex flex-wrap gap-3">
-                <button type="button" onclick="exportData()" class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"><i class="fa-solid fa-download mr-1"></i>Exportar backup completo (JSON)</button>
-                <label class="px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-sky-50 hover:bg-sky-100 text-sky-800 dark:bg-sky-950/30 dark:text-sky-300 cursor-pointer"><i class="fa-solid fa-upload mr-1"></i>Restaurar backup (JSON)<input type="file" id="import-file" onchange="importData(event)" class="hidden" accept=".json"></label>
-              </div>
-            </section>
-
-            <section class="app-card p-5 sm:p-6">
-              <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>Verificação dos tópicos</h2>
-              <p class="mt-1 text-xs text-slate-500">Confere se o Cronograma, o Edital Verticalizado e o Registro de Estudos usam os mesmos tópicos e aponta registros que ficaram sem tópico correspondente.</p>
-              <button type="button" onclick="renderTopicDiagnostics()" class="mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 hover:bg-indigo-700 text-white"><i class="fa-solid fa-magnifying-glass mr-1"></i>Verificar agora</button>
-              <div id="topic-diagnostics-result" class="mt-4"></div>
-            </section>
-
-            <section class="app-card p-5 sm:p-6 border border-red-200 dark:border-red-900/60">
-              <h2 class="font-bold text-lg text-red-700 dark:text-red-300"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de risco</h2>
-              <p class="mt-1 text-xs text-slate-500">Reinicia o progresso do concurso ativo. Gere um backup antes de continuar.</p>
-              <button type="button" onclick="confirmReset()" class="mt-4 px-4 py-2.5 rounded-xl text-sm font-semibold transition bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300"><i class="fa-solid fa-rotate-right mr-1"></i>Resetar progresso</button>
-            </section>
-          </div>
+        <div class="border border-slate-200 rounded-xl p-3 space-y-2 bg-slate-50">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Objetivo</label>
+          <select id="meta-objetivo" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"><option value="manutencao">Manutenção</option><option value="perda">Perda de peso</option><option value="ganho">Ganho de massa</option><option value="recomposicao">Recomposição corporal</option></select>
+          <button type="button" id="btn-sugerir-metas" class="px-3 py-1.5 bg-sky-700 text-white rounded-lg text-xs font-bold">Sugerir metas para o objetivo</button>
+          <div id="sugestao-metas" class="hidden text-xs text-slate-700 space-y-1"></div>
         </div>
-    </main>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Meta de Água Diária (ml)</label>
+          <input type="number" id="meta-agua" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+        </div>
+        <div class="pt-2 flex justify-end">
+          <button type="submit" class="px-5 py-2.5 bg-[#003a70] hover:bg-[#0a5cad] text-white rounded-xl text-sm font-semibold shadow">Salvar Metas</button>
+        </div>
+      </form>
     </div>
 
-    <!-- Modal de edição do histórico de estudos -->
-    <div id="session-edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 max-w-3xl w-full shadow-xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[92vh] overflow-y-auto">
-        <div class="flex items-start justify-between gap-3"><div><h3 class="font-bold text-base text-blue-800 dark:text-blue-300">Editar sessão de estudo</h3><p class="text-xs text-slate-500 mt-1">Altere os dados do histórico. Os totais do tópico serão ajustados junto com a sessão.</p></div><button type="button" onclick="closeSessionEdit()" class="rounded-lg border px-3 py-1.5 text-sm">Fechar</button></div>
-        <form id="session-edit-form" onsubmit="saveEditedSession(event)" class="session-edit-grid text-xs">
-          <input type="hidden" id="edit-session-id">
-          <label class="span-3">Data<input id="edit-session-date" type="date" required class="mt-1 rounded-lg border p-2 text-sm"></label>
-          <label class="span-4">Tipo de conteúdo<select id="edit-session-type1" class="mt-1 rounded-lg border p-2 text-sm"><option>Conhecimentos Específicos</option><option>Conhecimentos Gerais</option></select></label>
-          <label class="span-5">Tipo de estudo<select id="edit-session-type2" class="mt-1 rounded-lg border p-2 text-sm"><option>Estudo Teórico</option><option>Resolução de Questões</option><option>Revisão</option><option>Simulado</option></select></label>
-          <label class="span-4">Disciplina<select id="edit-session-discipline" onchange="updateEditSessionTopics()" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
-          <label class="span-8">Tópico e subtópico<select id="edit-session-item" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
-          <label class="span-3">Duração (minutos)<input id="edit-session-minutes" type="text" inputmode="numeric" required class="mt-1 rounded-lg border p-2 text-sm"></label>
-          <label class="span-3">Questões resolvidas<input id="edit-session-questions" type="number" min="0" required class="mt-1 rounded-lg border p-2 text-sm"></label>
-          <label class="span-3">Foi revisão?<select id="edit-session-review" class="mt-1 rounded-lg border p-2 text-sm"><option value="0">Não</option><option value="1">Sim (+1 ciclo)</option></select></label>
-          <label style="grid-column:1/-1">Observações<textarea id="edit-session-obs" rows="2" maxlength="500" class="mt-1 w-full rounded-lg border p-2 text-sm"></textarea></label>
-          <div class="span-3 flex items-end gap-2"><button type="button" onclick="closeSessionEdit()" class="flex-1 rounded-lg border px-3 py-2 font-semibold">Cancelar</button><button type="submit" class="flex-1 rounded-lg bg-blue-700 text-white px-3 py-2 font-bold">Salvar alterações</button></div>
-        </form>
+  </div>
+
+  <!-- MODULO: MEDIDAS & PESO -->
+  <div id="view-medidas" class="hidden space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">Histórico de Peso e Medidas Corporais</h2>
+      </div>
+      <button id="btn-nova-medida" class="bg-[#003a70] hover:bg-[#0a5cad] text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow">➕ Nova Medida</button>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead class="bg-[#003a70] text-white uppercase text-xs">
+            <tr>
+              <th class="p-3">Data</th>
+              <th class="p-3 text-center">Peso (kg)</th>
+              <th class="p-3 text-center">Cintura (cm)</th>
+              <th class="p-3 text-center">Abdômen (cm)</th>
+              <th class="p-3 text-center">Quadril (cm)</th>
+              <th class="p-3 text-center">Braço Esq/Dir (cm)</th>
+              <th class="p-3 text-center">Perna Esq/Dir (cm)</th>
+              <th class="p-3">Observações</th>
+              <th class="p-3 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-medidas-body" class="divide-y divide-slate-100"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Modal de Anotações -->
-    <div id="custom-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <h3 id="modal-title" class="font-bold text-sm sm:text-base">Anotações do Subtópico</h3>
-            <textarea aria-label="Insira suas anotações ou links de revisão..." id="modal-textarea" rows="4" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Insira suas anotações ou links de revisão..."></textarea>
-            <div class="flex justify-end space-x-2">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition">Cancelar</button>
-                <button type="button" onclick="saveModalNote()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">Salvar</button>
-            </div>
+
+
+  </div>
+
+  <!-- MODULO: BIOIMPEDÂNCIA -->
+  <div id="view-bio" class="hidden space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">Avaliações de Bioimpedância (InBody)</h2>
+      </div>
+      <button id="btn-nova-bio" class="bg-[#003a70] hover:bg-[#0a5cad] text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow">➕ Nova Bioimpedância</button>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="tabela-cards tabela-cards--bio w-full text-left border-collapse text-sm min-w-[1200px]">
+          <thead class="bg-[#003a70] text-white uppercase text-xs">
+            <tr>
+              <th class="p-3">Data / Hora</th>
+              <th class="p-3 text-center">Peso (kg)</th>
+              <th class="p-3 text-center">Musc. (kg)</th>
+              <th class="p-3 text-center">Gord. (kg)</th>
+              <th class="p-3 text-center">Água (L)</th>
+              <th class="p-3 text-center">Proteína (kg)</th>
+              <th class="p-3 text-center">Minerais (kg)</th>
+              <th class="p-3 text-center">IMC</th>
+              <th class="p-3 text-center">% Gordura</th>
+              <th class="p-3 text-center">Visceral</th>
+              <th class="p-3 text-center">TMB (kcal)</th>
+              <th class="p-3 text-center">Pontos</th>
+              <th class="p-3 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-bio-body" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULO: GRÁFICOS DE EVOLUÇÃO -->
+  <div id="view-treinos" class="hidden space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-4">
+      <div><h2 class="text-lg font-bold text-slate-800">Treinos e Atividade Física</h2>
+      <p class="text-xs text-slate-500">Calorias estimadas por MET × peso × tempo, sem contar o repouso. Clique em qualquer célula da tabela para editar (Enter confirma). Kcal editada à mão fica marcada com ✎.</p></div>
+      <button id="btn-novo-treino" class="bg-[#003a70] hover:bg-[#0a5cad] text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg transition shadow">➕ Novo Treino</button>
+    </div>
+    <div id="treinos-resumo" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+    <section class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-bold text-slate-600 uppercase">Filtros:</span>
+        <select id="tr-filtro-periodo" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 focus:ring-2 focus:ring-[#0a5cad]">
+          <option value="todos" selected>Todo o período</option>
+          <option value="hoje">Hoje</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="mes">Mês atual</option>
+          <option value="ano">Ano atual</option>
+          <option value="personalizado">Período personalizado</option>
+        </select>
+        <div id="tr-box-datas" class="hidden flex items-center gap-2">
+          <input type="date" id="tr-filtro-data-inicio" class="text-xs px-2 py-1.5 border border-slate-300 rounded-lg">
+          <span class="text-xs text-slate-500">até</span>
+          <input type="date" id="tr-filtro-data-fim" class="text-xs px-2 py-1.5 border border-slate-300 rounded-lg">
         </div>
+        <select id="tr-filtro-tipo" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 focus:ring-2 focus:ring-[#0a5cad]">
+          <option value="todos" selected>Todos os treinos</option>
+          <option>Musculação A</option><option>Musculação B</option><option>Musculação C</option><option>Musculação D</option><option>Musculação (geral)</option><option>Só cardio</option>
+          <option value="__cardio">Com cardio</option>
+        </select>
+        <button type="button" id="tr-filtro-limpar" class="text-xs px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">Limpar</button>
+      </div>
+      <span id="tr-contador" class="text-xs text-slate-500 font-medium"></span>
+    </section>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto">
+      <table class="tabela-cards tabela-cards--treinos w-full text-left border-collapse text-sm min-w-[1040px]"><thead class="bg-[#003a70] text-white uppercase text-xs"><tr><th class="p-3">Data</th><th class="p-3">Treino</th><th class="p-3">Intensidade</th><th class="p-3 text-center">Min musc.</th><th class="p-3">Cardio</th><th class="p-3 text-center">Min cardio</th><th class="p-3 text-center">Kcal musc.</th><th class="p-3 text-center">Kcal cardio</th><th class="p-3 text-center">Kcal total</th><th class="p-3">Obs.</th><th class="p-3"></th></tr></thead><tbody id="tbody-treinos"></tbody></table>
+    </div></div>
+  </div>
+
+  <div id="view-graficos" class="hidden space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-800">Gráficos de Evolução Nutricional e Corporal</h2>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h3 class="font-bold text-sm text-slate-700 mb-4">Evolução do Peso e Massa de Gordura (kg)</h3>
+        <div class="h-72 relative"><canvas id="chart-peso"></canvas></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h3 class="font-bold text-sm text-slate-700 mb-4">Evolução da Massa Muscular e Água Corporal</h3>
+        <div class="h-72 relative"><canvas id="chart-musculo"></canvas></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h3 class="font-bold text-sm text-slate-700 mb-4">Média Diária de Calorias e Proteínas</h3>
+        <div class="h-72 relative"><canvas id="chart-calorias"></canvas></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h3 class="font-bold text-sm text-slate-700 mb-4">Evolução da Taxa Metabólica Basal (TMB - kcal)</h3>
+        <div class="h-72 relative"><canvas id="chart-tmb"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULO: RELATÓRIO NUTRICIONISTA -->
+  <div id="view-relatorio" class="hidden space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-wrap justify-between items-center gap-4 no-print">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800">Relatório para a Nutricionista</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <select id="relatorio-periodo" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-slate-50">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="todos" selected>Todo o Período</option>
+        </select>
+        <button onclick="window.print()" class="bg-[#003a70] hover:bg-[#0a5cad] text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow flex items-center gap-1">🖨️ Imprimir / PDF</button>
+      </div>
     </div>
 
-    <!-- Modal de Diálogo -->
-    <div id="custom-dialog" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-200 dark:border-slate-700 space-y-4 text-center">
-            <div id="dialog-icon" class="text-3xl text-blue-500 mb-1"></div>
-            <h3 id="dialog-title" class="font-bold text-sm sm:text-base">Aviso</h3>
-            <p id="dialog-message" class="text-xs text-slate-600 dark:text-slate-300"></p>
-            <div id="dialog-buttons" class="flex justify-center space-x-2 pt-2">
-                <button type="button" onclick="closeDialog()" class="px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">OK</button>
-            </div>
+    <!-- Printable Container -->
+    <div id="ia-analise-box" class="no-print bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div><h3 class="font-bold text-slate-800">🤖 Análise de IA da alimentação</h3>
+      <p class="text-xs text-slate-500">Os números são calculados pelo app; a IA interpreta e sugere melhorias de acordo com o seu objetivo.</p></div>
+      <div class="flex items-center gap-2">
+        <select id="ia-periodo" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-slate-50"><option value="7">Últimos 7 dias</option><option value="14">Últimos 14 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select>
+        <button type="button" id="btn-ia-analise" class="bg-sky-700 hover:bg-sky-800 text-white text-xs md:text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50">Gerar análise</button>
+      </div>
+    </div>
+    <div id="ia-analise-status" class="hidden text-xs text-slate-600" role="status"></div>
+    <div id="ia-analise-resultado" class="space-y-3"></div>
+    <div class="border-t border-slate-200 pt-3">
+      <div class="text-xs font-bold text-slate-600 uppercase mb-2">Análises anteriores</div>
+      <div id="ia-historico" class="space-y-2 text-sm"><p class="text-xs text-slate-600">Carregando...</p></div>
+    </div>
+    <p class="text-xs text-slate-600">Dados agregados do diário (sem nome) são enviados ao Gemini. Não substitui a orientação de um nutricionista.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-8 shadow-sm space-y-6 print-only" id="relatorio-imprimivel">
+      <div class="border-b pb-4 flex justify-between items-end">
+        <div>
+          <h1 class="text-2xl font-bold text-[#003a70]">Relatório de Acompanhamento Nutricional</h1>
+          <p class="text-xs text-slate-500 mt-1">Gerado em: <span id="rel-data-geracao"></span></p>
         </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="rel-kpis"></div>
+      <div>
+        <h3 class="font-bold text-sm text-slate-700 border-b pb-1 mb-3">Resumo Executivo</h3>
+        <div id="rel-resumo-texto" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border"></div>
+      </div>
+      
+      <div>
+        <h3 class="font-bold text-sm text-slate-700 border-b pb-1 mb-3">Gráficos de Evolução Recente</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-3 border rounded-xl bg-slate-50">
+            <h4 class="text-xs font-bold text-slate-700 mb-2 text-center">Evolução do Peso (kg)</h4>
+            <div id="rel-chart-peso-container" class="h-48 flex items-center justify-center relative"></div>
+          </div>
+          <div class="p-3 border rounded-xl bg-slate-50">
+            <h4 class="text-xs font-bold text-slate-700 mb-2 text-center">Calorias Diárias (kcal)</h4>
+            <div id="rel-chart-calorias-container" class="h-48 flex items-center justify-center relative"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-sm text-slate-700 border-b pb-1 mb-3">Atividade Física no Período</h3>
+        <div id="rel-atividade" class="space-y-4"></div>
+      </div>
+      <div>
+        <h3 id="rel-titulo-refeicoes" class="font-bold text-sm text-slate-700 border-b pb-1 mb-1">Refeições do Período</h3>
+        <p id="rel-nota-refeicoes" class="text-xs text-slate-600 mb-2"></p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse" id="rel-tabela-refeicoes-table">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="p-2 border">Data</th>
+                <th class="p-2 border">Refeição</th>
+                <th class="p-2 border">Alimentos</th>
+                <th class="p-2 border text-center">Cal (kcal)</th>
+                <th class="p-2 border text-center">Pro (g)</th>
+                <th class="p-2 border text-center">Car (g)</th>
+                <th class="p-2 border text-center">Gor (g)</th>
+              </tr>
+            </thead>
+            <tbody id="rel-tabela-refeicoes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-sm text-slate-700 border-b pb-1 mb-3">Histórico de Bioimpedância (InBody) Completo</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="p-2 border">Data</th>
+                <th class="p-2 border text-center">Peso (kg)</th>
+                <th class="p-2 border text-center">Massa Musc (kg)</th>
+                <th class="p-2 border text-center">Massa Gord (kg)</th>
+                <th class="p-2 border text-center">PGC (%)</th>
+                <th class="p-2 border text-center">Visceral</th>
+                <th class="p-2 border text-center">TMB (kcal)</th>
+              </tr>
+            </thead>
+            <tbody id="rel-tabela-bio"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <script src="./js/01-base.js"></script>
-    <script src="./js/02-sugestoes.js"></script>
-    <script src="./js/03-utilitarios.js"></script>
-    <script src="./js/04-inicio.js"></script>
-    <script src="./js/05-registro.js"></script>
-    <script src="./js/06-edital.js"></script>
-    <script src="./js/07-concursos.js"></script>
-    <script src="./js/08-importacao-ia.js"></script>
-    <script src="./js/09-sincronizacao.js"></script>
-    <script src="./js/10-dados-backup.js"></script>
-    <script src="./js/11-datas-anotacoes.js"></script>
-    <script src="./js/12-estatisticas.js"></script>
-    <script src="./js/12a-ux.js"></script>
-    <script src="./js/13-iniciar.js"></script>
-    <script src="./js/auth.js"></script>
-    <script src="./js/pwa.js"></script>
+    <!-- On-screen Report Preview (Interactive View) -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6 no-print" id="relatorio-preview-box">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
 
+  <!-- MODULO: CONFIGURAÇÕES, METAS & CHAVES (UNIFICADO) -->
+  <div id="view-metas" class="hidden space-y-6 max-w-4xl mx-auto">
+    
+    <!-- CONFIGURAÇÕES: SUPABASE E BACKUP -->
+    <div class="space-y-6">
+      <!-- SUPABASE SYNC SETTINGS -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">☁️ Sincronização automática (Supabase)</h2>
+          <p class="text-xs text-slate-500 mb-4 leading-relaxed">A conexão é carregada exclusivamente de supabase-config.js. Login e sincronização usam essa configuração centralizada. Nunca coloque a chave service_role neste HTML.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label><input type="email" id="config-supabase-email" placeholder="voce@exemplo.com" autocomplete="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Senha</label><input type="password" id="config-supabase-password" placeholder="Mínimo conforme política do projeto" autocomplete="current-password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+          </div>
+          <p id="supabase-help" class="text-xs text-slate-500 mt-3">Primeiro crie o projeto e a tabela usando o arquivo SQL fornecido. Para novo usuário, use “Criar conta”; depois entre com o mesmo e-mail no celular e computador.</p>
+        </div>
+        <div class="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button type="button" id="btn-supabase-save-config" class="px-3 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow">Verificar conexão</button>
+          <button type="button" id="btn-supabase-signup" class="px-3 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow">Criar conta</button>
+          <button type="button" id="btn-supabase-login" class="px-3 py-2.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-semibold shadow">Entrar e sincronizar</button>
+          <button type="button" id="btn-supabase-sync" class="px-3 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-semibold shadow">Sincronizar agora</button>
+          <button type="button" id="btn-supabase-logout" class="px-3 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold">Sair da conta</button>
+        </div>
+      </div>
+
+      <!-- BACKUP E ARQUIVOS, INTEGRADOS ÀS CONFIGURAÇÕES -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-800 mb-1">☁️ Backup e Arquivos</h2>
+        <p class="text-xs text-slate-500 mb-4">Exporte uma cópia dos seus dados ou importe um backup existente. Guarde os arquivos JSON em local seguro.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <button id="btn-exportar-json" type="button" class="text-left px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition font-semibold text-sm">⬇️ Exportar Backup (JSON)</button>
+          <button id="btn-importar-json" type="button" class="text-left px-3 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-800 rounded-lg transition font-semibold text-sm">⬆️ Importar Backup (JSON)</button>
+          <button id="btn-resetar" type="button" class="text-left px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition font-medium text-sm">⚠️ Restaurar Padrão de Fábrica</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- Custom Confirmation Modal -->
+<dialog id="modal-confirm" class="rounded-2xl p-0 w-full max-w-sm shadow-2xl backdrop:bg-slate-900/50">
+  <div class="p-6 text-center space-y-4">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600 mb-4">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+    <h3 id="modal-confirm-title" class="font-bold text-lg text-slate-800">Atenção</h3>
+    <p id="modal-confirm-msg" class="text-sm text-slate-600">Deseja realmente continuar com esta ação?</p>
+    <div class="flex justify-center gap-3 pt-4">
+      <button id="modal-confirm-cancel" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition">Cancelar</button>
+      <button id="modal-confirm-ok" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold shadow transition">Confirmar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Cloud Sync Conflict Resolution Modal (SMART SYNC) -->
+<dialog id="modal-sync-conflict" class="rounded-2xl p-0 w-full max-w-xl shadow-2xl backdrop:bg-slate-900/60">
+  <div class="bg-blue-700 text-white px-6 py-4 border-b-4 border-blue-400">
+    <h3 class="font-bold text-lg flex items-center gap-2">☁️ Conflito de Sincronização</h3>
+  </div>
+  <div class="p-6 space-y-4">
+    <p class="text-sm text-slate-600">Detectamos dados diferentes neste dispositivo e na nuvem. Avalie abaixo antes de decidir:</p>
+    
+    <div id="sync-recommendation-box" class="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-200 text-sm leading-relaxed">
+      Analisando datas...
+    </div>
+
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+      <strong class="text-slate-700">Escolha a ação desejada:</strong>
+      <ul class="list-none mt-3 space-y-2">
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-blue-600">📥</span> 
+          <span><strong>Baixar da Nuvem:</strong> Substitui os dados atuais da tela pelos dados da nuvem.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-emerald-600">📤</span>
+          <span><strong>Enviar Meus Dados Atuais:</strong> Envia os dados atuais da tela para a nuvem.</span>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
+      <button onclick="window.resolveSyncConflict('upload')" class="px-4 py-2 border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-lg text-sm font-bold transition text-center shadow-sm">📤 Enviar Dados Atuais</button>
+      <button onclick="window.resolveSyncConflict('download')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow transition text-center">📥 Baixar da Nuvem</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Edit/Create/Copy Record Modal -->
+<dialog id="modal-registro" class="rounded-2xl p-0 w-full max-w-xl shadow-2xl backdrop:bg-slate-900/50">
+  <div class="bg-[#003a70] text-white px-6 py-4 flex justify-between items-center border-b-4 border-[#ffc20e]">
+    <h3 id="modal-title" class="font-bold text-lg">Novo Registro Alimentar</h3>
+    <button id="modal-close" class="text-white hover:text-amber-300 font-bold text-xl">&times;</button>
+  </div>
+  <form id="form-registro" class="p-6 space-y-4">
+    <input type="hidden" id="reg-id">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Data</label>
+        <input type="date" id="reg-data" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0a5cad] focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Refeição</label>
+        <select id="reg-refeicao" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0a5cad] focus:outline-none">
+          <option value="Café da Manhã">Café da Manhã</option>
+          <option value="Lanche da Manhã">Lanche da Manhã</option>
+          <option value="Almoço">Almoço</option>
+          <option value="Lanche da Tarde">Lanche da Tarde</option>
+          <option value="Jantar">Jantar</option>
+          <option value="Ceia">Ceia</option>
+          <option value="Pré-Treino">Pré-Treino</option>
+          <option value="Pós-Treino">Pós-Treino</option>
+        </select>
+      </div>
+    </div>
+    <div id="atalhos-refeicao" class="space-y-2">
+      <div id="atalho-repetir" class="hidden border border-[#0a5cad] bg-sky-50 rounded-xl p-3">
+        <div id="atalho-repetir-titulo" class="text-xs font-bold text-slate-600 uppercase"></div>
+        <div id="atalho-repetir-desc" class="text-sm font-semibold text-slate-800 mt-1"></div>
+        <div id="atalho-repetir-macros" class="text-xs text-slate-600"></div>
+        <button type="button" id="btn-repetir-refeicao" class="mt-2 w-full sm:w-auto text-sm bg-[#003a70] hover:bg-[#002a52] text-white font-semibold px-4 py-2.5 rounded-lg min-h-[44px]">Repetir nesta refeição</button>
+      </div>
+      <div id="atalho-favs" class="hidden">
+        <div class="text-xs font-bold text-slate-600 uppercase mb-1">Favoritos</div>
+        <div id="lista-favoritos" class="flex flex-wrap gap-2"></div>
+      </div>
+      <button type="button" id="btn-fav-salvar" class="text-xs border border-[#0a5cad] text-[#0a5cad] hover:bg-sky-50 font-semibold px-3 py-2 rounded-lg min-h-[44px]">★ Salvar esta refeição como favorita</button>
+    </div>
+    <div>
+      <div class="flex justify-between items-center mb-1 flex-wrap gap-2">
+        <label class="block text-xs font-semibold text-slate-600">Alimentos / Descrição da Refeição</label>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-ia-foto" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm border border-purple-200" title="Tirar foto ou enviar imagem para a IA analisar">
+            📷 Foto IA
+          </button>
+          <input type="file" id="input-ia-foto" accept="image/*" class="hidden">
+          
+          <button type="button" id="btn-ia-calcular" class="text-xs bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm border border-sky-100">
+            ✨ Texto IA
+          </button>
+        </div>
+      </div>
+      <textarea id="reg-alimentos" rows="3" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0a5cad] focus:outline-none text-sm" placeholder="Ex: Arroz, feijão, frango e salada... ou use a Foto IA!"></textarea>
+      <div class="flex items-center gap-2 mt-1"><div id="ia-loading" class="text-xs text-purple-600 hidden italic font-medium" role="status" aria-live="polite">Analisando com IA...</div><button type="button" id="btn-ia-cancelar" class="hidden text-xs font-bold text-red-600 border border-red-200 rounded-md px-2 py-0.5 hover:bg-red-50">Cancelar</button></div>
+      <p class="text-xs text-slate-600 mt-1">A IA estima os alimentos e as porções; confira antes de salvar. As calorias são calculadas a partir dos macros pela fórmula 4 kcal/g de proteína, 4 kcal/g de carboidrato e 9 kcal/g de gordura. Foto não permite medir o peso exato nem identificar com certeza ingredientes ocultos.</p>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Calorias (kcal)</label>
+        <input type="number" id="reg-calorias" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Proteínas (g)</label>
+        <input type="number" id="reg-proteinas" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Carboidratos (g)</label>
+        <input type="number" id="reg-carboidratos" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Gorduras (g)</label>
+        <input type="number" id="reg-gorduras" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Água (ml)</label>
+        <input type="number" id="reg-agua" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
+        <input type="text" id="reg-obs" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a5cad]">
+      </div>
+    </div>
+    <div id="toast-inline-slot" class="hidden" aria-live="polite"></div>
+    <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+      <button type="button" id="modal-cancel" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Cancelar</button>
+      <button type="submit" class="px-4 py-2 bg-[#ffc20e] hover:bg-amber-400 text-slate-900 rounded-lg text-sm font-bold shadow">Salvar Registro</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Medidas Modal -->
+<dialog id="modal-medidas" class="rounded-2xl p-0 w-full max-w-lg shadow-2xl backdrop:bg-slate-900/50">
+  <div class="bg-[#003a70] text-white px-6 py-4 flex justify-between items-center border-b-4 border-[#ffc20e]">
+    <h3 id="modal-medidas-title" class="font-bold text-lg">Registrar Medidas</h3>
+    <button id="modal-medidas-close" class="text-white hover:text-amber-300 font-bold text-xl">&times;</button>
+  </div>
+  <form id="form-medidas" class="p-6 space-y-4">
+    <input type="hidden" id="med-id">
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Data</label><input type="date" id="med-data" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Peso (kg)</label><input type="number" id="med-peso" step="any" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Cintura</label><input type="number" id="med-cintura" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Abdômen</label><input type="number" id="med-abdomen" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Quadril</label><input type="number" id="med-quadril" step="any" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Braço Esq/Dir</label><input type="text" id="med-braco" placeholder="ex: 38 / 38" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Perna Esq/Dir</label><input type="text" id="med-perna" placeholder="ex: 57 / 57" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
+      <input type="text" id="med-obs" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+    </div>
+    <div class="flex justify-end gap-3 pt-3 border-t">
+      <button type="button" id="modal-medidas-cancel" class="px-4 py-2 border text-slate-700 rounded-lg text-sm">Cancelar</button>
+      <button type="submit" class="px-4 py-2 bg-[#ffc20e] text-slate-900 font-bold rounded-lg text-sm shadow">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Bioimpedância Modal -->
+<dialog id="modal-treino" class="rounded-2xl p-0 w-full max-w-lg shadow-2xl backdrop:bg-slate-900/50">
+  <div class="bg-[#003a70] text-white px-6 py-4 flex justify-between items-center border-b-4 border-[#ffc20e]">
+    <h3 id="modal-treino-title" class="font-bold text-lg">Registrar treino</h3>
+    <button type="button" id="modal-treino-close" class="text-white hover:text-amber-300 font-bold text-xl">&times;</button>
+  </div>
+  <form id="form-treino" class="p-6 space-y-4">
+    <input type="hidden" id="tr-id">
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Data</label><input type="date" id="tr-data" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Treino</label><select id="tr-tipo" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"><option>Musculação A</option><option>Musculação B</option><option>Musculação C</option><option>Musculação D</option><option>Musculação (geral)</option><option>Só cardio</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Musculação (min)</label><input type="number" id="tr-min-musc" min="0" max="300" value="40" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Intensidade</label><select id="tr-intens" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"><option value="leve">Leve</option><option value="moderada" selected>Moderada</option><option value="intensa">Intensa</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Cardio</label><select id="tr-cardio-tipo" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"><option>Caminhada</option><option>Corrida / esteira</option><option>Bicicleta</option><option>Elíptico</option><option>Outro</option></select></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Cardio (min)</label><input type="number" id="tr-min-cardio" min="0" max="300" value="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+    </div>
+    <div class="space-y-1">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kcal musculação</label><input type="number" id="tr-kcal-musc" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Kcal cardio</label><input type="number" id="tr-kcal-cardio" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+      </div>
+      <div class="flex justify-between items-center gap-2"><p id="tr-kcal-info" class="text-xs text-slate-600"></p><button type="button" id="btn-tr-recalc" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold whitespace-nowrap">Recalcular estimativas</button></div>
+      <p class="text-sm font-bold text-slate-800">Total: <span id="tr-kcal-total">0</span> kcal</p>
+    </div>
+    <div><label class="block text-xs font-semibold text-slate-600 mb-1">Observação</label><input type="text" id="tr-obs" maxlength="200" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+    <div class="pt-2 flex justify-end gap-2"><button type="button" id="modal-treino-cancel" class="px-4 py-2 border border-slate-300 rounded-xl text-sm">Cancelar</button><button type="submit" class="px-5 py-2 bg-[#ffc20e] text-slate-900 rounded-xl text-sm font-bold">Salvar Treino</button></div>
+  </form>
+</dialog>
+
+<dialog id="modal-bio" class="rounded-2xl p-0 w-full max-w-2xl shadow-2xl backdrop:bg-slate-900/50">
+  <div class="bg-[#003a70] text-white px-6 py-4 flex justify-between items-center border-b-4 border-[#ffc20e]">
+    <h3 id="modal-bio-title" class="font-bold text-lg">Registrar Bioimpedância (InBody)</h3>
+    <button id="modal-bio-close" class="text-white hover:text-amber-300 font-bold text-xl">&times;</button>
+  </div>
+  <form id="form-bio" class="p-6 space-y-4">
+    <input type="hidden" id="bio-id">
+    <div class="border border-dashed border-sky-300 bg-sky-50 rounded-xl p-3 space-y-2">
+      <div class="text-xs font-semibold text-sky-800">📄 Importar de PDF (leitura por IA)</div>
+      <div class="flex flex-wrap gap-2 items-center">
+        <input type="file" id="bio-pdf" accept="application/pdf" class="text-xs max-w-full">
+        <button type="button" id="btn-bio-ia" class="px-3 py-1.5 bg-sky-700 text-white rounded-lg text-xs font-bold disabled:opacity-50">Ler com IA</button>
+      </div>
+      <div id="bio-ia-status" class="hidden text-xs text-slate-600" role="status"></div>
+      <div id="bio-ia-lista" class="hidden space-y-1"></div>
+      <button type="button" id="btn-bio-ia-importar" class="hidden px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold">Importar selecionados</button>
+      <p class="text-xs text-slate-600">O PDF é enviado ao Gemini apenas para leitura. Confira os valores antes de importar.</p>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Data / Hora</label><input type="datetime-local" id="bio-data" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Peso (kg)</label><input type="number" id="bio-peso" step="any" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Massa Musc. (kg)</label><input type="number" id="bio-massa-musc" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Massa Gordura (kg)</label><input type="number" id="bio-massa-gord" step="any" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Água Corporal (L)</label><input type="number" id="bio-agua" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Proteína (kg)</label><input type="number" id="bio-proteina" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Minerais (kg)</label><input type="number" id="bio-minerais" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">IMC</label><input type="number" id="bio-imc" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">% Gordura (PGC)</label><input type="number" id="bio-pgc" step="any" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Gordura Visceral</label><input type="number" id="bio-gord-visc" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">TMB (kcal)</label><input type="number" id="bio-tmb" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-semibold text-slate-600 mb-1">Pontuação InBody</label><input type="number" id="bio-pontos" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+    </div>
+    <div class="flex justify-end gap-3 pt-3 border-t">
+      <button type="button" id="modal-bio-cancel" class="px-4 py-2 border text-slate-700 rounded-lg text-sm">Cancelar</button>
+      <button type="submit" class="px-4 py-2 bg-[#ffc20e] text-slate-900 font-bold rounded-lg text-sm shadow">Salvar Avaliação</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite" class="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-xl bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl opacity-0 pointer-events-none transition duration-300 text-sm" style="z-index:2147483647; position:fixed; isolation:isolate;">
+  <div class="flex items-start gap-3"><div id="toast-message" class="flex-1"></div><button id="toast-close" type="button" aria-label="Fechar notificação" class="font-bold text-xl leading-none pointer-events-auto" style="display:none">×</button></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script src="js/00-config.js"></script>
+<script src="js/01-utils.js"></script>
+<script src="js/02-estado.js"></script>
+<script src="js/03-nuvem.js"></script>
+<script src="js/04-diario.js"></script>
+<script src="js/05-ia-refeicao.js"></script>
+<script src="js/06-medidas.js"></script>
+<script src="js/07-bio.js"></script>
+<script src="js/08-graficos.js"></script>
+<script src="js/09-ia-analise.js"></script>
+<script src="js/10-relatorio.js"></script>
+<script src="js/11-backup.js"></script>
+<script src="js/12-metas.js"></script>
+<script src="js/13-sync-supabase.js"></script>
+<script src="js/14-treinos.js"></script>
+<script src="js/15-navegacao.js"></script>
+<script src="js/16-auth.js"></script>
+<script src="js/17-tema.js"></script>
+<script src="js/99-main.js"></script>
 </body>
+</html>

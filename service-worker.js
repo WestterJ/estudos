@@ -1,35 +1,26 @@
-const CACHE_NAME = 'planejador-estudos-v10-32-espaco-observacoes-v1';
-const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './css/estilos.css', './js/00-config.js', './js/01-base.js', './js/02-sugestoes.js', './js/03-utilitarios.js', './js/04-inicio.js', './js/05-registro.js', './js/06-edital.js', './js/07-concursos.js', './js/08-importacao-ia.js', './js/09-sincronizacao.js', './js/10-dados-backup.js', './js/11-datas-anotacoes.js', './js/12-estatisticas.js', './js/12a-ux.js', './js/13-iniciar.js', './js/auth.js', './js/pwa.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
+importScripts('./js/00-config.js');
+const CACHE_NAME = 'diario-nutricional-' + self.APP_VERSION.toLowerCase();
+const APP_SHELL = [
+  './', './index.html', './manifest.webmanifest', './supabase-config.js', './css/app.css',
+  './js/00-config.js', './js/01-utils.js', './js/02-estado.js', './js/03-nuvem.js', './js/04-diario.js', './js/05-ia-refeicao.js',
+  './js/06-medidas.js', './js/07-bio.js', './js/08-graficos.js', './js/09-ia-analise.js', './js/10-relatorio.js',
+  './js/11-backup.js', './js/12-metas.js', './js/13-sync-supabase.js', './js/14-treinos.js', './js/15-navegacao.js',
+  './js/16-auth.js', './js/17-tema.js', './js/99-main.js',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
+];
 self.addEventListener('install', event => {
-  // Um arquivo de configuração local pode não existir em todos os ambientes.
-  // O shell restante ainda deve ser instalado e permitir atualização offline.
-  event.waitUntil(caches.open(CACHE_NAME).then(async cache => {
-    await Promise.all(APP_SHELL.map(async asset => {
-      try {
-        const response = await fetch(asset, { cache: 'no-cache' });
-        if (response.ok) await cache.put(asset, response);
-      } catch (_) {
-        // Recurso opcional ausente: não impede a instalação do service worker.
-      }
-    }));
-  }).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('planejador-estudos-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('diario-nutricional-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  // Never cache OAuth callback URLs, which can temporarily contain an authorization code.
-  const isAuthReturn = url.searchParams.has('code') || url.searchParams.has('error') || url.searchParams.has('type') || url.searchParams.has('access_token');
-  if (isAuthReturn) {
-    event.respondWith(fetch(request));
-    return;
-  }
   event.respondWith(fetch(request).then(response => {
-    if (response && response.ok && !url.search) {
+    if (response && response.ok) {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
     }
