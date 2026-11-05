@@ -1,0 +1,29 @@
+PLANEJADOR DE ESTUDOS V10.33 — MÓDULO DE USUÁRIOS (PERMISSÃO DE IA)
+
+O que mudou
+- Nova aba "Usuários", visível só para o administrador. Lista todos os usuários cadastrados e, para cada um, escolha "Sem IA" ou "IA liberada".
+- Por padrão só o administrador (westter@gmail.com) usa IA. Quem não tem permissão não vê o painel "Análise assistida do edital com IA" (todas as funções de IA do app ficam ocultas).
+- Se a consulta de permissão falhar, a IA fica oculta (falha fechada).
+- Barra inferior do celular: "Usuários" aparece em "Mais" só para o administrador.
+
+ORDEM PARA PUBLICAR (importante)
+1. Supabase > SQL Editor: rode schema_usuarios_v10_33.sql (uma vez). Confira com a consulta comentada no fim do arquivo que westter@gmail.com aparece como administrador.
+2. Suba para o GitHub: index.html, css/estilos.css, js/00-config.js, js/01-base.js, js/08-importacao-ia.js, js/12a-ux.js, js/12b-usuarios.js (novo), js/auth.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.33.txt, schema_usuarios_v10_33.sql.
+3. Abra o app, Ctrl+Shift+R e confira "V10.33".
+Se publicar antes de rodar o SQL, ninguém (nem o admin) verá a IA nem a aba Usuários.
+
+BARREIRA NO SERVIDOR (recomendado)
+Esconder o botão não impede quem chamar a função diretamente. Para barrar de verdade, na Edge Function dynamic-service, logo depois de validar o usuário e antes de chamar a IA, consulte a permissão com o token do próprio usuário:
+
+  const { data: liberado } = await supabaseDoUsuario.rpc('study_can_use_ai');
+  if (!liberado) {
+    return new Response(JSON.stringify({ error: 'IA não liberada para este usuário.' }),
+      { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+(supabaseDoUsuario = cliente criado com o cabeçalho Authorization recebido.) Atenção: se o Planner Escolar usa a mesma função, aplique o bloqueio só às chamadas do Planejador de Estudos (o app envia modo: 'edital'), senão o Planner também seria barrado.
+
+Como testar
+1. Entre como administrador: aparece "Usuários" no menu e o painel de IA no Edital.
+2. Em Usuários, mude uma conta de teste para "IA liberada"; entre com ela: o painel de IA aparece. Volte para "Sem IA": após reabrir o Edital (ou em até 30 s ao voltar ao app) o painel some.
+3. Conta nova: entra como "Sem IA", sem painel de IA e sem aba Usuários.

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- V10.33 — Módulo de usuários: o administrador libera ou bloqueia a IA por pessoa; sem permissão, os botões de IA ficam ocultos. -->
     <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
-    <title>Planejador de Estudos | Concursos — V10.32</title>
+    <title>Planejador de Estudos | Concursos — V10.33</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -112,6 +113,7 @@
             <button type="button" onclick="switchTab('estatisticas',true)" id="tab-estatisticas" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Estatísticas"><i class="fa-solid fa-chart-column"></i><span class="nav-label">Estatísticas</span></button>
             <button type="button" onclick="switchTab('dashboard',true)" id="tab-dashboard" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Datas Importantes"><i class="fa-solid fa-calendar-check"></i><span class="nav-label">Datas Importantes</span></button>
             <button type="button" onclick="switchTab('personalizacao',true)" id="tab-personalizacao" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Personalização"><i class="fa-solid fa-sliders"></i><span class="nav-label">Personalização</span></button>
+            <button type="button" onclick="switchTab('usuarios',true)" id="tab-usuarios" class="tab-btn admin-only bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Usuários"><i class="fa-solid fa-users-gear"></i><span class="nav-label">Usuários</span></button>
             <span class="sidebar-spacer"></span>
             <button type="button" onclick="switchTab('configuracoes',true)" id="tab-configuracoes" class="tab-btn bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" title="Configurações"><i class="fa-solid fa-gear"></i><span class="nav-label">Configurações</span></button>
           </nav>
@@ -401,7 +403,7 @@
                   </details>
                 </div>
 
-                <div class="app-card p-4 sm:p-5 mt-5 space-y-3">
+                <div class="app-card ia-only p-4 sm:p-5 mt-5 space-y-3">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h4 class="font-bold text-sm sm:text-base section-heading"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Análise assistida do edital com IA</h4>
@@ -564,6 +566,22 @@
             <p class="mt-3 text-[11px] text-slate-500">Renomear uma trilha atualiza também os registros que já usam esse nome. Excluir apenas retira a opção da lista.</p>
           </div>
         </div>
+        <div id="content-usuarios" class="tab-content hidden flex-1 flex flex-col space-y-5">
+          <div class="mx-auto w-full max-w-4xl space-y-5">
+            <section class="app-card p-5 sm:p-6">
+              <h2 class="font-bold text-lg section-heading"><i class="fa-solid fa-users-gear text-blue-600 mr-2"></i>Usuários e permissão de IA</h2>
+              <p class="mt-1 text-xs text-slate-500">Por padrão, só o administrador usa as funções de IA. Para quem estiver como “Sem IA”, os botões de IA ficam ocultos no app. “IA liberada” libera todas as funções de IA para essa pessoa.</p>
+              <div class="mt-4 flex flex-wrap items-center gap-2">
+                <input id="users-search" type="search" placeholder="Buscar por e-mail…" aria-label="Buscar usuário por e-mail" autocomplete="off" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium outline-none w-full sm:w-72">
+                <button type="button" onclick="StudyUsers.loadUsers()" class="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i>Atualizar</button>
+                <span id="users-summary" class="text-[11px] text-slate-500" aria-live="polite"></span>
+              </div>
+              <div id="users-list" class="mt-3" aria-live="polite"></div>
+              <p class="mt-3 text-[11px] text-slate-500"><i class="fa-solid fa-circle-info mr-1"></i>Novas contas aparecem aqui automaticamente, já como “Sem IA”. A mudança vale na próxima abertura do Edital ou ao voltar para o app (em até 30 s).</p>
+            </section>
+          </div>
+        </div>
+
         <div id="content-configuracoes" class="tab-content hidden flex-1 flex flex-col space-y-5">
           <div class="mx-auto w-full max-w-4xl space-y-5">
             <section class="app-card p-5 sm:p-6">
@@ -680,6 +698,7 @@
     <script src="./js/11-datas-anotacoes.js"></script>
     <script src="./js/12-estatisticas.js"></script>
     <script src="./js/12a-ux.js"></script>
+    <script src="./js/12b-usuarios.js"></script>
     <script src="./js/13-iniciar.js"></script>
     <script src="./js/auth.js"></script>
     <script src="./js/pwa.js"></script>

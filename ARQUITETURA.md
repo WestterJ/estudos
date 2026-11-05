@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.32
+# Arquitetura — Planejador de Estudos V10.33
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -37,6 +37,7 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 | 11 | `js/10-dados-backup.js` | `saveData`, cabeçalho do concurso, configurações do Supabase, reset e backup (exportar/importar). |
 | 12 | `js/11-datas-anotacoes.js` | Modal de anotações e **Datas Importantes** (checklist por concurso). |
 | 13 | `js/12-estatisticas.js` | Menu **Estatísticas**, totais gerais e semanais agrupados por prioridade e disciplina. |
+| 13b | `js/12b-usuarios.js` | **Usuários e permissão de IA** (`window.StudyUsers`): consulta `study_my_access`, mostra/oculta os botões de IA e a aba Usuários (só administrador). Carrega antes de `13-iniciar.js`. |
 | 14 | `js/13-iniciar.js` | Chamadas finais que montam a tela. **Deve ser o último arquivo de lógica** antes de `auth.js`. |
 | 15 | `js/auth.js` | Tela de login, cadastro, recuperação de senha, Google OAuth e botão de instalar o PWA (função autocontida, sem globais). |
 | 16 | `js/pwa.js` | Registro do service worker. |
@@ -75,6 +76,7 @@ Os scripts são clássicos (não `type="module"`) e **compartilham o mesmo escop
 | Painéis da Home / sugestões | `js/04-inicio.js`, `js/02-sugestoes.js` |
 | Datas Importantes | `js/11-datas-anotacoes.js` |
 | Edital, importação, IA | `js/06-edital.js`, `js/08-importacao-ia.js` |
+| Quem pode usar IA / aba Usuários | `js/12b-usuarios.js` + `schema_usuarios_v10_33.sql` |
 | Concursos, prioridades, disciplinas | `js/07-concursos.js` |
 | Sincronização, login, mesclagem | `js/09-sincronizacao.js`, `js/auth.js` |
 | Backup (exportar/importar) | `js/10-dados-backup.js` |
@@ -162,3 +164,12 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - `05-registro.js`: campo `obs` na sessão (formulário `#reg-obs`, modal `#edit-session-obs`, tabela inline, cartões, busca) e `filterHistoryByFormDiscipline()` (botão "Disciplina do lançamento").
 - `11-datas-anotacoes.js`: a data final ("até") só aparece quando existe; senão o botão "+ período".
 - `09-sincronizacao.js`: o selo de nuvem só fica âmbar com alteração local pendente (`pendente · há N`).
+
+## V10.33 — Módulo de usuários (permissão de IA)
+- Modelo (igual ao do Planner Escolar, adaptado): `study_app_admins` (administradores) e `study_ai_access` (`allowed` por usuário; sem linha = sem IA). As tabelas não têm acesso direto (RLS sem policy): tudo passa por funções `study_*` (security definer).
+- Funções: `study_is_admin`, `study_can_use_ai` (usada também pela Edge Function), `study_my_access` (o app chama no login), `study_all_users` (só admin; lê `auth.users`) e `study_set_ai` (só admin).
+- Padrão: só o administrador (westter@gmail.com) usa IA. Os demais ficam "Sem IA" até o admin liberar na aba **Usuários**.
+- Interface: todo elemento com a classe `ia-only` some quando o usuário não tem IA (`body:not(.ia-allowed) .ia-only`); `admin-only` some para quem não é admin. **Todo botão/painel novo com IA deve receber `ia-only`** e a função correspondente deve chamar `StudyUsers.requireAI()` no início.
+- Falha fechada: se a consulta ao banco falhar (ou o SQL não tiver sido rodado), a IA fica oculta.
+- Ocultar botão é só interface. A barreira real é o banco/servidor: veja no LEIA-ME-V10.33.txt o trecho para a Edge Function `dynamic-service`.
+- Atualização da permissão: ao logar, ao abrir o Edital e ao voltar para o app (no máximo a cada 30 s).

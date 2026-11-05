@@ -144,6 +144,7 @@
 
         // Alternância de Abas
         function switchTab(tabId, defer) {
+            if (tabId === 'usuarios' && !(window.StudyUsers && StudyUsers.isAdmin())) tabId = 'cronograma'; // aba só do administrador
             document.body.classList.remove('sidebar-open');
             document.body.dataset.tab = tabId;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -168,7 +169,8 @@
                 if (tabId === 'dashboard') renderDashboard();
                 if (tabId === 'estatisticas' && window.renderStudyStatistics) window.renderStudyStatistics();
                 if (tabId === 'registro') initRegistrationForm();
-                if (tabId === 'edital') initEditalFilters();
+                if (tabId === 'edital') { initEditalFilters(); if (window.StudyUsers) StudyUsers.refresh(false); }
+                if (tabId === 'usuarios' && window.StudyUsers) StudyUsers.loadUsers();
                 if (tabId === 'cronograma') initCronogramaFilters();
                 if (tabId === 'personalizacao') renderCustomization();
             };

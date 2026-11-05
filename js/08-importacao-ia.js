@@ -194,6 +194,7 @@
         const EDITAL_IA_SCHEMA={type:'OBJECT',properties:{concurso:{type:'STRING',nullable:true},banca:{type:'STRING',nullable:true},datas_importantes:{type:'ARRAY',items:{type:'OBJECT',properties:{data:{type:'STRING',nullable:true},evento:{type:'STRING'}},required:['evento']}},grupos_prova:{type:'ARRAY',items:{type:'OBJECT',properties:{grupo:{type:'STRING'},quantidade_questoes:{type:'NUMBER',nullable:true},peso:{type:'STRING',nullable:true}},required:['grupo']}},disciplinas:{type:'ARRAY',items:{type:'OBJECT',properties:{disciplina:{type:'STRING'},peso:{type:'STRING',nullable:true},quantidade_questoes:{type:'NUMBER',nullable:true},topicos:{type:'ARRAY',items:{type:'OBJECT',properties:{topico:{type:'STRING'},subtopicos:{type:'ARRAY',items:{type:'STRING'}}},required:['topico','subtopicos']}}},required:['disciplina','topicos']}},observacoes:{type:'ARRAY',items:{type:'STRING'}}},required:['disciplinas']};
         // A IA é chamada pelo servidor (Edge Function) com o token da sessão: nenhuma chave de IA é digitada nem guardada no navegador.
         async function chamarIAServidor(payload){
+          if(!(window.StudyUsers&&StudyUsers.canUseAI()))throw new Error('O uso de IA não está liberado para a sua conta.');
           if(!sbClient)throw new Error('Entre na sua conta para usar a IA.');
           const {data,error}=await sbClient.auth.getSession();
           const token=data&&data.session&&data.session.access_token;
@@ -206,6 +207,7 @@
         }
 
         async function analyzeEditalAI(){
+          if(!(window.StudyUsers&&StudyUsers.requireAI()))return;
                     let text=window._editalText||'';
           const f=document.getElementById('ai-edital-file').files[0];
           const out=document.getElementById('ai-results');

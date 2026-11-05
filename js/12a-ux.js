@@ -59,10 +59,11 @@
         ['estatisticas', 'Estatísticas', 'fa-chart-simple'],
         ['__more', 'Mais', 'fa-ellipsis']
     ];
-    const ABAS_MAIS = ['dashboard', 'personalizacao', 'configuracoes'];
+    const ABAS_MAIS = ['dashboard', 'personalizacao', 'usuarios', 'configuracoes'];
     const SHEET_ITENS = [
         ['dashboard', 'Datas Importantes', 'fa-calendar-check'],
         ['personalizacao', 'Personalização', 'fa-sliders'],
+        ['usuarios', 'Usuários', 'fa-users-gear'],
         ['configuracoes', 'Configurações', 'fa-gear'],
         ['__tema', 'Alternar tema', 'fa-moon'],
         ['__concurso', 'Trocar de concurso / menu completo', 'fa-bars']
@@ -102,7 +103,7 @@
         wrap.innerHTML = '<div class="more-sheet-backdrop" data-ms-close="1"></div>'
             + '<div class="more-sheet-panel" role="dialog" aria-modal="true" aria-label="Mais opções">'
             + '<div class="more-sheet-head"><strong>Mais opções</strong><button type="button" class="more-sheet-close" data-ms-close="1" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>'
-            + SHEET_ITENS.map(([id, rotulo, icone]) => '<button type="button" class="more-sheet-item" data-ms="' + id + '"><i class="fa-solid ' + icone + '" aria-hidden="true"></i><span>' + rotulo + '</span></button>').join('')
+            + SHEET_ITENS.map(([id, rotulo, icone]) => '<button type="button" class="more-sheet-item' + (id === 'usuarios' ? ' admin-only' : '') + '" data-ms="' + id + '"><i class="fa-solid ' + icone + '" aria-hidden="true"></i><span>' + rotulo + '</span></button>').join('')
             + '</div>';
         wrap.addEventListener('click', ev => {
             if (ev.target.closest('[data-ms-close]')) { closeMoreSheet(); return; }

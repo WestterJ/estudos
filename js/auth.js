@@ -114,6 +114,7 @@
     const changed=!!priorUid && priorUid!==uid;
     const firstAccount=!priorUid;
     if(changed) {
+      if(window.StudyUsers) StudyUsers.reset();
       if(currentUid) saveUserSnapshot(currentUid);
       if(!restoreUserSnapshot(uid)) resetForFreshAccount();
       reloadPlannerState();
@@ -125,6 +126,7 @@
     if(session.user.email) { $('auth-email').value=session.user.email; $('sb-email').value=session.user.email; localStorage.setItem('tce_sb_email',session.user.email); }
     if(recoveryMode) { showRecovery(); return; }
     unlock();
+    if(window.StudyUsers) StudyUsers.refresh(true);
     message('Autenticado como '+(session.user.email||'usuário')+'.','success');
     updateCloudStatus('Conectado: '+(session.user.email||'Google/Supabase'));
     if(changed||firstAccount) {
@@ -150,7 +152,7 @@
     const uid=(sbUser&&sbUser.id)||localStorage.getItem('tce_current_auth_uid');
     if(uid) { saveUserSnapshot(uid); localStorage.setItem('tce_last_auth_uid',uid); }
     localStorage.removeItem('tce_current_auth_uid');
-    sbUser=null; lock(); message('Você saiu da conta. Entre novamente para acessar o Planejador.');
+    sbUser=null; if(window.StudyUsers) StudyUsers.reset(); lock(); message('Você saiu da conta. Entre novamente para acessar o Planejador.');
     try { $('auth-password').value=''; $('sb-password').value=''; } catch(_) {}
     updateCloudStatus('Sessão encerrada; dados locais preservados');
   }
