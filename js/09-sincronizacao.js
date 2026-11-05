@@ -53,7 +53,7 @@
             return preferLocal?localValue:remoteValue;
         }
         function mergeRecordValue(field, remoteValue, localValue, preferLocal, remoteRecord, localRecord) {
-            if(field==='notes') return mergeNoteValues(remoteValue,localValue,remoteRecord||{},localRecord||{},preferLocal);
+            if(field==='notes'||field==='obs') return mergeNoteValues(remoteValue,localValue,remoteRecord||{},localRecord||{},preferLocal);
             if(field==='notesUpdatedAt') {
                 const remoteTime=Date.parse(remoteValue||'')||0;
                 const localTime=Date.parse(localValue||'')||0;

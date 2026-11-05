@@ -1,0 +1,26 @@
+PLANEJADOR DE ESTUDOS V10.34 — NOTA POR REGISTRO, LANÇAMENTO PRÉ-PREENCHIDO E USO DA IA
+
+Novidades
+1) "+ Lançar estudo desta disciplina" (e "Usar disciplina") agora abre o Registro já preenchido com o último estudo da disciplina: tópico, minutos, tipo, trilha e a nota. Data = hoje, questões = 0. O histórico já fica filtrado pela disciplina.
+2) Campo de minutos simplificado (sem −5/+5); continua aceitando 85 ou 1:25.
+3) "Observações" virou "Nota". Cada registro tem a sua nota (vinculada à data, disciplina e tópico). Alterar a nota de um registro no histórico não muda os outros.
+4) Cronograma e Prioridades / Últimos estudos: mostram sempre a nota da última sessão; ao editar ali, só a última sessão é alterada.
+   - As notas antigas (que eram do tópico e apareciam em todos os registros) passam, uma única vez, para a sessão mais recente de cada tópico. As sessões anteriores ficam sem nota.
+5) Aba Usuários: nova seção "Uso da IA" com consultas, tokens aproximados (entrada/saída/total) por modelo, por usuário e as últimas consultas. Filtro: todo o histórico, 30 ou 7 dias.
+
+ORDEM PARA PUBLICAR
+1. Supabase > SQL Editor: rode schema_ia_uso_v10_34.sql (uma vez; exige o schema_usuarios_v10_33.sql já aplicado).
+2. Suba para o GitHub: index.html, css/estilos.css, js/00-config.js, js/02-sugestoes.js, js/04-inicio.js, js/05-registro.js, js/08-importacao-ia.js, js/09-sincronizacao.js, js/11-datas-anotacoes.js, js/12a-ux.js, js/12b-usuarios.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.34.txt, schema_ia_uso_v10_34.sql.
+3. Ctrl+Shift+R e confira "V10.34".
+Antes de rodar o SQL o app funciona normalmente; só a seção "Uso da IA" avisa que falta rodar.
+
+SOBRE OS TOKENS
+- O histórico começa a ser gravado a partir desta versão (consultas anteriores não existem em nenhum lugar).
+- O app grava os tokens e o modelo que a resposta da Edge Function informa (usageMetadata e modelVersion do Gemini). Se a função não repassar esses campos, o app estima (caracteres ÷ 4) e marca com "*"; o modelo aparece como "não informado".
+- O registro é feito pelo navegador. Para uma contagem à prova de adulteração, grave também dentro da Edge Function (insert em study_ai_usage com o usuário do token).
+
+Como testar
+1. Registro: clique em "+ Lançar estudo desta disciplina": tópico, minutos e nota vêm preenchidos e o histórico filtrado.
+2. Histórico: mude a nota de um registro; os outros da mesma disciplina/tópico não mudam.
+3. Cronograma: edite a nota de um tópico; só a sessão mais recente dele muda.
+4. Faça uma Análise de edital com IA; em Usuários > Uso da IA aparece 1 consulta, com o modelo e os tokens.

@@ -127,11 +127,8 @@
                 const lastDate = lastSession?.date || '';
                 const lastTrack = lastSession?.studyTrack || (lastSession ? 'Trilha não informada' : '');
                 const lastTopic = lastSession ? (masterEditalData.find(topic => sessionMatchesTopic(lastSession, topic)) || topics.find(topic => topic.topic === lastSession.topic && topic.subtopic === (lastSession.subtopic || '')) || null) : null;
-                // A nota vem exclusivamente do tópico associado à sessão mais recente da disciplina.
-                // Não agregamos anotações de outras aulas/disciplina.
-                const lastNote = lastTopic
-                    ? String((userProgress.find(progress => String(progress.id) === String(lastTopic.id)) || {}).notes || '').trim()
-                    : '';
+                // V10.34 — a nota é a da própria sessão mais recente da disciplina (cada registro tem a sua).
+                const lastNote = lastSession ? getSessionNote(lastSession) : '';
                 const lastTimestamp = lastSession ? parseBRDate(lastSession.date).getTime() : 0;
                 const hours = vals.reduce((sum,value) => sum + (Number(value.hours)||0), 0);
                 const questions = vals.reduce((sum,value) => sum + (Number(value.questions)||0), 0);
@@ -162,9 +159,6 @@
         }
         function applyStudyRecommendation() {
             const item=getNextStudyRecommendation();
-            const select=document.getElementById('reg-discipline');
-            if(!item||!select) return;
-            select.value=item.discipline;
-            updateRegTopics();
-            showCustomDialog('Disciplina selecionada', 'A disciplina '+item.discipline+' foi selecionada conforme a estratégia configurada. Escolha o tópico e registre o estudo.');
+            if(!item||!document.getElementById('reg-discipline')) return;
+            prefillStudyForm(item.discipline);
         }

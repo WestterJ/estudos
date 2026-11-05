@@ -4,10 +4,19 @@
         let activeModalId = null;
         function openModal(id) {
             activeModalId = id;
-            const item = masterEditalData.find(i => i.id === id);
-            const userItem = userProgress.find(u => u.id === id);
-            document.getElementById('modal-title').innerText = `Anotações: ${item.topic}`;
-            document.getElementById('modal-textarea').value = userItem && userItem.notes ? userItem.notes : '';
+            // V10.34 — 'session:<id>' edita a nota de um registro; um id de tópico edita a nota da sessão mais recente dele.
+            if (String(id).startsWith('session:')) {
+                const s = studySessions.find(x => x.id === String(id).slice(8));
+                if (!s) { activeModalId = null; return; }
+                document.getElementById('modal-title').innerText = `Nota: ${s.topic || s.discipline || 'registro'} · ${s.date || ''}`;
+                document.getElementById('modal-textarea').value = getSessionNote(s);
+            } else {
+                const item = masterEditalData.find(i => i.id === id);
+                if (!item) { activeModalId = null; return; }
+                const last = getLatestSessionForItem(item);
+                document.getElementById('modal-title').innerText = last ? `Nota da última sessão: ${item.topic}` : `Nota: ${item.topic}`;
+                document.getElementById('modal-textarea').value = getTopicNote(id);
+            }
             document.getElementById('custom-modal').classList.remove('hidden');
             document.getElementById('custom-modal').classList.add('flex');
         }
@@ -20,16 +29,15 @@
 
         function saveModalNote() {
             if (activeModalId) {
-                let userItem = userProgress.find(i => i.id === activeModalId);
-                if (!userItem) {
-                    const master = masterEditalData.find(m => m.id === activeModalId);
-                    userItem = { ...master, hours: 0, questions: 0, reviews: 0, completed: false };
-                    userProgress.push(userItem);
+                const text = document.getElementById('modal-textarea').value;
+                if (String(activeModalId).startsWith('session:')) {
+                    const s = studySessions.find(x => x.id === String(activeModalId).slice(8));
+                    if (s) setSessionNote(s, text);
+                } else {
+                    setLatestNoteForItem(activeModalId, text);
                 }
-                userItem.notes = document.getElementById('modal-textarea').value;
-                userItem.notesUpdatedAt = new Date().toISOString();
                 saveData();
-                try{renderRecentRotation();renderPriorityDisciplineProgress();}catch(err){console.warn(err);}
+                try{renderRecentRotation();renderPriorityDisciplineProgress();renderSessionsList();}catch(err){console.warn(err);}
             }
             closeModal();
         }

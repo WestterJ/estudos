@@ -199,12 +199,11 @@
                 const card=document.createElement('div');
                 card.className='recent-study-card flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-3';
                 const duration=((Number(session.minutes)||0)/60).toFixed(1);
-                const noteItem=masterEditalData.find(i=>sessionMatchesTopic(session,i));
-                const noteText=noteItem?String((userProgress.find(u=>u.id===noteItem.id)||{}).notes||'').trim():'';
-                const noteId=noteItem?escapeHtml(noteItem.id):'';
-                const noteHtml=!noteItem?'':(noteText
-                    ?`<div role="button" tabindex="0" data-skip-summary onclick="openModal('${noteId}')" title="Abrir anotações" class="note-clamp mt-1.5 max-w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-left text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(noteText)}</div>`
-                    :`<button type="button" onclick="openModal('${noteId}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:underline dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Adicionar anotação</button>`);
+                const noteText=getSessionNote(session);
+                const noteId=escapeHtml(session.id);
+                const noteHtml=noteText
+                    ?`<div role="button" tabindex="0" data-skip-summary onclick="openModal('session:${noteId}')" title="Editar a nota deste estudo" class="note-clamp mt-1.5 max-w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-left text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(noteText)}</div>`
+                    :`<button type="button" onclick="openModal('session:${noteId}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:underline dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Adicionar nota</button>`;
                 const questions=Number(session.questions)||0;
                 card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="recent-study-topic text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5" title="${escapeHtml((session.topic||'Estudo registrado')+(session.subtopic?' · '+session.subtopic:''))}">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')}${weekdayAbbr(session.date)?' ('+weekdayAbbr(session.date)+')':''} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
@@ -247,12 +246,7 @@
         }
         function openDisciplineInCronograma(discipline) {
             switchTab('registro');
-            const select = document.getElementById('reg-discipline');
-            if (select) {
-                select.value = discipline;
-                updateRegTopics();
-            }
-            window.scrollTo({top:0,behavior:'smooth'});
+            prefillStudyForm(discipline);
         }
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -346,6 +340,8 @@
             const summary=document.getElementById('home-progress-summary');
             if(summary) summary.textContent=`${overall}% concluído · ${completed}/${total} tópicos`;
             if(!total){container.innerHTML=onboardingHtml();return;}
+            ensureNotesMigrated();
+            const latestNotes=getLatestSessionByItemMap();
             const weekMinutes=getWeekMinutesByDiscipline();
             const pSettings=getPrioritySettings();
             const priorityOrder=Object.keys(pSettings).sort((a,b)=>(Number(pSettings[b].weight)||1)-(Number(pSettings[a].weight)||1));
@@ -368,9 +364,10 @@
                     const reviews=values.reduce((sum,u)=>sum+(Number(u.reviews)||0),0);
                     const topicRows=topics.map(t=>{
                         const u=userProgress.find(x=>x.id===t.id)||t;
+                        const topicNote=getTopicNote(t.id,latestNotes);
                         const itemPct=u.completed?100:((Number(u.hours)||0)>0?Math.min(90,Math.round((Number(u.hours)||0)/Math.max(Number(t.hours)||1,1)*50)):0);
                         const priorityColor=getPrioritySettings()[priority]?.color||'#64748b';
-                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div><button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Anotações</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${fmtHoras(Number(u.hours)||0)}</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
+                        return `<div class="home-topic-row"><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(t.topic||'Tópico')}</div><div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.subtopic||'')}</div><div class="text-[10px] mt-1" style="color:${priorityColor}">${u.completed?'Concluído':'Em andamento'} · Prioridade ${escapeHtml(getPriorityLabel(priority))} · Peso: ${escapeHtml(t.weight||'—')}</div>${topicNote?`<div class="note-clamp mt-1.5 max-w-full rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" title="Nota da última sessão deste tópico"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(topicNote)}</div>`:''}<button type="button" onclick="openModal('${t.id}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900 dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>${topicNote?'Editar nota da última sessão':'Adicionar nota'}</button></div><div class="text-right shrink-0 text-[10px] space-y-1"><div class="font-bold text-blue-700">${fmtHoras(Number(u.hours)||0)}</div><div class="text-amber-700">${Number(u.questions)||0} ${(Number(u.questions)||0)===1?'questão':'questões'}</div><div class="text-purple-700">${Number(u.reviews)||0} ${(Number(u.reviews)||0)===1?'revisão':'revisões'}</div><label class="flex items-center justify-end gap-1 mt-1"><input type="checkbox" ${u.completed?'checked':''} onchange="toggleItem('${t.id}');renderPriorityDisciplineProgress();renderEditalVerticalizado();" class="rounded border-slate-300"><span>Concluído</span></label></div></div>`;
                     }).join('');
                     inner+=`<details class="home-discipline-group" ${window._openHomeDisciplines.has(discipline)?'open':''} ontoggle="if(!window._openHomeDisciplines)window._openHomeDisciplines=new Set();this.open?window._openHomeDisciplines.add(this.dataset.discipline):window._openHomeDisciplines.delete(this.dataset.discipline)" data-discipline="${escapeHtml(discipline)}"><summary><span class="gauge" style="--gauge-pct:${pct}%;--gauge-color:${met.color}"><span>${pct}%</span></span><div class="min-w-0 flex-1"><div class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(discipline)}</div><div class="text-[10px] text-slate-500 mt-1">${done}/${topics.length} tópicos concluídos${weekMinutes.get(discipline)>0?`<span class="week-badge">+${escapeHtml(fmtMinutesHM(weekMinutes.get(discipline)))} na semana</span>`:''}</div><div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] mt-1"><span class="text-emerald-700 font-bold">${fmtHoras(hours)}</span><span class="text-amber-700 font-bold">${questions} questões</span><span class="text-purple-700 font-bold">${reviews} revisões</span></div></div><i class="fa-solid fa-chevron-right group-chevron"></i></summary><div>${topicRows}</div></details>`;
                 });

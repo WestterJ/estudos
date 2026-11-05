@@ -200,10 +200,15 @@
           const token=data&&data.session&&data.session.access_token;
           if(error||!token)throw new Error('Sua sessão expirou. Entre novamente no aplicativo.');
           const cfg=window.PLANEJADOR_SUPABASE||{};
-          const resp=await fetch(String(cfg.url).replace(/\/$/,'')+'/functions/v1/dynamic-service',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':cfg.publishableKey},body:JSON.stringify(payload)});
-          const j=await resp.json().catch(()=>({}));
-          if(!resp.ok)throw new Error(j.error||j.message||('Serviço de IA retornou HTTP '+resp.status+'.'));
-          return j;
+          // V10.34 — cada consulta (com sucesso ou falha) vai para o histórico de uso da IA (consultas e tokens por modelo).
+          const t0=Date.now();let j=null,ok=false,erro='';
+          try{
+            const resp=await fetch(String(cfg.url).replace(/\/$/,'')+'/functions/v1/dynamic-service',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':cfg.publishableKey},body:JSON.stringify(payload)});
+            j=await resp.json().catch(()=>({}));
+            if(!resp.ok)throw new Error(j.error||j.message||('Serviço de IA retornou HTTP '+resp.status+'.'));
+            ok=true;return j;
+          }catch(e){erro=(e&&e.message)||String(e);throw e;}
+          finally{try{if(window.StudyUsers)StudyUsers.logAI(payload,ok?j:null,ok,erro,Date.now()-t0);}catch(_){}}
         }
 
         async function analyzeEditalAI(){

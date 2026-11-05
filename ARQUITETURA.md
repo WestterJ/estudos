@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.33
+# Arquitetura — Planejador de Estudos V10.34
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -173,3 +173,12 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - Falha fechada: se a consulta ao banco falhar (ou o SQL não tiver sido rodado), a IA fica oculta.
 - Ocultar botão é só interface. A barreira real é o banco/servidor: veja no LEIA-ME-V10.33.txt o trecho para a Edge Function `dynamic-service`.
 - Atualização da permissão: ao logar, ao abrir o Edital e ao voltar para o app (no máximo a cada 30 s).
+
+## V10.34 — Nota por registro, lançamento pré-preenchido e uso da IA
+- **Nota por registro**: a nota fica na própria sessão (`obs` + `notesUpdatedAt`). Nenhum painel por tópico/disciplina tem nota própria: eles mostram a nota da **sessão mais recente** (`getTopicNote`, `getLatestSessionByItemMap`) e editar ali (`openModal(idDoTópico)` → `setLatestNoteForItem`) altera só essa sessão. `openModal('session:<id>')` edita a nota de um registro específico (histórico e "Últimos estudos"). Ficam em `js/05-registro.js` e `js/11-datas-anotacoes.js`.
+- **Migração única** (`ensureNotesMigrated`): a nota antiga do tópico (`userProgress[].notes`) vira a nota da sessão mais recente do tópico e o item recebe `notesMigrated`. O campo antigo só é usado como reserva quando o tópico não tem nenhuma sessão.
+- **Sincronização**: `mergeRecordValue` trata `obs` como as notas (vence o `notesUpdatedAt` mais recente, inclusive para apagar a nota).
+- **Lançar estudo desta disciplina** (`prefillStudyForm`, em `05-registro.js`): usado pelos botões das Sugestões e por "Usar disciplina". Preenche disciplina, último tópico estudado, tipo, trilha, minutos e a nota do último estudo; data = hoje; questões = 0; filtra o histórico pela disciplina. A pesquisa do último estudo ignora revisões (se só houver revisão, usa a revisão).
+- **Formulário**: o campo "Observações" virou "Nota"; os botões −5/+5 foram removidos (continua aceitando `85` ou `1:25`).
+- **Uso da IA**: `study_ai_usage` (+ `study_log_ai`, `study_ai_usage_summary`, `study_ai_usage_recent`, em `schema_ia_uso_v10_34.sql`). `chamarIAServidor` registra cada consulta (sucesso ou falha) via `StudyUsers.logAI`, com os tokens que a resposta informa (`usageMetadata`) e o modelo (`modelVersion`). Sem esses dados, estima por caracteres ÷ 4 e marca como estimado. A aba Usuários mostra totais, por modelo, por usuário e as últimas consultas, com filtro de período.
+- Todo novo ponto de chamada de IA deve passar por `chamarIAServidor` para entrar no histórico.

@@ -11,7 +11,7 @@
         const refresh = () => {
             if (!hint) return;
             const v = parseMinutesInput(input.value);
-            hint.textContent = v ? '= ' + fmtMinutesHM(v) + ' · digite 85 ou 1:25' : 'Digite os minutos (ex.: 85) ou 1:25';
+            hint.textContent = v ? '= ' + fmtMinutesHM(v) : 'Ex.: 85 ou 1:25';
         };
         const step = delta => {
             const cur = parseMinutesInput(input.value) || 0;

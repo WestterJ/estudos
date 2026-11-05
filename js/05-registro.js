@@ -62,7 +62,7 @@
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
-            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,obs:(document.getElementById('reg-obs')?.value||'').trim().slice(0,500),isReview:type2==='Revisão'?1:0};
+            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,obs:(document.getElementById('reg-obs')?.value||'').trim().slice(0,2000),notesUpdatedAt:new Date().toISOString(),isReview:type2==='Revisão'?1:0};
             studySessions.unshift(session);
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
             let userItem=userProgress.find(u=>u.id===itemId);
@@ -145,6 +145,7 @@
         function sessionTopicLabel(item){return item.topic+(item.subtopic?' → '+item.subtopic:'');}
         function renderSessionsList() {
             const container=document.getElementById('sessions-list');if(!container)return;
+            ensureNotesMigrated();
             const typeFilter=document.getElementById('hist-filter-type')?.value||'all';
             const discFilter=document.getElementById('hist-filter-disc')?.value||'all';
             const trackFilter=document.getElementById('hist-filter-track')?.value||'all';
@@ -171,11 +172,11 @@
                 return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Disciplina / Tópico."':''}>
                     <td style="min-width:122px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
                     <td style="min-width:164px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select><select class="tbl-field tbl-sub" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
-                    <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select><input type="text" class="tbl-field tbl-sub" data-f="obs" maxlength="500" placeholder="Observações" value="${e(s.obs||'')}" aria-label="Observações"></td>
+                    <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select><input type="text" class="tbl-field tbl-sub" data-f="obs" maxlength="1000" placeholder="Nota deste registro (ex.: Tópico 7, Aula 06)" value="${e(s.obs||'')}" aria-label="Nota deste registro"></td>
                     <td style="min-width:132px"><select class="tbl-field" data-f="studyTrack" aria-label="Curso ou trilha">${trackOptionsHtml(String(s.studyTrack||'Trilha não informada'))}</select></td>
                     <td style="min-width:78px"><input type="number" min="1" class="tbl-field" data-f="minutes" value="${minutes}" aria-label="Minutos"><div class="px-1.5 text-[10px] text-slate-400" data-dhm>${fmtHoras(minutes/60)}</div></td>
                     <td style="min-width:64px"><input type="number" min="0" class="tbl-field" data-f="questions" value="${Number(s.questions)||0}" aria-label="Questões"></td>
-                    <td style="min-width:132px;white-space:nowrap"><button type="button" data-act="edit" class="sess-ico bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200" title="Editar registro" aria-label="Editar registro"><i class="fa-solid fa-pen"></i></button> <button type="button" data-act="copy" class="sess-ico bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300" title="Copiar para o formulário" aria-label="Copiar para o formulário"><i class="fa-regular fa-copy"></i></button> <button type="button" data-act="note" class="sess-ico bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300" title="Anotações do tópico" aria-label="Anotações do tópico"><i class="fa-regular fa-note-sticky"></i></button> <button type="button" data-act="del" class="sess-ico bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir registro" aria-label="Excluir registro"><i class="fa-regular fa-trash-can"></i></button></td>
+                    <td style="min-width:132px;white-space:nowrap"><button type="button" data-act="edit" class="sess-ico bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200" title="Editar registro" aria-label="Editar registro"><i class="fa-solid fa-pen"></i></button> <button type="button" data-act="copy" class="sess-ico bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300" title="Copiar para o formulário" aria-label="Copiar para o formulário"><i class="fa-regular fa-copy"></i></button> <button type="button" data-act="note" class="sess-ico bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300" title="Nota deste registro" aria-label="Nota deste registro"><i class="fa-regular fa-note-sticky"></i></button> <button type="button" data-act="del" class="sess-ico bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300" title="Excluir registro" aria-label="Excluir registro"><i class="fa-regular fa-trash-can"></i></button></td>
                 </tr>`;
             }).join('');
             container.innerHTML=`<table class="sess-table"><thead><tr><th>Data</th><th>Atividade / Conteúdo</th><th>Disciplina / Tópico</th><th>Trilha</th><th>Min</th><th>Quest.</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -195,9 +196,77 @@
         }
         // As opções de tópico só são montadas quando o campo recebe foco (mantém a tabela leve com centenas de tópicos).
         // V10.29 — Busca, período e cartões no celular
-        function getTopicNote(itemId){
+        // ===== V10.34 — Nota por registro =====
+        // Cada sessão guarda a sua própria nota em `obs` (com `notesUpdatedAt` para a mesclagem entre aparelhos).
+        // Nos painéis por tópico/disciplina mostra-se sempre a nota da sessão mais recente; editar ali altera só essa sessão.
+        function getSessionNote(s){return String((s&&s.obs)||'').trim();}
+        function setSessionNote(s,text){s.obs=String(text||'').trim().slice(0,2000);s.notesUpdatedAt=new Date().toISOString();}
+        function getLatestSessionForItem(item){
+            if(!item)return null;
+            return getSessionsNewestFirst().find(s=>sessionMatchesTopic(s,item))||null;
+        }
+        // Mapa tópico -> sessão mais recente, calculado uma vez por renderização (evita ordenar o histórico a cada tópico).
+        function getLatestSessionByItemMap(){
+            const byId=new Map(),byKey=new Map(),out=new Map();
+            masterEditalData.forEach(i=>{byId.set(String(i.id),i);byKey.set([i.discipline,i.topic,i.subtopic].map(v=>String(v||'')).join('|'),i);});
+            getSessionsNewestFirst().forEach(s=>{
+                const it=(s.itemId&&byId.get(String(s.itemId)))||byKey.get([s.discipline,s.topic,s.subtopic].map(v=>String(v||'')).join('|'));
+                if(it&&!out.has(String(it.id)))out.set(String(it.id),s);
+            });
+            return out;
+        }
+        function getTopicNote(itemId,latestMap){
+            const item=masterEditalData.find(x=>x.id===itemId);
+            const last=latestMap?latestMap.get(String(itemId)):getLatestSessionForItem(item);
+            if(last)return getSessionNote(last);
             const u=userProgress.find(x=>x.id===itemId);if(u&&u.notes)return String(u.notes);
-            const m=masterEditalData.find(x=>x.id===itemId);return m&&m.notes?String(m.notes):'';
+            return item&&item.notes?String(item.notes):'';
+        }
+        // Edita a nota "do tópico": grava só na sessão mais recente dele (sem sessões, usa o campo antigo do tópico).
+        function setLatestNoteForItem(itemId,text){
+            const item=masterEditalData.find(x=>x.id===itemId);if(!item)return;
+            const last=getLatestSessionForItem(item);
+            if(last){setSessionNote(last,text);return;}
+            let u=userProgress.find(x=>x.id===itemId);
+            if(!u){u={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(u);}
+            u.notes=String(text||'');u.notesUpdatedAt=new Date().toISOString();
+        }
+        // Migração única: a nota antiga (que era do tópico e aparecia em todos os registros dele) passa a ser a nota da sessão mais recente do tópico.
+        function ensureNotesMigrated(){
+            const pending=userProgress.filter(u=>String(u.notes||'').trim()&&!u.notesMigrated);
+            if(!pending.length)return false;
+            const latest=getLatestSessionByItemMap();let changed=false;
+            pending.forEach(u=>{
+                const s=latest.get(String(u.id));
+                if(s&&!getSessionNote(s)){s.obs=String(u.notes).trim().slice(0,2000);s.notesUpdatedAt=u.notesUpdatedAt||s.createdAt||'';}
+                u.notesMigrated=true;changed=true;
+            });
+            if(changed)saveData();
+            return changed;
+        }
+        // ===== V10.34 — Lançar estudo já preenchido com o último estudo da disciplina =====
+        function fillStudyFormFromSession(s){
+            const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+            const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
+            if(item){set('reg-discipline',item.discipline);updateRegTopics();set('reg-topic',item.id);}
+            set('reg-type1',s.type1||SESSION_TYPE1_OPTIONS[0]);set('reg-type2',s.type2||SESSION_TYPE2_OPTIONS[0]);
+            const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';
+            if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));
+            if(ts)set('reg-track',tv||(ts.options[0]?ts.options[0].value:''));
+            set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',0);
+            set('reg-date',localTodayISO());set('reg-obs',getSessionNote(s));
+        }
+        function prefillStudyForm(discipline){
+            const sel=document.getElementById('reg-discipline');
+            if(!sel||!discipline)return;
+            if(![...sel.options].some(o=>o.value===discipline))return;
+            const all=getSessionsNewestFirst().filter(s=>s.discipline===discipline);
+            const last=all.find(s=>!isRevisionSession(s))||all[0]||null;
+            sel.value=discipline;updateRegTopics();
+            if(last)fillStudyFormFromSession(last);
+            filterHistoryByFormDiscipline(false);
+            window.scrollTo({top:0,behavior:'smooth'});
+            if(typeof showToast==='function')showToast(last?'Formulário preenchido':'Disciplina selecionada',last?('Último estudo de '+discipline+' (tópico, minutos e nota). Ajuste e salve.'):('Ainda não há estudos de '+discipline+'. Escolha o tópico e registre.'),'info');
         }
         function normText(v){return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
         function historyExtraFilter(s){
@@ -214,7 +283,7 @@
             const q=normText(document.getElementById('hist-search')?.value).trim();
             if(q){
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
-                const hay=normText([s.discipline,s.topic,s.subtopic,s.studyTrack,s.type2,s.date,s.obs,item?getTopicNote(item.id):''].join(' '));
+                const hay=normText([s.discipline,s.topic,s.subtopic,s.studyTrack,s.type2,s.date,s.obs].join(' '));
                 if(!q.split(/\s+/).every(t=>hay.includes(t)))return false;
             }
             return true;
@@ -234,7 +303,7 @@
             setTimeout(()=>{renderSessionsList();document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});},60);
         }
         // V10.32 — filtra o histórico pela disciplina escolhida no formulário de lançamento (para tirar dúvidas)
-        function filterHistoryByFormDiscipline(){
+        function filterHistoryByFormDiscipline(scroll){
             const disc=document.getElementById('reg-discipline')?.value||'';
             const sel=document.getElementById('hist-filter-disc');
             if(!disc||!sel)return;
@@ -245,7 +314,7 @@
             const q=document.getElementById('hist-search');if(q)q.value='';
             window._sessionsLimit=20;
             renderSessionsList();
-            document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+            if(scroll!==false)document.getElementById('sessions-list')?.scrollIntoView({behavior:'smooth',block:'start'});
         }
         function clearHistoryFilters(){
             ['hist-filter-type','hist-filter-disc','hist-filter-track'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
@@ -273,18 +342,17 @@
                 const orphan=!item||legacyIds.has(String(item.id));
                 const topic=item?sessionTopicLabel(item):(s.topic||'Tópico')+(s.subtopic?' → '+s.subtopic:'')+' (não está mais no edital)';
                 const min=Math.max(0,Number(s.minutes)||0);
-                const note=item?String(getTopicNote(item.id)||'').trim():'';
+                const note=getSessionNote(s);
                 const q=Number(s.questions)||0;
                 return `<article class="sess-card${orphan?' sess-orphan':''}" data-id="${e(s.id)}">
                     <div class="sess-card-top"><span>${e(s.date||'')}</span><span class="sess-card-time">${e(fmtMinutesHM(min))}${min>=60?` <small>(${min} min)</small>`:''}</span></div>
                     <p class="sess-card-disc">${e(s.discipline||'Sem disciplina')}</p>
                     <p class="sess-card-topic">${orphan?'⚠ ':''}${e(topic)}</p>
                     <p class="sess-card-meta">${e(s.type2||'')} · ${e(s.studyTrack||'Trilha não informada')}${q?` · ${q} questões`:''}</p>
-                    ${note?`<p class="sess-card-note" title="Toque para ver tudo">${e(note)}</p>`:'<p class="sess-card-note sess-card-note-empty">Sem anotação neste tópico</p>'}
-                    ${s.obs?`<p class="sess-card-obs"><strong>Obs.:</strong> ${e(s.obs)}</p>`:''}
+                    ${note?`<p class="sess-card-note" title="Toque para ver tudo">${e(note)}</p>`:'<p class="sess-card-note sess-card-note-empty">Sem nota neste registro</p>'}
                     <div class="sess-card-actions">
                         <button type="button" data-act="edit" aria-label="Editar registro"><i class="fa-solid fa-pen" aria-hidden="true"></i>Editar</button>
-                        <button type="button" data-act="note" aria-label="Abrir anotações do tópico"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i>Anotação</button>
+                        <button type="button" data-act="note" aria-label="Editar a nota deste registro"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i>Nota</button>
                         <button type="button" data-act="copy" aria-label="Copiar para o formulário"><i class="fa-solid fa-copy" aria-hidden="true"></i>Copiar</button>
                         <button type="button" data-act="del" aria-label="Excluir registro"><i class="fa-solid fa-trash" aria-hidden="true"></i>Excluir</button>
                     </div></article>`;
@@ -317,7 +385,7 @@
             else if(f==='studyTrack')patch.studyTrack=(el.value||'').trim()||'Trilha não informada';
             else if(f==='minutes')patch.minutes=Math.max(1,Number(el.value)||1);
             else if(f==='questions')patch.questions=Math.max(0,Number(el.value)||0);
-            else if(f==='obs')patch.obs=(el.value||'').trim().slice(0,500);
+            else if(f==='obs'){patch.obs=(el.value||'').trim().slice(0,2000);patch.notesUpdatedAt=new Date().toISOString();}
             else if(f==='discipline'){
                 const first=masterEditalData.find(x=>x.discipline===el.value);
                 if(!first){showCustomDialog('Disciplina sem tópicos','Essa disciplina não tem tópicos cadastrados no edital.');el.value=s.discipline||'';return;}
@@ -356,14 +424,12 @@
             }else if(btn.dataset.act==='edit'){
                 editSession(id);
             }else if(btn.dataset.act==='note'){
-                const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
-                if(!item)return showCustomDialog('Tópico indisponível','Escolha primeiro um tópico válido do edital nesta linha para abrir as anotações.');
-                openModal(item.id);
+                openModal('session:'+s.id);
             }else if(btn.dataset.act==='copy'){
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
                 const set=(id2,v)=>{const el=document.getElementById(id2);if(el)el.value=v;};
                 set('reg-type1',s.type1||SESSION_TYPE1_OPTIONS[0]);set('reg-type2',s.type2||SESSION_TYPE2_OPTIONS[0]);
-                {const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));set('reg-track',tv||(ts&&ts.options[0]?ts.options[0].value:''));}set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());
+                {const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));set('reg-track',tv||(ts&&ts.options[0]?ts.options[0].value:''));}set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());set('reg-obs',getSessionNote(s));
                 if(item){set('reg-discipline',item.discipline);updateRegTopics();set('reg-topic',item.id);}
                 document.getElementById('study-session-form')?.scrollIntoView({behavior:'smooth',block:'center'});
                 showCustomDialog('Registro copiado','Os dados foram levados para o formulário, com a data de hoje. Ajuste o que precisar e clique em “Salvar registro de estudo”.','fa-solid fa-circle-check');
@@ -410,6 +476,7 @@
             const minutes=parseMinutesInput(document.getElementById('edit-session-minutes').value)||1;
             const questions=Math.max(0,Number(document.getElementById('edit-session-questions').value)||0);
             const isReview=Number(document.getElementById('edit-session-review').value)||0;
+            const newObs=(document.getElementById('edit-session-obs')?.value||'').trim().slice(0,2000);
             const oldItem=masterEditalData.find(t=>t.discipline===oldSession.discipline&&t.topic===oldSession.topic&&t.subtopic===oldSession.subtopic);
             const oldProgress=oldItem?userProgress.find(u=>u.id===oldItem.id):null;
             if(oldProgress){
@@ -419,7 +486,7 @@
             }
             const dateValue=document.getElementById('edit-session-date').value;
             const [year,month,day]=dateValue.split('-');
-            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,obs:(document.getElementById('edit-session-obs')?.value||'').trim().slice(0,500),isReview});
+            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,obs:newObs,isReview});if(newObs!==String(oldSession.obs||'').trim())session.notesUpdatedAt=new Date().toISOString();
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress)}
             newProgress.hours=(Number(newProgress.hours)||0)+minutes/60;
