@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.34
+# Arquitetura — Planejador de Estudos V10.35
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -182,3 +182,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - **Formulário**: o campo "Observações" virou "Nota"; os botões −5/+5 foram removidos (continua aceitando `85` ou `1:25`).
 - **Uso da IA**: `study_ai_usage` (+ `study_log_ai`, `study_ai_usage_summary`, `study_ai_usage_recent`, em `schema_ia_uso_v10_34.sql`). `chamarIAServidor` registra cada consulta (sucesso ou falha) via `StudyUsers.logAI`, com os tokens que a resposta informa (`usageMetadata`) e o modelo (`modelVersion`). Sem esses dados, estima por caracteres ÷ 4 e marca como estimado. A aba Usuários mostra totais, por modelo, por usuário e as últimas consultas, com filtro de período.
 - Todo novo ponto de chamada de IA deve passar por `chamarIAServidor` para entrar no histórico.
+
+## V10.35 — Edições não voltam mais ao valor antigo (sincronização)
+- Sintoma: ao editar um dado (ex.: diminuir os minutos de uma sessão), o selo ficava "Local" e, ao voltar para "Nuvem", a tela exibia o valor antigo. Causa: a mesclagem com a cópia da nuvem (`mergeRecordValue`) mantinha o MAIOR valor de `minutes/hours/questions/reviews`, o `completed` marcado e o valor não vazio; depois a mesclagem era aplicada na tela (`adoptMergedCloudPayloadLocally`).
+- Correção (`js/09-sincronizacao.js`): `saveData()` chama `stampChangedRecords()`, que compara cada registro (sessões, progresso dos tópicos, itens do edital) com o último estado salvo (`localStorage tce_rechash_<usuário>_<concurso>_<lista>`) e grava `updatedAt` só nos que mudaram. Em `mergeRecordLists`, se os dois lados têm `updatedAt` e ele difere, vale o registro inteiro mais recente.
+- Registros antigos sem `updatedAt` continuam na regra anterior (maior valor). `baselineRecordHashes(force)` define o ponto de partida sem carimbar: ao abrir o app (`13-iniciar.js`), ao entrar na conta (`auth.js`) e após carregar dados da nuvem/trocar de concurso (`restoreSnapshotToMemory`).
+- Limite conhecido: o progresso por tópico (`userProgress.hours/questions/reviews`) é um total derivado das sessões; se dois aparelhos lançarem sessões diferentes no mesmo tópico ao mesmo tempo, vale o total do mais recente (não a soma).

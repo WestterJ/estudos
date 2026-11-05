@@ -1,0 +1,23 @@
+PLANEJADOR DE ESTUDOS V10.35 — EDIÇÕES NÃO VOLTAM MAIS AO VALOR ANTIGO
+
+Problema corrigido
+Ao editar um dado (por exemplo, diminuir os minutos de um registro no histórico), o ícone do topo ficava "Local · agora", depois voltava para "Nuvem · agora" e o valor editado desaparecia. A sincronização juntava seus dados com a cópia da nuvem mantendo o MAIOR valor (minutos, horas, questões, revisões), o "concluído" marcado e o valor não vazio. Como a nuvem ainda tinha o valor antigo, ele vencia e voltava para a tela.
+
+Como ficou
+- Cada registro passa a ter data/hora da última edição. Na sincronização vale o registro editado por último, inclusive para diminuir valores, apagar campos e desmarcar "concluído".
+- Sessões lançadas em aparelhos diferentes continuam se somando (registros diferentes não se sobrepõem).
+- Registros antigos, sem data de edição, seguem a regra anterior até serem editados uma vez.
+- O ícone "Local" ainda aparece por instantes depois de cada alteração (é o aviso de que ela ainda não foi enviada). Isso é normal; agora o valor permanece.
+
+Não precisa rodar SQL.
+
+Como publicar
+Suba: index.html, js/00-config.js, js/07-concursos.js, js/09-sincronizacao.js, js/13-iniciar.js, js/auth.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.35.txt. Ctrl+Shift+R e confira "V10.35".
+
+Como testar
+1. Registro > tabela do histórico: mude os minutos de um registro de 50 para 40. Espere o ícone ir de "Local" para "Nuvem" (cerca de 2 s): deve continuar 40. Recarregue a página: continua 40.
+2. Apague o texto de uma nota, ou desmarque "Concluído" de um tópico: o mesmo vale.
+3. Com dois aparelhos: edite no celular, abra no computador (ou recarregue): o computador mostra a edição.
+
+Limite conhecido
+O total de horas/questões por tópico (Cronograma) é calculado a partir das sessões; se dois aparelhos lançarem sessões diferentes no mesmo tópico ao mesmo tempo, vale o total do aparelho que salvou por último (as sessões em si não se perdem).

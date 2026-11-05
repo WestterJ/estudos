@@ -128,6 +128,7 @@
             const di=new Set(dead.items),ds=new Set(dead.sessions);
             masterEditalData=masterEditalData.filter(x=>!di.has(String(x.id)));userProgress=userProgress.filter(x=>!di.has(String(x.id)));studySessions=studySessions.filter(x=>!ds.has(String(x.id)));
           }
+          try{baselineRecordHashes(true);}catch(_){}
           return true;
         }
         function changeContest(id){

@@ -121,6 +121,7 @@
     }
     localStorage.setItem('tce_current_auth_uid',uid);
     localStorage.setItem('tce_last_auth_uid',uid);
+    try { baselineRecordHashes(false); } catch(_) {}
     currentAuthUidHandled=uid;
     sbUser=session.user;
     if(session.user.email) { $('auth-email').value=session.user.email; $('sb-email').value=session.user.email; localStorage.setItem('tce_sb_email',session.user.email); }

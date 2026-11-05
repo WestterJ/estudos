@@ -76,6 +76,40 @@
             if(remoteValue && localValue && typeof remoteValue==='object' && typeof localValue==='object') return {...remoteValue,...localValue};
             return preferLocal ? localValue : remoteValue;
         }
+        // ===== V10.35 — Data/hora por registro (a edição mais recente vale na mesclagem) =====
+        // Antes, a mesclagem ficava com o MAIOR valor de minutos/horas/questões e com o valor não vazio: ao diminuir ou apagar
+        // um dado, a cópia antiga da nuvem vencia e a tela voltava ao valor anterior. Agora cada registro (sessão, progresso do
+        // tópico, item do edital) recebe `updatedAt` quando muda, e na mesclagem vence o registro editado por último.
+        function recHashStr(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h;}
+        function recHashMap(list){
+            const m={};
+            (Array.isArray(list)?list:[]).forEach(r=>{if(!r||r.id===undefined||r.id===null)return;const {updatedAt,...rest}=r;m[String(r.id)]=recHashStr(JSON.stringify(rest));});
+            return m;
+        }
+        function recHashKey(name){return 'tce_rechash_'+(localStorage.getItem('tce_current_auth_uid')||'')+'_'+activeContest+'_'+name;}
+        function recHashLists(){return [['p',userProgress],['s',studySessions],['m',masterEditalData]];}
+        // Guarda o estado atual como ponto de partida (sem carimbar). force=true refaz o ponto de partida (depois de carregar dados da nuvem/outro concurso).
+        function baselineRecordHashes(force){
+            recHashLists().forEach(([n,l])=>{
+                const k=recHashKey(n);
+                try{if(force||localStorage.getItem(k)===null)localStorage.setItem(k,JSON.stringify(recHashMap(l)));}catch(_){}
+            });
+        }
+        function stampChangedRecords(){
+            const now=new Date().toISOString();
+            recHashLists().forEach(([n,l])=>{
+                const k=recHashKey(n);let prev=null;
+                try{prev=JSON.parse(localStorage.getItem(k)||'null');}catch(_){}
+                const next={};
+                (Array.isArray(l)?l:[]).forEach(r=>{
+                    if(!r||r.id===undefined||r.id===null)return;
+                    const id=String(r.id);const {updatedAt,...rest}=r;const h=recHashStr(JSON.stringify(rest));next[id]=h;
+                    if(prev&&prev[id]!==h)r.updatedAt=now;
+                });
+                try{localStorage.setItem(k,JSON.stringify(next));}catch(_){}
+            });
+        }
+
         function mergeRecordLists(remoteList, localList, preferLocal) {
             const merged=[]; const indexByKey=new Map();
             const addOrMerge=(item,source)=>{
@@ -84,6 +118,9 @@
                 if(!indexByKey.has(key)) { indexByKey.set(key,merged.length); merged.push({...item}); return; }
                 const idx=indexByKey.get(key), existing=merged[idx];
                 if(source==='local') {
+                    // V10.35 — se os dois lados têm data de edição e ela difere, vale o registro inteiro mais recente.
+                    const tRemote=Date.parse(existing.updatedAt||'')||0,tLocal=Date.parse(item.updatedAt||'')||0;
+                    if((tRemote||tLocal)&&tRemote!==tLocal){merged[idx]={...(tLocal>tRemote?item:existing)};return;}
                     const result={...existing,...item};
                     const fields=new Set([...Object.keys(existing),...Object.keys(item)]);
                     fields.forEach(field=>{result[field]=mergeRecordValue(field,existing[field],item[field],preferLocal,existing,item);});
@@ -627,6 +664,7 @@
             }
         }
         function saveData() {
+            stampChangedRecords();
             const savedAtLocal=new Date().toISOString();
             localStorage.setItem('tce_go_pro_data',JSON.stringify(userProgress));
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
