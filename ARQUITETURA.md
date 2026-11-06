@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.36
+# Arquitetura — Planejador de Estudos V10.37
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -194,3 +194,6 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - Reforço: a regra `body:not(.ia-allowed) .ia-only` / `body:not(.is-admin) .admin-only` agora também está embutida no `<head>` do `index.html`, e `StudyUsers.apply()` esconde/mostra os elementos direto por JavaScript (`style.display`), já na abertura do app. Antes isso dependia só do `css/estilos.css`, que o navegador pode manter antigo.
 - Só existe um ponto de IA no app (`#ai-edital-file` / `analyzeEditalAI`, dentro do card `.ia-only`). Qualquer novo ponto de IA deve ter a classe `ia-only`.
 - Ocultar é só interface; a barreira real continua sendo a checagem `study_can_use_ai()` na Edge Function `dynamic-service` (ver LEIA-ME-V10.33.txt).
+
+## V10.37 — Ícone na aba do navegador
+- O `<head>` do `index.html` usava `<link rel="icon" href="data:,">` (favicon vazio, aparecia o globo). Agora aponta para `icons/icon.svg` (principal) e `icons/icon-192.png` (reserva), os mesmos ícones do app instalado.

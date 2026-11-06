@@ -1,0 +1,7 @@
+PLANEJADOR DE ESTUDOS V10.37 — ÍCONE NA ABA DO NAVEGADOR
+
+A aba mostrava um globo porque o index.html tinha um favicon vazio. Agora usa o ícone do app (livro aberto, azul), o mesmo do app instalado: icons/icon.svg, com icons/icon-192.png de reserva.
+
+Não precisa rodar SQL.
+Publicar: index.html, js/00-config.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.37.txt (os ícones já existem na pasta icons/).
+Se a aba continuar com o globo depois de publicar, é cache de favicon do navegador: Ctrl+Shift+R, ou feche a aba e abra de novo (em último caso, limpe os dados do site).

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- V10.37 — Ícone do app (livro aberto) no título/aba do navegador. -->
     <!-- V10.36 — Botões de IA e aba Usuários ocultos pelo próprio HTML e pelo JavaScript (sem depender do CSS em cache). -->
     <!-- V10.35 — Correção: edições (minutos, questões, notas…) não voltam mais ao valor antigo depois da sincronização com a nuvem. -->
     <!-- V10.34 — Nota por registro, “Lançar estudo desta disciplina” já preenchido, campo de minutos simplificado e histórico de uso da IA (aba Usuários). -->
     <!-- V10.33 — Módulo de usuários: o administrador libera ou bloqueia a IA por pessoa; sem permissão, os botões de IA ficam ocultos. -->
     <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
-    <title>Planejador de Estudos | Concursos — V10.36</title>
+    <title>Planejador de Estudos | Concursos — V10.37</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -46,7 +47,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Planejador">
-    <link rel="icon" href="data:,">
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
