@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.35
+# Arquitetura — Planejador de Estudos V10.36
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -188,3 +188,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 - Correção (`js/09-sincronizacao.js`): `saveData()` chama `stampChangedRecords()`, que compara cada registro (sessões, progresso dos tópicos, itens do edital) com o último estado salvo (`localStorage tce_rechash_<usuário>_<concurso>_<lista>`) e grava `updatedAt` só nos que mudaram. Em `mergeRecordLists`, se os dois lados têm `updatedAt` e ele difere, vale o registro inteiro mais recente.
 - Registros antigos sem `updatedAt` continuam na regra anterior (maior valor). `baselineRecordHashes(force)` define o ponto de partida sem carimbar: ao abrir o app (`13-iniciar.js`), ao entrar na conta (`auth.js`) e após carregar dados da nuvem/trocar de concurso (`restoreSnapshotToMemory`).
 - Limite conhecido: o progresso por tópico (`userProgress.hours/questions/reviews`) é um total derivado das sessões; se dois aparelhos lançarem sessões diferentes no mesmo tópico ao mesmo tempo, vale o total do mais recente (não a soma).
+
+## V10.36 — Ocultação da IA sem depender do CSS em cache
+- Relato: outro usuário viu o botão "Análise assistida do edital com IA" (visível, mas sem funcionar: o clique caía na trava `StudyUsers.requireAI()`).
+- Reforço: a regra `body:not(.ia-allowed) .ia-only` / `body:not(.is-admin) .admin-only` agora também está embutida no `<head>` do `index.html`, e `StudyUsers.apply()` esconde/mostra os elementos direto por JavaScript (`style.display`), já na abertura do app. Antes isso dependia só do `css/estilos.css`, que o navegador pode manter antigo.
+- Só existe um ponto de IA no app (`#ai-edital-file` / `analyzeEditalAI`, dentro do card `.ia-only`). Qualquer novo ponto de IA deve ter a classe `ia-only`.
+- Ocultar é só interface; a barreira real continua sendo a checagem `study_can_use_ai()` na Edge Function `dynamic-service` (ver LEIA-ME-V10.33.txt).

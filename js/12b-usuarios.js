@@ -14,6 +14,9 @@ window.StudyUsers = (function () {
     function apply() {
         document.body.classList.toggle('is-admin', st.isAdmin);
         document.body.classList.toggle('ia-allowed', st.ai);
+        // Segunda barreira, independente do CSS: esconde/mostra direto os elementos marcados.
+        document.querySelectorAll('.ia-only').forEach(el => { if (st.ai) el.style.removeProperty('display'); else el.style.setProperty('display', 'none', 'important'); });
+        document.querySelectorAll('.admin-only').forEach(el => { if (st.isAdmin) el.style.removeProperty('display'); else el.style.setProperty('display', 'none', 'important'); });
         if (!st.isAdmin && document.body.dataset.tab === 'usuarios') switchTab('cronograma');
     }
 
@@ -209,6 +212,9 @@ window.StudyUsers = (function () {
         showCustomDialog('IA não liberada', 'O uso de IA não está liberado para a sua conta. Peça ao administrador para liberar.');
         return false;
     }
+
+    // Ao carregar o app, já esconde tudo (ninguém vê IA/admin antes de a permissão ser confirmada pelo banco).
+    apply();
 
     // Ligações da tela
     const listEl = $('users-list'); if (listEl) listEl.addEventListener('change', onChange);

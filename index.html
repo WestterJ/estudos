@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- V10.36 — Botões de IA e aba Usuários ocultos pelo próprio HTML e pelo JavaScript (sem depender do CSS em cache). -->
     <!-- V10.35 — Correção: edições (minutos, questões, notas…) não voltam mais ao valor antigo depois da sincronização com a nuvem. -->
     <!-- V10.34 — Nota por registro, “Lançar estudo desta disciplina” já preenchido, campo de minutos simplificado e histórico de uso da IA (aba Usuários). -->
     <!-- V10.33 — Módulo de usuários: o administrador libera ou bloqueia a IA por pessoa; sem permissão, os botões de IA ficam ocultos. -->
     <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
-    <title>Planejador de Estudos | Concursos — V10.35</title>
+    <title>Planejador de Estudos | Concursos — V10.36</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -37,6 +38,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/estilos.css">
+    <!-- V10.36 — regra de permissão embutida no HTML: não depende de o navegador ter o estilos.css atualizado. Sem permissão, IA e aba de administrador ficam ocultas. -->
+    <style>body:not(.ia-allowed) .ia-only{display:none!important}body:not(.is-admin) .admin-only{display:none!important}</style>
 
     <meta name="theme-color" content="#003a70">
     <meta name="mobile-web-app-capable" content="yes">

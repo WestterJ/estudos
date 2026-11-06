@@ -1,0 +1,24 @@
+PLANEJADOR DE ESTUDOS V10.36 — BOTÃO DE IA OCULTO PARA QUEM NÃO TEM PERMISSÃO
+
+Relato: um usuário viu o botão "Análise assistida do edital com IA" (visível, mas sem funcionar).
+Só existe um botão de IA no app e ele já era ocultado por uma regra do arquivo css/estilos.css. Se o navegador do usuário estava com um estilos.css antigo (cache) junto com o index.html novo, a regra não valia e o botão aparecia; ao clicar, a trava do JavaScript respondia "IA não liberada".
+
+O que mudou
+- A regra de ocultação agora está dentro do próprio index.html e também é aplicada por JavaScript, desde a abertura do app. Não depende mais do estilos.css.
+- Sem permissão confirmada pelo banco, a IA e a aba Usuários ficam ocultas (inclusive durante o carregamento).
+
+Não precisa rodar SQL.
+
+Como publicar
+Suba: index.html, js/00-config.js, js/12b-usuarios.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.36.txt. Ctrl+Shift+R e confira "V10.36". Peça ao outro usuário para recarregar com Ctrl+Shift+R (no celular, fechar e reabrir o app instalado).
+
+Como conferir a permissão dele (aba Usuários, como administrador)
+- Linha dele com "IA bloqueada" e "Sem IA": ele só viu o botão por versão/cache antigo (corrigido nesta versão).
+- Linha dele com "IA liberada": o botão apareceu de propósito; se não funcionou, veja em Usuários > Uso da IA > Últimas consultas a linha "Falhou" com a mensagem de erro dele.
+Para conferir direto no Supabase (SQL Editor):
+  select u.email, coalesce(a.allowed,false) as ia_liberada,
+         exists(select 1 from public.study_app_admins s where s.user_id=u.id) as admin
+  from auth.users u left join public.study_ai_access a on a.user_id=u.id order by 1;
+
+Lembrete
+Esconder o botão não impede quem chamar a Edge Function diretamente. Para barrar de verdade, aplique na dynamic-service a checagem study_can_use_ai() (trecho no LEIA-ME-V10.33.txt).
