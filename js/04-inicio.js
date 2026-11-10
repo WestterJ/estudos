@@ -205,7 +205,7 @@
                     ?`<div role="button" tabindex="0" data-skip-summary onclick="openModal('session:${noteId}')" title="Editar a nota deste estudo" class="note-clamp mt-1.5 max-w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-left text-[11px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><i class="fa-regular fa-note-sticky mr-1"></i>${escapeHtml(noteText)}</div>`
                     :`<button type="button" onclick="openModal('session:${noteId}')" class="mt-1 text-[10px] font-semibold text-blue-700 hover:underline dark:text-blue-300"><i class="fa-regular fa-note-sticky mr-1"></i>Adicionar nota</button>`;
                 const questions=Number(session.questions)||0;
-                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="recent-study-topic text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5" title="${escapeHtml((session.topic||'Estudo registrado')+(session.subtopic?' · '+session.subtopic:''))}">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(session.date||'')}${weekdayAbbr(session.date)?' ('+weekdayAbbr(session.date)+')':''} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
+                card.innerHTML=`<div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 grid place-items-center shrink-0"><i class="fa-solid fa-book-open"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(session.discipline||'Sem disciplina')}</div><div class="recent-study-topic text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5" title="${escapeHtml((session.topic||'Estudo registrado')+(session.subtopic?' · '+session.subtopic:''))}">${escapeHtml(session.topic||'Estudo registrado')}${session.subtopic?' · '+escapeHtml(session.subtopic):''}</div><div class="text-[10px] text-slate-400 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(String(session.date||'').split(/[ T]/)[0])}${weekdayAbbr(session.date)?' ('+weekdayAbbr(session.date)+')':''}${getSessionTimeLabel(session)?' · '+escapeHtml(getSessionTimeLabel(session)):''} · ${escapeHtml(session.studyTrack||'Trilha não informada')}</div>${noteHtml}</div></div><div class="text-right shrink-0 min-w-[104px]"><div class="font-bold text-xs text-emerald-700 dark:text-emerald-300">${fmtHoras((Number(session.minutes)||0)/60)}</div><div class="text-[10px] text-amber-700 dark:text-amber-300 mt-1">${questions} ${questions===1?'questão':'questões'}</div></div>`;
                 container.appendChild(card);
             });
             renderStudySuggestionPanel();
@@ -213,7 +213,7 @@
             const recommendation=getNextStudyRecommendation();
             const text=document.getElementById('next-study-recommendation-text');
             const button=document.getElementById('use-study-recommendation');
-            if(text) text.innerHTML=recommendation ? `<strong class="font-bold">${escapeHtml(recommendation.discipline)}</strong> · <strong class="font-bold">Prioridade ${escapeHtml(getPriorityLabel(recommendation.priority))}</strong> · <strong class="font-bold">${recommendation.pct}% concluído</strong>${recommendation.lastDate?' · último estudo '+escapeHtml(recommendation.lastDate)+(recommendation.lastTrack?' · '+escapeHtml(recommendation.lastTrack):''):' · ainda não estudada'}${recommendation.lastNote?`<div class="mt-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-700"><span class="font-semibold">Nota da última aula:</span><div class="whitespace-pre-line">${escapeHtml(recommendation.lastNote)}</div></div>`:''}` : 'Todas as disciplinas estão concluídas.';
+            if(text) text.innerHTML=recommendation ? `<strong class="font-bold">${escapeHtml(recommendation.discipline)}</strong> · <strong class="font-bold">Prioridade ${escapeHtml(getPriorityLabel(recommendation.priority))}</strong> · <strong class="font-bold">${recommendation.pct}% concluído</strong>${recommendation.lastDate?' · último estudo '+escapeHtml(recommendation.lastDate)+(recommendation.lastTime?' às '+escapeHtml(recommendation.lastTime):'')+(recommendation.lastTrack?' · '+escapeHtml(recommendation.lastTrack):''):' · ainda não estudada'}${recommendation.lastNote?`<div class="mt-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-700"><span class="font-semibold">Nota da última aula:</span><div class="whitespace-pre-line">${escapeHtml(recommendation.lastNote)}</div></div>`:''}` : 'Todas as disciplinas estão concluídas.';
             if(button) button.disabled=!recommendation;
             updateSuggestionModeHelp();
         }
@@ -235,7 +235,7 @@
                 card.dataset.discipline = item.discipline;
                 card.className = 'next-study-card flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:bg-slate-900/50 dark:border-slate-700 p-3';
                 const colorStyle = 'color:' + (getPrioritySettings()[item.priority]?.color || '#64748b');
-                const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (weekdayAbbr(item.lastDate)?' ('+weekdayAbbr(item.lastDate)+')':'') + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
+                const lastStudyText = item.lastDate ? 'Último estudo: ' + escapeHtml(item.lastDate) + (weekdayAbbr(item.lastDate)?' ('+weekdayAbbr(item.lastDate)+')':'') + (item.lastTime ? ' · ' + escapeHtml(item.lastTime) : '') + (item.lastTrack ? ' · ' + escapeHtml(item.lastTrack) : '') : 'Ainda não estudada';
                 // Exibe somente a anotação vinculada ao tópico da sessão mais recente; o texto fica em linha separada.
                 const lastNoteHtml = item.lastNote ? `<div class="suggestion-last-note mt-1.5 max-w-full rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] leading-relaxed text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" title="Anotação do tópico da última aula"><div class="suggestion-last-note-text whitespace-pre-line">${escapeHtml(item.lastNote)}</div></div>` : '';
                 card.innerHTML = `<div class="flex items-start gap-2 min-w-0"><div class="grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold shrink-0">${index+1}</div><div class="min-w-0"><div class="text-xs font-bold text-slate-800 dark:text-slate-100">${escapeHtml(item.discipline)}</div><div class="text-[10px] font-bold mt-1" style="${colorStyle}">Prioridade ${escapeHtml(getPriorityLabel(item.priority))} · ${item.pct}% concluído</div><div class="text-[10px] text-slate-400 mt-1">${lastStudyText}</div>${lastNoteHtml}</div></div><button type="button" class="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold px-3 py-2">Estudar</button>`;
@@ -259,10 +259,10 @@
             const candidates=[];
             masterEditalData.forEach(item=>{
                 const matches=all.filter(s=>sessionMatchesTopic(s,item));
-                const lastStudy=matches.filter(s=>!isRevisionSession(s)).sort((a,b)=>parseBRDate(b.date)-parseBRDate(a.date))[0];
+                const lastStudy=matches.filter(s=>!isRevisionSession(s)).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a))[0];
                 if(!lastStudy)return;
-                const lastStudyTs=parseBRDate(lastStudy.date).getTime();
-                const reviews=matches.filter(s=>isRevisionSession(s)&&parseBRDate(s.date).getTime()>=lastStudyTs).sort((a,b)=>parseBRDate(b.date)-parseBRDate(a.date));
+                const lastStudyTs=getSessionTimestamp(lastStudy);
+                const reviews=matches.filter(s=>isRevisionSession(s)&&getSessionTimestamp(s)>=lastStudyTs).sort((a,b)=>getSessionTimestamp(b)-getSessionTimestamp(a));
                 const lastActivity=reviews[0]||lastStudy;
                 const interval=cadence[Math.min(reviews.length,cadence.length-1)];
                 const dueDate=parseBRDate(lastActivity.date);dueDate.setDate(dueDate.getDate()+interval);dueDate.setHours(12,0,0,0);
@@ -280,6 +280,7 @@
             const topic=document.getElementById('reg-topic');if(topic)topic.value=item.id;
             const type2=document.getElementById('reg-type2');if(type2)type2.value='Revisão';
             const date=document.getElementById('reg-date');if(date)date.value=localTodayISO();
+            const hora=document.getElementById('reg-time');if(hora)hora.value=nowTimeHM();
             window.scrollTo({top:0,behavior:'smooth'});
             showCustomDialog('Revisão selecionada',`${item.discipline} · ${item.topic}${item.subtopic?' · '+item.subtopic:''}. Confira a data, a trilha e registre a duração/questões ao concluir.`);
         }

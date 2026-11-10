@@ -1,0 +1,21 @@
+PLANEJADOR DE ESTUDOS V10.38 — HORA DO ESTUDO
+
+O que mudou
+- O formulário do Registro agora tem "Data e hora do estudo". A hora já vem preenchida com o horário atual e pode ser ajustada (útil para lançar um estudo feito antes).
+- A hora também aparece e pode ser editada no histórico (tabela, cartões, editor inline e modal de edição).
+- "Últimos estudos" mostra data e hora e passa a ordenar por data + hora.
+- As sugestões usam o mesmo critério: ao comparar quais disciplinas foram estudadas há mais tempo (inclusive no mesmo dia), consideram data + hora. Os cartões de sugestão e a "Próxima recomendação" mostram a hora do último estudo.
+- Revisões: uma revisão só conta como posterior ao estudo se for depois dele em data + hora.
+
+Registros antigos
+- Não têm hora informada: mostram só a data e não ganham hora inventada.
+- Para ordenar, usam a hora em que foram gravados, mas só quando a gravação foi no mesmo dia do estudo. Se não há hora conhecida, ficam antes dos registros com hora naquele dia.
+- Para completar um registro antigo, abra o histórico e preencha a hora dele.
+
+Não precisa rodar SQL.
+Publicar: index.html, css/estilos.css, js/00-config.js, js/02-sugestoes.js, js/04-inicio.js, js/05-registro.js, service-worker.js, ARQUITETURA.md, LEIA-ME-V10.38.txt. Ctrl+Shift+R e confira "V10.38".
+
+Como testar
+1. Registre dois estudos no mesmo dia em disciplinas diferentes, com horas diferentes (ex.: 08:00 e 19:30). "Últimos estudos" mostra o das 19:30 primeiro, com a hora.
+2. Nas sugestões (modo Prioridade + data), a disciplina estudada às 08:00 vem antes da estudada às 19:30.
+3. Mude a hora de um registro no histórico: a ordem se ajusta.

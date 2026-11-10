@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- V10.38 — Hora do estudo: sequência dos últimos estudos, histórico e sugestões por data + hora. -->
     <!-- V10.37 — Ícone do app (livro aberto) no título/aba do navegador. -->
     <!-- V10.36 — Botões de IA e aba Usuários ocultos pelo próprio HTML e pelo JavaScript (sem depender do CSS em cache). -->
     <!-- V10.35 — Correção: edições (minutos, questões, notas…) não voltam mais ao valor antigo depois da sincronização com a nuvem. -->
     <!-- V10.34 — Nota por registro, “Lançar estudo desta disciplina” já preenchido, campo de minutos simplificado e histórico de uso da IA (aba Usuários). -->
     <!-- V10.33 — Módulo de usuários: o administrador libera ou bloqueia a IA por pessoa; sem permissão, os botões de IA ficam ocultos. -->
     <!-- V10.32 — Espaço no fim das páginas, filtros sem rolagem lateral, datas sem período ocultas, observações e filtro pela disciplina do lançamento. -->
-    <title>Planejador de Estudos | Concursos — V10.37</title>
+    <title>Planejador de Estudos | Concursos — V10.38</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
@@ -262,8 +263,11 @@
                             </div>
                         </div>
                         <div>
-                            <label for="reg-date" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Data do estudo:</label>
-                            <input type="date" id="reg-date" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
+                            <label for="reg-date" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Data e hora do estudo:</label>
+                            <div class="flex gap-1.5">
+                                <input type="date" id="reg-date" required class="min-w-0 w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs font-medium outline-none">
+                                <input type="time" id="reg-time" aria-label="Hora do estudo" class="w-28 shrink-0 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2.5 text-xs font-medium outline-none">
+                            </div>
                         </div>
                         <div>
                             <label for="reg-track" class="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Curso / trilha:</label>
@@ -670,8 +674,9 @@
         <form id="session-edit-form" onsubmit="saveEditedSession(event)" class="session-edit-grid text-xs">
           <input type="hidden" id="edit-session-id">
           <label class="span-3">Data<input id="edit-session-date" type="date" required class="mt-1 rounded-lg border p-2 text-sm"></label>
-          <label class="span-4">Tipo de conteúdo<select id="edit-session-type1" class="mt-1 rounded-lg border p-2 text-sm"><option>Conhecimentos Específicos</option><option>Conhecimentos Gerais</option></select></label>
-          <label class="span-5">Tipo de estudo<select id="edit-session-type2" class="mt-1 rounded-lg border p-2 text-sm"><option>Estudo Teórico</option><option>Resolução de Questões</option><option>Revisão</option><option>Simulado</option></select></label>
+          <label class="span-2">Hora<input id="edit-session-time" type="time" class="mt-1 rounded-lg border p-2 text-sm"></label>
+          <label class="span-3">Tipo de conteúdo<select id="edit-session-type1" class="mt-1 rounded-lg border p-2 text-sm"><option>Conhecimentos Específicos</option><option>Conhecimentos Gerais</option></select></label>
+          <label class="span-4">Tipo de estudo<select id="edit-session-type2" class="mt-1 rounded-lg border p-2 text-sm"><option>Estudo Teórico</option><option>Resolução de Questões</option><option>Revisão</option><option>Simulado</option></select></label>
           <label class="span-4">Disciplina<select id="edit-session-discipline" onchange="updateEditSessionTopics()" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
           <label class="span-8">Tópico e subtópico<select id="edit-session-item" required class="mt-1 rounded-lg border p-2 text-sm"></select></label>
           <label class="span-3">Duração (minutos)<input id="edit-session-minutes" type="text" inputmode="numeric" required class="mt-1 rounded-lg border p-2 text-sm"></label>

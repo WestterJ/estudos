@@ -28,6 +28,7 @@
             const trackFilter=document.getElementById('hist-filter-track');
             if(trackFilter){const oldTrack=trackFilter.value||'all';trackFilter.innerHTML='<option value="all">Todas as trilhas</option>';getStudyTracks().forEach(track=>{const opt=document.createElement('option');opt.value=track;opt.textContent=track;trackFilter.appendChild(opt)});trackFilter.value=getStudyTracks().includes(oldTrack)?oldTrack:'all';}
             const dateField=document.getElementById('reg-date');if(dateField&&!dateField.value)dateField.value=localTodayISO();
+            const timeField=document.getElementById('reg-time');if(timeField&&!timeField.value)timeField.value=nowTimeHM();
             populateRegTrackSelect();
             updateRegTopics();
             renderSessionsList();
@@ -56,13 +57,14 @@
             const discipline=document.getElementById('reg-discipline').value;
             const itemId=document.getElementById('reg-topic').value;
             const dateValue=document.getElementById('reg-date').value||localTodayISO();
+            const timeValue=normalizeTimeHM(document.getElementById('reg-time')?.value)||nowTimeHM();
             const studyTrack=(document.getElementById('reg-track').value||'Curso regular').trim()||'Curso regular';
             const minutes=parseMinutesInput(document.getElementById('reg-minutes').value);
             if(!minutes)return showCustomDialog('Duração inválida','Digite os minutos (ex.: 85) ou a duração no formato 1:25.');
             const questions=Math.max(0,parseInt(document.getElementById('reg-questions').value)||0);
             const item=masterEditalData.find(i=>i.id===itemId);
             if(!item)return showCustomDialog('Selecione um tópico','A disciplina selecionada não tem tópico disponível. Cadastre ou importe o conteúdo do edital primeiro.');
-            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,obs:(document.getElementById('reg-obs')?.value||'').trim().slice(0,2000),notesUpdatedAt:new Date().toISOString(),isReview:type2==='Revisão'?1:0};
+            const session={id:crypto.randomUUID(),itemId:item.id,date:dateToBR(dateValue),time:timeValue,createdAt:new Date().toISOString(),type1,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||''),minutes,questions,obs:(document.getElementById('reg-obs')?.value||'').trim().slice(0,2000),notesUpdatedAt:new Date().toISOString(),isReview:type2==='Revisão'?1:0};
             studySessions.unshift(session);
             localStorage.setItem('tce_go_pro_sessions',JSON.stringify(studySessions));
             let userItem=userProgress.find(u=>u.id===itemId);
@@ -74,6 +76,7 @@
             saveData();
             const _q=document.getElementById('reg-questions');if(_q)_q.value=0;
             const _o=document.getElementById('reg-obs');if(_o)_o.value='';
+            const _t=document.getElementById('reg-time');if(_t)_t.value='';
             initRegistrationForm();initCronogramaFilters();renderSessionsList();
             renderRecentRotation();renderDashboard();renderPriorityDisciplineProgress();
             showCustomDialog('Registro salvo',`${type2==='Revisão'?'Revisão':'Sessão de estudo'} registrada em ${session.date} na trilha “${studyTrack}”.`,'fa-solid fa-circle-check');
@@ -91,7 +94,7 @@
             const topicOptions=masterEditalData.filter(x=>x.discipline===(currentItem?.discipline||session.discipline)).map(x=>`<option value="${escapeHtml(x.id)}" ${x.id===currentItem?.id?'selected':''}>${escapeHtml(x.topic)}${x.subtopic?' → '+escapeHtml(x.subtopic):''}</option>`).join('');
             return `<details class="session-inline-editor mt-2 w-full rounded-xl border border-blue-200 dark:border-slate-600 bg-blue-50/50 dark:bg-slate-900/40 p-3"><summary class="cursor-pointer select-none text-xs font-bold text-blue-700 dark:text-blue-300"><i class="fa-solid fa-pen-to-square mr-1"></i>Editar campos nesta tela</summary>
               <form class="inline-session-edit grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mt-3 items-end" data-session-id="${escapeHtml(session.id)}">
-                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Data<input name="date" type="date" required value="${escapeHtml(dateValue)}" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs"></label>
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Data e hora<span class="mt-1 flex gap-1.5"><input name="date" type="date" required value="${escapeHtml(dateValue)}" class="min-w-0 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs"><input name="time" type="time" value="${escapeHtml(getSessionTimeLabel(session))}" aria-label="Hora do estudo" class="w-24 shrink-0 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs"></span></label>
                 <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Tipo 1<select name="type1" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs">${type1Options}</select></label>
                 <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Tipo 2<select name="type2" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs">${type2Options}</select></label>
                 <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Curso / trilha<input name="studyTrack" list="study-tracks-list" maxlength="100" value="${escapeHtml(session.studyTrack||'Trilha não informada')}" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 text-xs"></label>
@@ -127,7 +130,7 @@
                 oldProgress.questions=Math.max(0,(Number(oldProgress.questions)||0)-(Number(oldSession.questions)||0));
                 if(isRevisionSession(oldSession))oldProgress.reviews=Math.max(0,(Number(oldProgress.reviews)||0)-1);
             }
-            Object.assign(session,{itemId:item.id,date:dateToBR(form.querySelector('[name="date"]').value),type1:form.querySelector('[name="type1"]').value,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,isReview:type2==='Revisão'?1:0});
+            Object.assign(session,{itemId:item.id,date:dateToBR(form.querySelector('[name="date"]').value),time:normalizeTimeHM(form.querySelector('[name="time"]')?.value),type1:form.querySelector('[name="type1"]').value,type2,studyTrack,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,isReview:type2==='Revisão'?1:0});
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress);}
             newProgress.hours=(Number(newProgress.hours)||0)+(minutes/60);
@@ -170,7 +173,7 @@
                 const topicText=item?sessionTopicLabel(item)+(legacyIds.has(String(item.id))?' (edital padrão)':''):'⚠ '+(s.topic||'Tópico')+(s.subtopic?' → '+s.subtopic:'')+' (não está mais no edital)';
                 const minutes=Math.max(0,Number(s.minutes)||0);
                 return `<tr data-id="${e(s.id)}"${flagged?' class="sess-orphan" title="Este registro aponta para um tópico que não faz parte do seu edital atual. Escolha o tópico correto na coluna Disciplina / Tópico."':''}>
-                    <td style="min-width:122px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"></td>
+                    <td style="min-width:122px"><input type="date" class="tbl-field" data-f="date" value="${e(dateToInputValue(s.date))}" aria-label="Data"><input type="time" class="tbl-field tbl-sub" data-f="time" value="${e(getSessionTimeLabel(s))}" aria-label="Hora do estudo"></td>
                     <td style="min-width:164px"><select class="tbl-field font-semibold" data-f="type2" aria-label="Atividade">${opts(SESSION_TYPE2_OPTIONS,s.type2||SESSION_TYPE2_OPTIONS[0])}</select><select class="tbl-field tbl-sub" data-f="type1" aria-label="Conteúdo">${opts(SESSION_TYPE1_OPTIONS,s.type1||SESSION_TYPE1_OPTIONS[0])}</select></td>
                     <td style="min-width:300px"><select class="tbl-field font-semibold" data-f="discipline" title="${e(s.discipline||'')}" aria-label="Disciplina">${discOpts(s.discipline||'')}</select><select class="tbl-field tbl-sub" data-f="itemId" title="${e(topicText)}" aria-label="Tópico e subtópico"><option value="${e(item?item.id:'')}" selected>${e(topicText)}</option></select><input type="text" class="tbl-field tbl-sub" data-f="obs" maxlength="1000" placeholder="Nota deste registro (ex.: Tópico 7, Aula 06)" value="${e(s.obs||'')}" aria-label="Nota deste registro"></td>
                     <td style="min-width:132px"><select class="tbl-field" data-f="studyTrack" aria-label="Curso ou trilha">${trackOptionsHtml(String(s.studyTrack||'Trilha não informada'))}</select></td>
@@ -254,7 +257,7 @@
             if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));
             if(ts)set('reg-track',tv||(ts.options[0]?ts.options[0].value:''));
             set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',0);
-            set('reg-date',localTodayISO());set('reg-obs',getSessionNote(s));
+            set('reg-date',localTodayISO());set('reg-time',nowTimeHM());set('reg-obs',getSessionNote(s));
         }
         function prefillStudyForm(discipline){
             const sel=document.getElementById('reg-discipline');
@@ -345,7 +348,7 @@
                 const note=getSessionNote(s);
                 const q=Number(s.questions)||0;
                 return `<article class="sess-card${orphan?' sess-orphan':''}" data-id="${e(s.id)}">
-                    <div class="sess-card-top"><span>${e(s.date||'')}</span><span class="sess-card-time">${e(fmtMinutesHM(min))}${min>=60?` <small>(${min} min)</small>`:''}</span></div>
+                    <div class="sess-card-top"><span>${e(formatSessionWhen(s))}</span><span class="sess-card-time">${e(fmtMinutesHM(min))}${min>=60?` <small>(${min} min)</small>`:''}</span></div>
                     <p class="sess-card-disc">${e(s.discipline||'Sem disciplina')}</p>
                     <p class="sess-card-topic">${orphan?'⚠ ':''}${e(topic)}</p>
                     <p class="sess-card-meta">${e(s.type2||'')} · ${e(s.studyTrack||'Trilha não informada')}${q?` · ${q} questões`:''}</p>
@@ -380,6 +383,7 @@
             const tr=el.closest('tr');const s=studySessions.find(x=>x.id===tr.dataset.id);if(!s)return;
             const f=el.dataset.f,patch={};
             if(f==='date'){if(!el.value){el.value=dateToInputValue(s.date);return;}patch.date=dateToBR(el.value);}
+            else if(f==='time'){patch.time=normalizeTimeHM(el.value);}
             else if(f==='type1')patch.type1=el.value;
             else if(f==='type2'){patch.type2=el.value;patch.isReview=el.value==='Revisão'?1:0;}
             else if(f==='studyTrack')patch.studyTrack=(el.value||'').trim()||'Trilha não informada';
@@ -429,7 +433,7 @@
                 const item=masterEditalData.find(x=>sessionMatchesTopic(s,x));
                 const set=(id2,v)=>{const el=document.getElementById(id2);if(el)el.value=v;};
                 set('reg-type1',s.type1||SESSION_TYPE1_OPTIONS[0]);set('reg-type2',s.type2||SESSION_TYPE2_OPTIONS[0]);
-                {const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));set('reg-track',tv||(ts&&ts.options[0]?ts.options[0].value:''));}set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());set('reg-obs',getSessionNote(s));
+                {const ts=document.getElementById('reg-track'),tv=s.studyTrack||'';if(ts&&tv&&![...ts.options].some(o=>o.value===tv))ts.add(new Option(tv+' (fora da lista)',tv));set('reg-track',tv||(ts&&ts.options[0]?ts.options[0].value:''));}set('reg-minutes',Math.max(1,Number(s.minutes)||1));set('reg-questions',Number(s.questions)||0);set('reg-date',localTodayISO());set('reg-time',nowTimeHM());set('reg-obs',getSessionNote(s));
                 if(item){set('reg-discipline',item.discipline);updateRegTopics();set('reg-topic',item.id);}
                 document.getElementById('study-session-form')?.scrollIntoView({behavior:'smooth',block:'center'});
                 showCustomDialog('Registro copiado','Os dados foram levados para o formulário, com a data de hoje. Ajuste o que precisar e clique em “Salvar registro de estudo”.','fa-solid fa-circle-check');
@@ -451,6 +455,7 @@
             document.getElementById('edit-session-id').value=id;
             const d=parseBRDate(session.date);
             document.getElementById('edit-session-date').value=isNaN(d.getTime())?'':`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            document.getElementById('edit-session-time').value=getSessionTimeLabel(session);
             document.getElementById('edit-session-type1').value=session.type1||'Conhecimentos Específicos';
             const type2=document.getElementById('edit-session-type2');
             if(![...type2.options].some(o=>o.value===session.type2)){const opt=document.createElement('option');opt.value=session.type2;opt.textContent=session.type2;type2.appendChild(opt)}
@@ -486,7 +491,7 @@
             }
             const dateValue=document.getElementById('edit-session-date').value;
             const [year,month,day]=dateValue.split('-');
-            Object.assign(session,{date:`${day}/${month}/${year}`,type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,obs:newObs,isReview});if(newObs!==String(oldSession.obs||'').trim())session.notesUpdatedAt=new Date().toISOString();
+            Object.assign(session,{date:`${day}/${month}/${year}`,time:normalizeTimeHM(document.getElementById('edit-session-time')?.value),type1:document.getElementById('edit-session-type1').value,type2:document.getElementById('edit-session-type2').value,discipline:item.discipline,topic:item.topic,subtopic:item.subtopic,priority:String(item.priority||session.priority||''),minutes,questions,obs:newObs,isReview});if(newObs!==String(oldSession.obs||'').trim())session.notesUpdatedAt=new Date().toISOString();
             let newProgress=userProgress.find(u=>u.id===item.id);
             if(!newProgress){newProgress={...item,hours:0,questions:0,reviews:0,completed:false};userProgress.push(newProgress)}
             newProgress.hours=(Number(newProgress.hours)||0)+minutes/60;

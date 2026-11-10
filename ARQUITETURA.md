@@ -1,4 +1,4 @@
-# Arquitetura — Planejador de Estudos V10.37
+# Arquitetura — Planejador de Estudos V10.38
 
 O app é uma página estática (GitHub Pages) + Supabase. Não há build nem bundler: o `index.html` carrega arquivos JS comuns, na ordem abaixo.
 
@@ -197,3 +197,9 @@ Adiciona seis visualizações construídas localmente (sem bibliotecas externas)
 
 ## V10.37 — Ícone na aba do navegador
 - O `<head>` do `index.html` usava `<link rel="icon" href="data:,">` (favicon vazio, aparecia o globo). Agora aponta para `icons/icon.svg` (principal) e `icons/icon-192.png` (reserva), os mesmos ícones do app instalado.
+
+## V10.38 — Hora do estudo (sequência por data + hora)
+- Cada sessão passa a guardar `time` (HH:MM), preenchida no formulário ("Data e hora do estudo", padrão = hora atual), editável na tabela do histórico, no editor inline e no modal de edição.
+- Critério único de sequência em `js/02-sugestoes.js`: `getSessionSortInfo` (dia + relógio) → `getSessionsNewestFirst` (dia, depois hora, depois ordem de gravação), `getSessionTimestamp` (data + hora em ms), `getSessionTimeLabel` / `formatSessionWhen` (texto exibido). Registros antigos sem `time` usam a hora de gravação (`createdAt`) só se foi gravado no mesmo dia do estudo; sem hora conhecida, ficam antes dos que têm hora naquele dia e mostram apenas a data.
+- Usos: "Últimos estudos" e histórico (ordem e texto), sugestões (`lastTimestamp` = data + hora; `lastTime` aparece nos cartões e na "Próxima recomendação") e revisões (uma revisão só conta se for posterior ao último estudo em data + hora).
+- A hora é informada pelo usuário e não é validada contra a data (um estudo lançado depois pode ter hora anterior).

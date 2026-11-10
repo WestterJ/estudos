@@ -11,25 +11,40 @@
             if(isoLocal) return new Date(Number(isoLocal[1]),Number(isoLocal[2])-1,Number(isoLocal[3]),Number(isoLocal[4]),Number(isoLocal[5]),isoLocal[6]===undefined?0:Number(isoLocal[6]),isoLocal[7]===undefined?0:Number(String(isoLocal[7]).padEnd(3,'0')));
             return new Date(raw);
         }
-        // As sessões antigas guardavam somente a data. Para novas sessões, createdAt preserva
-        // a hora de registro; quando uma data já contém hora, ela tem precedência.
+        // V10.38 — critério único de sequência: DATA + HORA do estudo.
+        // A hora vem de `session.time` (HH:MM, campo "Hora do estudo"); se a data já trouxer hora, ela tem precedência.
+        // Em registros antigos sem hora, usa-se a hora de gravação (createdAt) apenas se foi gravado no mesmo dia do estudo.
+        // Registros sem hora conhecida ficam antes dos que têm hora no mesmo dia; entre si, vale a ordem de gravação.
+        function normalizeTimeHM(value) {
+            const m=String(value||'').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+            if(!m) return '';
+            const h=Number(m[1]),mi=Number(m[2]);
+            return h>23||mi>59 ? '' : String(h).padStart(2,'0')+':'+m[2];
+        }
+        function nowTimeHM() {
+            const d=new Date();
+            return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        }
         function getSessionSortInfo(session) {
             const rawDate=String(session?.date||'').trim();
             const parsed=parseBRDate(rawDate);
             if(!Number.isFinite(parsed.getTime())||parsed.getTime()===0) return {day:0,clock:null};
             const day=new Date(parsed.getFullYear(),parsed.getMonth(),parsed.getDate()).getTime();
+            const toClock=d=>((d.getHours()*60+d.getMinutes())*60+d.getSeconds())*1000+d.getMilliseconds();
             const hasDateTime=/^(?:\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})[ T]\d{2}:\d{2}/.test(rawDate);
             let clock=null;
             if(hasDateTime) {
-                clock=((parsed.getHours()*60+parsed.getMinutes())*60+parsed.getSeconds())*1000+parsed.getMilliseconds();
+                clock=toClock(parsed);
             } else {
-                const timeMatch=String(session?.time||session?.hour||'').match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-                if(timeMatch) clock=((Number(timeMatch[1])*60+Number(timeMatch[2]))*60+Number(timeMatch[3]||0))*1000;
-                else {
+                const explicit=normalizeTimeHM(session?.time||session?.hour);
+                if(explicit) {
+                    const [h,m]=explicit.split(':').map(Number);
+                    clock=(h*60+m)*60000;
+                } else {
                     const recorded=session?.createdAt||session?.created_at||session?.recordedAt||session?.timestamp;
                     if(recorded) {
                         const d=new Date(recorded);
-                        if(Number.isFinite(d.getTime())) clock=((d.getHours()*60+d.getMinutes())*60+d.getSeconds())*1000+d.getMilliseconds();
+                        if(Number.isFinite(d.getTime())&&d.getFullYear()===parsed.getFullYear()&&d.getMonth()===parsed.getMonth()&&d.getDate()===parsed.getDate()) clock=toClock(d);
                     }
                 }
             }
@@ -37,19 +52,24 @@
         }
         function getSessionsNewestFirst() {
             const rows=studySessions.map((x,index)=>({x,index,info:getSessionSortInfo(x)}));
-            // Ordena primeiro pela data. Só usa a hora como critério secundário quando todos os
-            // registros daquele dia têm hora conhecida; em dados antigos sem hora preserva a ordem original.
-            rows.sort((a,b)=>b.info.day-a.info.day||a.index-b.index);
-            const ordered=[];
-            for(let start=0;start<rows.length;) {
-                let end=start+1;
-                while(end<rows.length&&rows[end].info.day===rows[start].info.day) end++;
-                const group=rows.slice(start,end);
-                if(group.length>1&&group.every(row=>row.info.clock!==null)) group.sort((a,b)=>b.info.clock-a.info.clock||a.index-b.index);
-                ordered.push(...group);
-                start=end;
-            }
-            return ordered.map(row=>row.x);
+            rows.sort((a,b)=>b.info.day-a.info.day||((b.info.clock===null?-1:b.info.clock)-(a.info.clock===null?-1:a.info.clock))||a.index-b.index);
+            return rows.map(row=>row.x);
+        }
+        // Instante do estudo (data + hora) em milissegundos; 0 se a data for inválida.
+        function getSessionTimestamp(session) {
+            const info=getSessionSortInfo(session);
+            return info.day ? info.day+(info.clock||0) : 0;
+        }
+        // Hora a exibir: só quando foi informada de fato (campo Hora ou data com hora). Registros antigos mostram só a data.
+        function getSessionTimeLabel(session) {
+            const m=String(session?.date||'').match(/[ T](\d{2}):(\d{2})/);
+            if(m) return m[1]+':'+m[2];
+            return normalizeTimeHM(session?.time||session?.hour);
+        }
+        function formatSessionWhen(session) {
+            const day=String(session?.date||'').trim().split(/[ T]/)[0];
+            const t=getSessionTimeLabel(session);
+            return day+(t?' · '+t:'');
         }
         function localTodayISO() {
             const d=new Date();
@@ -129,14 +149,15 @@
                 const lastTopic = lastSession ? (masterEditalData.find(topic => sessionMatchesTopic(lastSession, topic)) || topics.find(topic => topic.topic === lastSession.topic && topic.subtopic === (lastSession.subtopic || '')) || null) : null;
                 // V10.34 — a nota é a da própria sessão mais recente da disciplina (cada registro tem a sua).
                 const lastNote = lastSession ? getSessionNote(lastSession) : '';
-                const lastTimestamp = lastSession ? parseBRDate(lastSession.date).getTime() : 0;
+                const lastTimestamp = lastSession ? getSessionTimestamp(lastSession) : 0; // V10.38: data + hora
+                const lastTime = lastSession ? getSessionTimeLabel(lastSession) : '';
                 const hours = vals.reduce((sum,value) => sum + (Number(value.hours)||0), 0);
                 const questions = vals.reduce((sum,value) => sum + (Number(value.questions)||0), 0);
                 return {
                     discipline, topics, done,
                     pct: topics.length ? Math.round(done/topics.length*100) : 0,
                     priority, rank: priorityRank[priority] ?? 99,
-                    pending: pendingTopics.length, hours, questions, lastDate, lastTrack, lastNote, lastTimestamp
+                    pending: pendingTopics.length, hours, questions, lastDate, lastTime, lastTrack, lastNote, lastTimestamp
                 };
             }).filter(item => item.pending > 0);
 

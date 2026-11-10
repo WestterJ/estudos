@@ -606,3 +606,7 @@ body:not(.is-admin) .admin-only{display:none!important}
 .usage-table{width:100%;border-collapse:collapse;font-size:12px}
 .usage-table th{text-align:left;font-weight:700;padding:6px 8px;border-bottom:2px solid var(--app-border);white-space:nowrap}
 .usage-table td{padding:6px 8px;border-bottom:1px solid var(--app-border);vertical-align:top}
+
+/* V10.38 — campo Hora no modal de edição do histórico */
+.session-edit-grid .span-2{grid-column:span 2}
+@media(max-width:760px){.session-edit-grid .span-2{grid-column:span 12}}
